@@ -14,6 +14,7 @@
 package io.macgyver.plugin.cloud.vsphere.cmdb;
 
 import java.net.URL;
+import java.rmi.RemoteException;
 
 import org.jclouds.ContextBuilder;
 import org.jclouds.compute.ComputeService;
@@ -37,7 +38,7 @@ import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.plugin.cloud.vsphere.VSphereQueryTemplate;
 import io.macgyver.plugin.cloud.vsphere.cmdb.VSphereScanner;
 import io.macgyver.test.MacGyverIntegrationTest;
-import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor;
+
 public class VSphereScannerIntegrationTest extends MacGyverIntegrationTest {
 
 	
@@ -84,13 +85,21 @@ public class VSphereScannerIntegrationTest extends MacGyverIntegrationTest {
 	}
 	
 	@Test
+	public void testXX() throws RemoteException{
+	
+
+		System.out.println(serviceInstance.getServerConnection().getSessionStr());
+		System.out.println(serviceInstance.getSessionManager().sessionIsActive(serviceInstance.getServerConnection().getSessionStr(), serviceInstance.getServerConnection().getUsername()));
+	}
+	
+	@Test
 	@Ignore
 	public void testY() throws Exception {
 		
 		//https://github.com/if6was9/jclouds-labs/blob/master/vsphere/src/test/java/org/jclouds/vsphere/ContextBuilderTest.java
-	      ImmutableSet modules = ImmutableSet.of(new ExecutorServiceModule(sameThreadExecutor(), sameThreadExecutor()), new SshjSshClientModule());
+	      ImmutableSet modules = ImmutableSet.of(new ExecutorServiceModule(), new SshjSshClientModule());
 	      ComputeServiceContext context = ContextBuilder.newBuilder("vsphere")
-//	     
+     
 	              .credentials(user, pass)
 	              .endpoint(url)
 	              .modules(modules)

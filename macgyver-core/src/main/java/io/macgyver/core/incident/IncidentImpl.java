@@ -1,16 +1,25 @@
 package io.macgyver.core.incident;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.MoreObjects;
 
 public class IncidentImpl implements Incident {
 
-	JsonNode n;
+	ObjectNode n;
 
 	protected IncidentImpl(JsonNode n) {
+		this((ObjectNode)n);
+	}
+	protected IncidentImpl(ObjectNode n) {
 		this.n = n;
 	}
 
+	
+	public ObjectNode getData() {
+		return n;
+	}
+	
 	@Override
 	public String getIncidentKey() {
 		return n.path("incidentKey").asText(null);

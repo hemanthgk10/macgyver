@@ -43,6 +43,8 @@ public class VSphereScannerTest {
 
 	}
 
+
+	
 	@Test
 	public void testComputeMacId() {
 		ManagedObjectReference mor = new ManagedObjectReference();

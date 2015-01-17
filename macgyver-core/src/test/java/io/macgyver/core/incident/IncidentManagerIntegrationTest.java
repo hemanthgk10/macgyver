@@ -22,15 +22,20 @@ public class IncidentManagerIntegrationTest extends MacGyverIntegrationTest {
 	public void testIt() {
 		Assertions.assertThat(incidentManager).isNotNull();
 
-		String key = "test-incident-" + System.currentTimeMillis();
-		String description = UUID.randomUUID().toString();
-		Incident x = incidentManager.newIncident().incidentKey(key)
-				.description(description).create();
-
-		Assertions.assertThat(
-				incidentManager.withIncidentKey("keynotfound").get()
-						.isPresent()).isFalse();
-
+		Incident incident = new IncidentBuilder().incidentKey("test-incident-"+System.currentTimeMillis()).build();
+		
+		Incident i2 = incidentManager.createIncident(incident);
+		
+		Assertions.assertThat(i2).isNotNull();
+		Assertions.assertThat(i2.getIncidentKey()).isEqualTo(incident.getIncidentKey());
+		Assertions.assertThat(i2.isOpen()).isTrue();
+		
+		Incident acked = incidentManager.acknowledge(i2.getIncidentKey());
+		
+		Assertions.assertThat(acked.isOpen()).isFalse();
+		Assertions.assertThat(acked.isAcknowledged()).isFalse();
+		Assertions.assertThat(acked.isResolved()).isFalse();
+/*
 		Assertions.assertThat(
 				incidentManager.withIncidentKey(key).get().isPresent())
 				.isTrue();
@@ -72,6 +77,6 @@ public class IncidentManagerIntegrationTest extends MacGyverIntegrationTest {
 		Assertions.assertThat(
 				incidentManager.withIncidentKey(key).get().get().isResolved())
 				.isTrue();
-		
+		*/
 	}
 }
