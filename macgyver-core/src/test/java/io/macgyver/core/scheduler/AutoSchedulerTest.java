@@ -33,7 +33,7 @@ public class AutoSchedulerTest {
 	public void testCrontabScanner() throws IOException {
 
 		File f = File.createTempFile("junit", "junit");
-		String cronExpression = "* * * * * ?";
+		String cronExpression = "* * * * *";
 		String expected = "{\"cron\":\""+cronExpression+"\"}";
 		String data = "blah\nblah\n//   #@Schedule    " + expected + "   \n\nblah";
 		Files.write(data, f, Charsets.UTF_8);
