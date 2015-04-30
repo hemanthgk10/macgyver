@@ -37,67 +37,36 @@ public class AppInstanceManager {
 	
 	CheckInProcessor processor = new BasicCheckInProcessor();
 
-	public ObjectNode getOrCreateAppInstance(String host, String groupId,
-			String appId) {
-
-		String cypher = "match (ai:AppInstance) where ai.host={host} and ai.groupId={groupId} and ai.appId={appId} return ai";
-
-		JsonNode val = neo4j.execCypher(cypher, "host", host, "groupId", groupId,
-				"appId", appId).toBlocking().firstOrDefault(null);
-
-		if (val!=null) {
-
-			return (ObjectNode) val;
-			
-		} else {
-
-			String createCypher = "CREATE (ai:AppInstance {host:{host}, appId:{appId}, groupId:{groupId}}) RETURN ai";
-
-			val = neo4j.execCypher(createCypher, "host", host, "appId", appId,
-					"groupId", groupId).toBlocking().firstOrDefault(null);
-
-			if (val!=null) {
-				return (ObjectNode) val;
-			}
-
-		}
-		throw new MacGyverException("could not get or create new AppInstance");
-	}
-
-
 
 	public ObjectNode processCheckIn(ObjectNode data) {
-	
 
 		String host = data.path("host").asText();
 		String group = data.path("groupId").asText();
 		String app = data.path("appId").asText();
 
-		if (Strings.isNullOrEmpty(group)) {
-			group = "";
-		}
-		logger.debug("host:{} group:{} app:{}", host, group, app);
-
-		if (!Strings.isNullOrEmpty(host) && !Strings.isNullOrEmpty(app)) {
-			ObjectNode n = getOrCreateAppInstance(host, group, app);
 		
-			ObjectNode set = n;
-			set.put("lastContactTs", System.currentTimeMillis());
-			set.setAll(data);
-
-			ObjectNode p = new ObjectMapper().createObjectNode();
-			p.put("host", host);
-			p.put("groupId", group);
-			p.put("appId", app);
-			p.put("props", set);
-			String cypher = "match (ai:AppInstance) where ai.host={host} and ai.appId={appId} set ai={props} return ai";
-
-			JsonNode r = neo4j.execCypher(cypher, p).toBlocking().firstOrDefault(null);
-			if (r!=null) {
-				return (ObjectNode) r;
+		if (host.toLowerCase().equals("unknown") || host.toLowerCase().equals("localhost")) {
+			return new ObjectMapper().createObjectNode();
+		} else {
+			if (Strings.isNullOrEmpty(group)) {
+				group = "";
 			}
+			logger.debug("host:{} group:{} app:{}", host, group, app);
+	
+			if (!Strings.isNullOrEmpty(host) && !Strings.isNullOrEmpty(app)) {	
+				ObjectNode set = new ObjectMapper().createObjectNode();
+				set.setAll(data);
+				set.put("lastContactTs", System.currentTimeMillis());
+			
+				String cypher = "merge (x:AppInstance {host:{h}, groupId:{gi}, appId:{ai}}) set x={props} return x";
+	
+				JsonNode r = neo4j.execCypher(cypher, "h",host, "gi",group, "ai",app, "props",set).toBlocking().firstOrDefault(null);
+				if (r!=null) {
+					return (ObjectNode) r;
+				}
+			}
+			return new ObjectMapper().createObjectNode();
 		}
-		return new ObjectMapper().createObjectNode();
 	}
 	public CheckInProcessor getCheckInProcessor() {
 		return processor;
