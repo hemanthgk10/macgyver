@@ -57,10 +57,16 @@ public class AppInstanceManager {
 				ObjectNode set = new ObjectMapper().createObjectNode();
 				set.setAll(data);
 				set.put("lastContactTs", System.currentTimeMillis());
-			
+								
+				ObjectNode p = new ObjectMapper().createObjectNode();
+				p.put("h", host);
+				p.put("gi", group);
+				p.put("ai", app);
+				p.set("props", set);
+							
 				String cypher = "merge (x:AppInstance {host:{h}, groupId:{gi}, appId:{ai}}) set x={props} return x";
 	
-				JsonNode r = neo4j.execCypher(cypher, "h",host, "gi",group, "ai",app, "props",set).toBlocking().firstOrDefault(null);
+				JsonNode r = neo4j.execCypher(cypher, p).toBlocking().firstOrDefault(null);
 				if (r!=null) {
 					return (ObjectNode) r;
 				}
