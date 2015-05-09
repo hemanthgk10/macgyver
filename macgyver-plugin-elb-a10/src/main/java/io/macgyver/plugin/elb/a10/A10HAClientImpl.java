@@ -28,13 +28,14 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
-public class A10HAClientImpl implements A10Client, Runnable {
+public class A10HAClientImpl implements A10HAClient, Runnable {
 
 	private Logger logger = LoggerFactory.getLogger(A10HAClientImpl.class);
 
@@ -84,6 +85,11 @@ public class A10HAClientImpl implements A10Client, Runnable {
 		}
 	}
 
+	public A10HAClientImpl(A10Client a, A10Client b) {
+		this();
+		clients.add(a);
+		clients.add(b);
+	}
 	public class ClientSelector extends CacheLoader<String, A10Client> {
 
 		@Override
@@ -113,6 +119,26 @@ public class A10HAClientImpl implements A10Client, Runnable {
 			}
 			throw e;
 		}
+	}
+	
+	/**
+	 * Obtains a client to the standby A10.
+	 * @return
+	 */
+	public A10Client getStandbyClient() {
+		
+		// We are going to assume that the first client that is not the active client is the standby.
+		A10Client activeClient = getActiveClient();
+		if (clients==null) {
+			return null;
+		}
+		
+		for (A10Client c: clients) {
+			if (c!=activeClient) {
+				return c;
+			}
+		}
+		return null;
 	}
 
 	protected synchronized void ensureClientIsFirstInList(A10Client c) {
