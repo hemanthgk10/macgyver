@@ -546,15 +546,18 @@ public class A10ClientImpl implements A10Client {
 			Element statusListElement = e.getChild("ha_group_status_list");
 			if (statusListElement == null
 					|| statusListElement.getChildren().isEmpty()) {
+	
 				return true;
 			}
 			String x = e.getChild("ha_group_status_list").getChildren().get(0)
-					.getChildTextTrim("local_status");
-			return Strings.nullToEmpty(x).equals("1");
+					.getText();
+		
+			return Strings.nullToEmpty(x).trim().equals("1");
 
 		} catch (ElbException e) {
 			throw e;
-		} catch (RuntimeException e) {
+		}
+		catch (RuntimeException e) {
 			throw new ElbException(e);
 		}
 	}
