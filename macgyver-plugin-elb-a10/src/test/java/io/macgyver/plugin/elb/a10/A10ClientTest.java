@@ -178,7 +178,7 @@ public class A10ClientTest {
 		String path = rr.getPath();
 		Assertions.assertThat(path).contains("format=json").contains("abc=123").contains("foo=bar").contains("method=testmethod").contains("session_id");
 		
-		String requestBody = new String(rr.getBody()); 
+		String requestBody = rr.getUtf8Body();
 		Assertions.assertThat(requestBody).isEqualTo(json.toString()); 
 	}
 	
@@ -224,7 +224,7 @@ public class A10ClientTest {
 		String path = rr.getPath();
 		Assertions.assertThat(path).contains("format=xml").contains("abc=123").contains("foo=bar").contains("method=testmethod").contains("session_id");
 		
-		String requestBody = new String(rr.getBody()); 
+		String requestBody = rr.getBody().readUtf8();
 		Assertions.assertThat(requestBody).isEqualTo(new XMLOutputter(Format.getRawFormat()).outputString(xml));
 		
 	}
