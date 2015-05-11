@@ -55,6 +55,7 @@ dependencies {
     compile 'com.ning:async-http-client:1.7.23'
     
     compile "com.squareup.okhttp:okhttp:${OKHTTP_VERSION}"
+    compile "com.squareup.okhttp:okhttp-urlconnection:${OKHTTP_VERSION}"
     
     compile "com.squareup.retrofit:retrofit:${RETROFIT_VERSION}"
     compile "com.squareup.retrofit:converter-jackson:${RETROFIT_VERSION}"

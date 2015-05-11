@@ -13,7 +13,6 @@
  */
 package io.macgyver.plugin.github;
 
-import io.macgyver.core.ConfigurationException;
 import io.macgyver.core.rest.BasicAuthInterceptor;
 import io.macgyver.core.rest.OkRest;
 import io.macgyver.core.service.BasicServiceFactory;
@@ -21,18 +20,16 @@ import io.macgyver.core.service.ServiceDefinition;
 import io.macgyver.core.service.ServiceRegistry;
 
 import java.io.IOException;
-import java.net.Proxy;
 import java.util.Properties;
 import java.util.Set;
 
 import org.kohsuke.github.GitHub;
+import org.kohsuke.github.GitHubBuilder;
+import org.kohsuke.github.extras.OkHttpConnector;
 
 import com.google.gwt.thirdparty.guava.common.base.Strings;
-import com.hazelcast.security.Credentials;
-import com.squareup.okhttp.Authenticator;
 import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
+import com.squareup.okhttp.OkUrlFactory;
 
 public class GitHubServiceFactory extends BasicServiceFactory<GitHub> {
 
@@ -55,34 +52,30 @@ public class GitHubServiceFactory extends BasicServiceFactory<GitHub> {
 
 			String message = "connecting to {} using {}";
 
+			GitHubBuilder builder = new GitHubBuilder();
+
+			builder = builder.withConnector(new OkHttpConnector(
+					new OkUrlFactory(new OkHttpClient())));
+
 			GitHub gh = null;
+
 			if (url != null) {
-
-				if (useToken) {
-					logger.info(message, url, "oauth");
-					gh = GitHub.connectToEnterprise(url, oauthToken);
-				} else if (useUsernamePassword) {
-					logger.info(message, url, "username/password");
-					gh = GitHub.connectToEnterprise(url, username, password);
-				} else {
-					throw new ConfigurationException(
-							"connection to GitHub enterprise requires either oauth token or usernmae/password");
-				}
-
+				builder = builder.withEndpoint(url);
 			} else {
-
-				if (useToken) {
-					logger.info(message, "api.github.com", "oauth");
-					gh = GitHub.connectUsingOAuth(oauthToken);
-				} else if (useUsernamePassword) {
-					logger.info(message, "api.github.com", "username/password");
-					gh = GitHub.connectUsingPassword(username, password);
-				} else {
-					logger.info(message, "api.github.com", "anonymous");
-					gh = GitHub.connectAnonymously();
-				}
-
+				builder = builder.withEndpoint("https://api.github.com");
 			}
+
+			if (useToken) {
+				logger.info(message, url, "oauth");
+				builder = builder.withOAuthToken(oauthToken);
+
+			} else if (useUsernamePassword) {
+				logger.info(message, url, "username/password");
+				builder = builder.withPassword(username, password);
+			}
+
+			gh = builder.build();
+
 			return gh;
 		} catch (IOException e) {
 			throw new io.macgyver.core.ConfigurationException(
@@ -96,25 +89,25 @@ public class GitHubServiceFactory extends BasicServiceFactory<GitHub> {
 
 		OkHttpClient c = new OkHttpClient();
 		GitHub h;
-	
+
 		final String oauthToken = primaryDefinition.getProperties()
 				.getProperty("oauthToken");
 		final String username = primaryDefinition.getProperties().getProperty(
 				"username");
 		final String password = primaryDefinition.getProperties().getProperty(
 				"password");
-		String url =  primaryDefinition.getProperties().getProperty(
-				"url");
+		String url = primaryDefinition.getProperties().getProperty("url");
 		if (!Strings.isNullOrEmpty(oauthToken)) {
 			logger.info("using oauth");
-			c.interceptors().add(new BasicAuthInterceptor(oauthToken, "x-oauth-token"));
+			c.interceptors().add(
+					new BasicAuthInterceptor(oauthToken, "x-oauth-token"));
 
 		} else if (!Strings.isNullOrEmpty(username)) {
-			logger.info("using username/password auth for OkRest client: "+username+"/"+password);
+			logger.info("using username/password auth for OkRest client: "
+					+ username + "/" + password);
 			c.interceptors().add(new BasicAuthInterceptor(username, password));
 
-		}
-		else {
+		} else {
 			logger.info("using anonymous auth");
 		}
 
@@ -122,9 +115,8 @@ public class GitHubServiceFactory extends BasicServiceFactory<GitHub> {
 			url = "https://api.github.com";
 		}
 		OkRest rest = new OkRest(c).url(url);
-		
-		registry.registerCollaborator(primaryDefinition.getName() + "Api",
-				rest);
+
+		registry.registerCollaborator(primaryDefinition.getName() + "Api", rest);
 
 	}
 
