@@ -14,7 +14,8 @@
 package io.macgyver.core.config;
 
 import io.macgyver.core.web.handlebars.DummyHandlebarsController;
-import io.macgyver.core.web.handlebars.MacGyverHandlebarsViewResolver;
+import io.macgyver.core.web.handlebars.MacGyverMustacheTemplateLoader;
+import io.macgyver.core.web.handlebars.MacGyverMustacheViewResolver;
 import io.macgyver.core.web.mvc.CoreApiController;
 import io.macgyver.core.web.mvc.HomeController;
 import io.macgyver.core.web.mvc.MacgyverWeb;
@@ -29,30 +30,45 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.boot.autoconfigure.mustache.MustacheEnvironmentCollector;
+import org.springframework.boot.autoconfigure.mustache.MustacheProperties;
+import org.springframework.boot.autoconfigure.mustache.MustacheResourceTemplateLoader;
+import org.springframework.boot.autoconfigure.mustache.web.MustacheViewResolver;
 import org.springframework.boot.autoconfigure.web.WebMvcAutoConfiguration;
 import org.springframework.boot.context.embedded.ServletRegistrationBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.web.servlet.ViewResolver;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
-import com.github.jknack.handlebars.springmvc.HandlebarsViewResolver;
+import com.samskivert.mustache.Mustache;
+import com.samskivert.mustache.Mustache.Collector;
+import com.samskivert.mustache.Mustache.Compiler;
+import com.samskivert.mustache.Mustache.TemplateLoader;
 
 @Configuration
 @ComponentScan(basePackageClasses = { HomeController.class })
 @AutoConfigureAfter(WebMvcAutoConfiguration.class)
 @EnableGlobalMethodSecurity(securedEnabled = true, proxyTargetClass = true,prePostEnabled=true)
+@EnableConfigurationProperties(MustacheProperties.class)
 public class WebConfig implements EnvironmentAware {
 
 	Logger logger = LoggerFactory.getLogger(WebConfig.class);
 
 	@Autowired
 	private final org.springframework.core.io.ResourceLoader resourceLoader = new DefaultResourceLoader();
+
+	@Autowired
+	private Environment environment;
 
 	@Override
 	public void setEnvironment(Environment environment) {
@@ -118,13 +134,44 @@ public class WebConfig implements EnvironmentAware {
 	
 	
 	@Bean
-	public ViewResolver macHandlebarsViewResolver() {
+	public MustacheResourceTemplateLoader macMustacheTemplateLoader() {
 		
-		HandlebarsViewResolver r = new MacGyverHandlebarsViewResolver();
+		return new MacGyverMustacheTemplateLoader();
 		
-		return r;
 
 	}
+	
+	
+	@Bean
+	public Mustache.Compiler macMustacheCompiler() {
+		return Mustache.compiler().withLoader(macMustacheTemplateLoader())
+				.withCollector(collector());
+	}
+
+	private Collector collector() {
+		MustacheEnvironmentCollector collector = new MustacheEnvironmentCollector();
+		collector.setEnvironment(this.environment);
+		return collector;
+	}
+
+
+	@Autowired
+	MustacheProperties mustacheProperties;
+		
+	@Bean
+		public MacGyverMustacheViewResolver macMustacheViewResolver() {
+			MacGyverMustacheViewResolver resolver = new MacGyverMustacheViewResolver();
+			resolver.setPrefix(mustacheProperties.getPrefix());
+			resolver.setSuffix(mustacheProperties.getSuffix());
+			resolver.setCache(mustacheProperties.isCache());
+			resolver.setViewNames(mustacheProperties.getViewNames());
+			resolver.setContentType(mustacheProperties.getContentType());
+			resolver.setCharset(mustacheProperties.getCharset());
+			resolver.setCompiler(macMustacheCompiler());
+			resolver.setOrder(Ordered.LOWEST_PRECEDENCE - 10);
+			return resolver;
+		}
+
 	
 	@Bean
 	public DummyHandlebarsController macDummyHandlebarsController() {

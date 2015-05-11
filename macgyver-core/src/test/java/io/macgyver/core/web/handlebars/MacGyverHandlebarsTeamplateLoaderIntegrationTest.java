@@ -30,16 +30,18 @@ public class MacGyverHandlebarsTeamplateLoaderIntegrationTest extends MacGyverIn
 	@Inject
 	ApplicationContext ctx;
 	
+	@Inject
+	public MacGyverMustacheTemplateLoader loader;
 	
 	@Test
 	public void testGetResourceNotFound() throws IOException {
 		assertThat(ctx).isNotNull();
 		
-		MacGyverHandlebarsTemplateLoader mtl = new MacGyverHandlebarsTemplateLoader(ctx);
 		
 		
 		
-		assertThat(mtl.getResource("something/not/found")).isNull();
+		
+		assertThat(loader.getTemplate("/something/not/found")).isNull();
 
 		
 		
@@ -48,24 +50,11 @@ public class MacGyverHandlebarsTeamplateLoaderIntegrationTest extends MacGyverIn
 	public void testResolve() throws IOException {
 		assertThat(ctx).isNotNull();
 		
-		MacGyverHandlebarsTemplateLoader mtl = new MacGyverHandlebarsTemplateLoader(ctx);
 		
-		assertThat(mtl.getPrefix()).isEqualTo("/");
-		assertThat(mtl.getSuffix()).isEqualTo(".hbs");
+		assertThat(loader.getTemplate("macgyver-login")).isNotNull();
 		
-		assertThat(mtl.resolve("web/macgyver-login")).isEqualTo("/web/macgyver-login.hbs");
-		assertThat(mtl.resolve("/web/macgyver-login")).isEqualTo("/web/macgyver-login.hbs");
-		
-		
-		assertThat(mtl.resolve("/not/found/anywhere")).isEqualTo("/not/found/anywhere.hbs");
 		
 	}
 	
-	@Test
-	public void testGetResource() throws IOException {
-		MacGyverHandlebarsTemplateLoader mtl = new MacGyverHandlebarsTemplateLoader(ctx);
-		
-		assertThat(mtl.getResource("/macgyver-login.hbs")).isNotNull().isInstanceOf(URL.class);
-		assertThat(mtl.getResource("macgyver-login.hbs")).isNotNull().isInstanceOf(URL.class);
-	}
+	
 }

@@ -31,7 +31,7 @@ public class LoginController {
 	
 	public ModelAndView home() {
 
-		ModelAndView m = new ModelAndView("macgyver-login");
+		ModelAndView m = new ModelAndView("/macgyver-login");
 		return m;
 	
 

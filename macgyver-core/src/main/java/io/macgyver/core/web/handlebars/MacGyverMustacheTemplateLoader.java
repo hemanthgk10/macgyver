@@ -16,62 +16,83 @@ package io.macgyver.core.web.handlebars;
 import io.macgyver.core.Bootstrap;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URL;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.mustache.MustacheResourceTemplateLoader;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 
-import com.github.jknack.handlebars.springmvc.SpringTemplateLoader;
+import com.samskivert.mustache.Template;
 
-public class MacGyverHandlebarsTemplateLoader extends SpringTemplateLoader {
 
+public class MacGyverMustacheTemplateLoader extends MustacheResourceTemplateLoader {
+
+	@Autowired
 	ApplicationContext applicationContext;
 
-	Logger logger = LoggerFactory.getLogger(MacGyverHandlebarsTemplateLoader.class);
+	Logger logger = LoggerFactory.getLogger(MacGyverMustacheTemplateLoader.class);
 
-	public MacGyverHandlebarsTemplateLoader(ResourceLoader loader) {
-		super(loader);
+	public MacGyverMustacheTemplateLoader( ) {
+		super();
+		setCharset("UTF-8");
 	}
 
-	public MacGyverHandlebarsTemplateLoader(ApplicationContext applicationContext) {
-		super(applicationContext);
-		this.applicationContext = applicationContext;
-	}
 
+	
 	@Override
-	protected URL getResource(String location) throws IOException {
+	public Reader getTemplate(String name) throws IOException {
 
-		URL url = null;
-
+		
+		logger.debug("getTemplate({})",name);
+		Reader reader = null;
+		String location = name+".html";
 		try {
-			if (logger.isDebugEnabled()) {
-				logger.debug("searching for {} on filesystem...",location);
-			}
+		
 			File resourceLocation = new File(Bootstrap.getInstance()
 					.getWebDir(), location);
+			
+			if (logger.isDebugEnabled()) {
+				logger.debug("Searching for {} on filesystem: {}",location,resourceLocation);
+			}
 			if (resourceLocation != null && resourceLocation.exists()) {
 
-				url = resourceLocation.toURI().toURL();
+				reader = new FileReader(resourceLocation);
+				
 		
+				if (logger.isDebugEnabled()) {
+					logger.debug("resolved template for {} to {}", resourceLocation );
+				}
 			}
 
-			if (url==null) {
+			if (reader==null) {
 				
 				// we couldn't find a file in web dir...fall back to looking in the classpath...
 				
-				if (logger.isDebugEnabled()) {
-					logger.debug("searching for {} in classpath...",location);
-				}
+				
 				String resourceName = "classpath:"
 						+ appendPath("web", location);
+				
+				if (logger.isDebugEnabled()) {
+					logger.debug("searching for {} in classpath: {}",location, resourceName);
+				}
 				Resource resource = applicationContext
 						.getResource(resourceName);
 				if (resource.exists()) {
-					url = resource.getURL();
+					
+					if (logger.isDebugEnabled()) {
+						logger.debug("resolved template for {} to {}", location, resource);
+					}
+					
+					reader = new InputStreamReader(resource.getInputStream());
+						
 				}
 
 			}
@@ -80,11 +101,7 @@ public class MacGyverHandlebarsTemplateLoader extends SpringTemplateLoader {
 			logger.warn("problem loading template", e);
 		}
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("resolved template for {} to {}", location, url);
-		}
-
-		return url;
+		return reader;
 
 	}
 
