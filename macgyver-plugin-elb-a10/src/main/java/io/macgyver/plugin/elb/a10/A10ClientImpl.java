@@ -199,8 +199,7 @@ public class A10ClientImpl implements A10Client {
 			FormEncodingBuilder b = new FormEncodingBuilder();
 			b = b.add("username", username).add("password", password)
 					.add("format", "json").add("method", "authenticate");
-	
-			
+
 			Request r = new Request.Builder().url(getUrl())
 					.addHeader("Accept", "application/json").post(b.build())
 					.build();
@@ -262,9 +261,10 @@ public class A10ClientImpl implements A10Client {
 	}
 
 	@Override
-	public ObjectNode invokeJson(String method,  String... args) {
+	public ObjectNode invokeJson(String method, String... args) {
 		return invokeJson(method, null, toMap(args));
 	}
+
 	@Override
 	public ObjectNode invokeJson(String method, JsonNode body, String... args) {
 		return invokeJson(method, body, toMap(args));
@@ -274,6 +274,7 @@ public class A10ClientImpl implements A10Client {
 	public Element invokeXml(String method, Element body, String... args) {
 		return invokeXml(method, body, toMap(args));
 	}
+
 	@Override
 	public Element invokeXml(String method, String... args) {
 		return invokeXml(method, null, toMap(args));
@@ -285,9 +286,11 @@ public class A10ClientImpl implements A10Client {
 	}
 
 	public ObjectNode invokeJson(String method, Map<String, String> params) {
-		return invokeJson(method,null,params);
+		return invokeJson(method, null, params);
 	}
-	public ObjectNode invokeJson(String method, JsonNode body, Map<String, String> params) {
+
+	public ObjectNode invokeJson(String method, JsonNode body,
+			Map<String, String> params) {
 		if (params == null) {
 			params = Maps.newConcurrentMap();
 		}
@@ -299,11 +302,13 @@ public class A10ClientImpl implements A10Client {
 
 	@Override
 	public Element invokeXml(String method, Map<String, String> params) {
-		
-		return invokeXml(method,null,params);
+
+		return invokeXml(method, null, params);
 	}
+
 	@Override
-	public Element invokeXml(String method, Element body, Map<String, String> params) {
+	public Element invokeXml(String method, Element body,
+			Map<String, String> params) {
 		if (params == null) {
 			params = Maps.newConcurrentMap();
 		}
@@ -312,8 +317,6 @@ public class A10ClientImpl implements A10Client {
 
 		return invokeXml(copy, body);
 	}
-
-	
 
 	protected Element parseXmlResponse(Response response, String method) {
 		try {
@@ -330,8 +333,6 @@ public class A10ClientImpl implements A10Client {
 			Preconditions.checkNotNull(response);
 
 			String contentType = response.header("Content-type");
-
-			
 
 			// aXAPI is very sketchy with regard to content type of response.
 			// Sometimes we get XML/HTML back even though
@@ -365,32 +366,33 @@ public class A10ClientImpl implements A10Client {
 			String method = x.get("method");
 			Preconditions.checkArgument(!Strings.isNullOrEmpty(method),
 					"method argument must be passed");
-			
+
 			Response resp;
-			
-			if (optionalBody==null) {
-				FormEncodingBuilder fb = new FormEncodingBuilder()
-					.add("session_id", getAuthToken()).add("format", "json");
-		
-				for (Map.Entry<String, String> entry: x.entrySet()) {
+
+			if (optionalBody == null) {
+				FormEncodingBuilder fb = new FormEncodingBuilder().add(
+						"session_id", getAuthToken()).add("format", "json");
+
+				for (Map.Entry<String, String> entry : x.entrySet()) {
 					fb = fb.add(entry.getKey(), entry.getValue());
 				}
 
 				resp = getClient().newCall(
-				new Request.Builder().url(getUrl()).post(fb.build())
-						.build()).execute();
+						new Request.Builder().url(getUrl()).post(fb.build())
+								.build()).execute();
 			} else {
-				
-				String url = formatUrl(x,"json");
+
+				String url = formatUrl(x, "json");
 				String bodyAsString = optionalBody.toString();
-								
-				final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+
+				final MediaType JSON = MediaType
+						.parse("application/json; charset=utf-8");
 				resp = getClient().newCall(
 						new Request.Builder().url(url).post(
-								
-								RequestBody.create(JSON,bodyAsString))
-									.header("Content-Type", "application/json")
-									.build()).execute();
+
+						RequestBody.create(JSON, bodyAsString))
+								.header("Content-Type", "application/json")
+								.build()).execute();
 			}
 
 			return parseJsonResponse(resp, method);
@@ -408,32 +410,33 @@ public class A10ClientImpl implements A10Client {
 			String method = x.get("method");
 			Preconditions.checkArgument(!Strings.isNullOrEmpty(method),
 					"method argument must be passed");
-			
-			String url = formatUrl(x,"xml");
-			
+
+			String url = formatUrl(x, "xml");
+
 			Response resp;
-			
-			if (optionalBody==null) { 
-				FormEncodingBuilder fb = new FormEncodingBuilder()
-				.add("session_id", getAuthToken()).add("format", "xml");
-				for (Map.Entry<String, String> entry: x.entrySet()) {
+
+			if (optionalBody == null) {
+				FormEncodingBuilder fb = new FormEncodingBuilder().add(
+						"session_id", getAuthToken()).add("format", "xml");
+				for (Map.Entry<String, String> entry : x.entrySet()) {
 					fb = fb.add(entry.getKey(), entry.getValue());
 				}
 				resp = getClient().newCall(
 						new Request.Builder().url(getUrl()).post(fb.build())
-							.build()).execute();
-			} else { 
-				
-				String bodyAsString = new XMLOutputter(Format.getRawFormat()).outputString(optionalBody);
+								.build()).execute();
+			} else {
+
+				String bodyAsString = new XMLOutputter(Format.getRawFormat())
+						.outputString(optionalBody);
 				final MediaType XML = MediaType.parse("text/xml");
 
 				resp = getClient().newCall(
-						new Request.Builder().url(url).post(
-								RequestBody.create(XML, bodyAsString))
-									.header("Content-Type", "text/xml")
-									.build()).execute();
+						new Request.Builder().url(url)
+								.post(RequestBody.create(XML, bodyAsString))
+								.header("Content-Type", "text/xml").build())
+						.execute();
 			}
-	
+
 			Element element = parseXmlResponse(resp, method);
 			throwExceptionIfNecessary(element);
 			return element;
@@ -444,8 +447,6 @@ public class A10ClientImpl implements A10Client {
 
 	}
 
-	
-
 	AtomicReference<OkHttpClient> clientReference = new AtomicReference<OkHttpClient>();
 
 	protected OkHttpClient getClient() {
@@ -453,7 +454,7 @@ public class A10ClientImpl implements A10Client {
 		// not guaranteed to be singleton, but close enough
 		if (clientReference.get() == null) {
 			OkHttpClient c = new OkHttpClient();
-			
+
 			c.setConnectTimeout(20, TimeUnit.SECONDS);
 
 			c.setHostnameVerifier(withoutHostnameVerification());
@@ -546,13 +547,15 @@ public class A10ClientImpl implements A10Client {
 			Element statusListElement = e.getChild("ha_group_status_list");
 			if (statusListElement == null
 					|| statusListElement.getChildren().isEmpty()) {
-	
+
 				return true;
 			}
-			String x = e.getChild("ha_group_status_list").getChildren().get(0)
-					.getText();
-		
-			return Strings.nullToEmpty(x).trim().equals("1");
+			String x = statusListElement.getChildren().get(0)
+					.getChild("local_status").getText();
+			if (Strings.nullToEmpty(x).trim().equals("1")) {
+				return true;
+			}
+			return false;
 
 		} catch (ElbException e) {
 			throw e;
@@ -565,15 +568,16 @@ public class A10ClientImpl implements A10Client {
 	public String toString() {
 		return MoreObjects.toStringHelper(this).add("url", url).toString();
 	}
-	
-	protected String formatUrl(Map<String,String> x, String format) { 
-		String url = getUrl() + "?session_id=" + getAuthToken() + "&format=" + format;
-		
-		for (String key : x.keySet()) { 
-			String val = x.get(key); 
+
+	protected String formatUrl(Map<String, String> x, String format) {
+		String url = getUrl() + "?session_id=" + getAuthToken() + "&format="
+				+ format;
+
+		for (String key : x.keySet()) {
+			String val = x.get(key);
 			url += "&" + key + "=" + val;
 		}
-		
+
 		return url;
 	}
 

@@ -257,12 +257,34 @@ public class A10ClientTest {
 
 		mockServer
 				.enqueue(new MockResponse()
-						.setBody("<response status=\"ok\"><ha_group_status_list><local_status>0</local_status></ha_group_status_list></response>"));
+						.setBody("<response status=\"ok\">\n" + 
+								"  <ha_group_status_list>\n" + 
+								"    <ha_group_status>\n" + 
+								"      <id>1</id>\n" + 
+								"      <local_status>0</local_status>\n" + 
+								"      <local_priority>100</local_priority>\n" + 
+								"      <peer_status>0</peer_status>\n" + 
+								"      <peer_priority>50</peer_priority>\n" + 
+								"      <force_self_standby>0</force_self_standby>\n" + 
+								"    </ha_group_status>\n" + 
+								"  </ha_group_status_list>\n" + 
+								"</response>"));
 		Assertions.assertThat(testClient.isActive()).isFalse();
 
 		mockServer
 				.enqueue(new MockResponse()
-						.setBody("<ha_group_status_list><local_status>1</local_status></ha_group_status_list>"));
+						.setBody("<response status=\"ok\">\n" + 
+								"  <ha_group_status_list>\n" + 
+								"    <ha_group_status>\n" + 
+								"      <id>1</id>\n" + 
+								"      <local_status>1</local_status>\n" + 
+								"      <local_priority>100</local_priority>\n" + 
+								"      <peer_status>0</peer_status>\n" + 
+								"      <peer_priority>50</peer_priority>\n" + 
+								"      <force_self_standby>0</force_self_standby>\n" + 
+								"    </ha_group_status>\n" + 
+								"  </ha_group_status_list>\n" + 
+								"</response>"));
 		Assertions.assertThat(testClient.isActive()).isTrue();
 	}
 

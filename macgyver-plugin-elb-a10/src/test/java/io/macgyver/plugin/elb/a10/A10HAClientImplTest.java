@@ -53,10 +53,32 @@ public class A10HAClientImplTest {
 		// Set up response so that #2 is active and #1 is standby
 		mock1
 		.enqueue(new MockResponse()
-				.setBody("<response status=\"ok\"><ha_group_status_list><local_status>0</local_status></ha_group_status_list></response>"));
+				.setBody("<response status=\"ok\">\n" + 
+						"  <ha_group_status_list>\n" + 
+						"    <ha_group_status>\n" + 
+						"      <id>1</id>\n" + 
+						"      <local_status>0</local_status>\n" + 
+						"      <local_priority>100</local_priority>\n" + 
+						"      <peer_status>0</peer_status>\n" + 
+						"      <peer_priority>50</peer_priority>\n" + 
+						"      <force_self_standby>0</force_self_standby>\n" + 
+						"    </ha_group_status>\n" + 
+						"  </ha_group_status_list>\n" + 
+						"</response>"));
 		mock2
 		.enqueue(new MockResponse()
-				.setBody("<response status=\"ok\"><ha_group_status_list><local_status>1</local_status></ha_group_status_list></response>"));
+				.setBody("<response status=\"ok\">\n" + 
+						"  <ha_group_status_list>\n" + 
+						"    <ha_group_status>\n" + 
+						"      <id>1</id>\n" + 
+						"      <local_status>1</local_status>\n" + 
+						"      <local_priority>100</local_priority>\n" + 
+						"      <peer_status>0</peer_status>\n" + 
+						"      <peer_priority>50</peer_priority>\n" + 
+						"      <force_self_standby>0</force_self_standby>\n" + 
+						"    </ha_group_status>\n" + 
+						"  </ha_group_status_list>\n" + 
+						"</response>"));
 		
 		// Now verify this on each client individually
 		Assertions.assertThat(c1.isActive()).isFalse();
@@ -65,10 +87,32 @@ public class A10HAClientImplTest {
 		// Set up the same test #2 active and #1 standby
 		mock1
 		.enqueue(new MockResponse()
-				.setBody("<response status=\"ok\"><ha_group_status_list><local_status>0</local_status></ha_group_status_list></response>"));
+				.setBody("<response status=\"ok\">\n" + 
+						"  <ha_group_status_list>\n" + 
+						"    <ha_group_status>\n" + 
+						"      <id>1</id>\n" + 
+						"      <local_status>0</local_status>\n" + 
+						"      <local_priority>100</local_priority>\n" + 
+						"      <peer_status>0</peer_status>\n" + 
+						"      <peer_priority>50</peer_priority>\n" + 
+						"      <force_self_standby>0</force_self_standby>\n" + 
+						"    </ha_group_status>\n" + 
+						"  </ha_group_status_list>\n" + 
+						"</response>"));
 		mock2
 		.enqueue(new MockResponse()
-				.setBody("<response status=\"ok\"><ha_group_status_list><local_status>1</local_status></ha_group_status_list></response>"));
+				.setBody("<response status=\"ok\">\n" + 
+						"  <ha_group_status_list>\n" + 
+						"    <ha_group_status>\n" + 
+						"      <id>1</id>\n" + 
+						"      <local_status>1</local_status>\n" + 
+						"      <local_priority>100</local_priority>\n" + 
+						"      <peer_status>0</peer_status>\n" + 
+						"      <peer_priority>50</peer_priority>\n" + 
+						"      <force_self_standby>0</force_self_standby>\n" + 
+						"    </ha_group_status>\n" + 
+						"  </ha_group_status_list>\n" + 
+						"</response>"));
 
 	
 		// Now establish an HA Client with the two
@@ -82,10 +126,32 @@ public class A10HAClientImplTest {
 		// simulate a failover
 		mock1
 		.enqueue(new MockResponse()
-				.setBody("<response status=\"ok\"><ha_group_status_list><local_status>1</local_status></ha_group_status_list></response>"));
+				.setBody("<response status=\"ok\">\n" + 
+						"  <ha_group_status_list>\n" + 
+						"    <ha_group_status>\n" + 
+						"      <id>1</id>\n" + 
+						"      <local_status>1</local_status>\n" + 
+						"      <local_priority>100</local_priority>\n" + 
+						"      <peer_status>0</peer_status>\n" + 
+						"      <peer_priority>50</peer_priority>\n" + 
+						"      <force_self_standby>0</force_self_standby>\n" + 
+						"    </ha_group_status>\n" + 
+						"  </ha_group_status_list>\n" + 
+						"</response>"));
 		mock2
 		.enqueue(new MockResponse()
-				.setBody("<response status=\"ok\"><ha_group_status_list><local_status>0</local_status></ha_group_status_list></response>"));
+				.setBody("<response status=\"ok\">\n" + 
+						"  <ha_group_status_list>\n" + 
+						"    <ha_group_status>\n" + 
+						"      <id>1</id>\n" + 
+						"      <local_status>0</local_status>\n" + 
+						"      <local_priority>100</local_priority>\n" + 
+						"      <peer_status>0</peer_status>\n" + 
+						"      <peer_priority>50</peer_priority>\n" + 
+						"      <force_self_standby>0</force_self_standby>\n" + 
+						"    </ha_group_status>\n" + 
+						"  </ha_group_status_list>\n" + 
+						"</response>"));
 		
 		// need to reset the status or else the HAClient will cache the active client
 		haClient.resetClientHAStatus(); // "forget" the active A10

@@ -30,8 +30,10 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.boot.autoconfigure.mustache.MustacheAutoConfiguration;
 import org.springframework.boot.autoconfigure.mustache.MustacheEnvironmentCollector;
 import org.springframework.boot.autoconfigure.mustache.MustacheProperties;
 import org.springframework.boot.autoconfigure.mustache.MustacheResourceTemplateLoader;
@@ -60,6 +62,7 @@ import com.samskivert.mustache.Mustache.TemplateLoader;
 @AutoConfigureAfter(WebMvcAutoConfiguration.class)
 @EnableGlobalMethodSecurity(securedEnabled = true, proxyTargetClass = true,prePostEnabled=true)
 @EnableConfigurationProperties(MustacheProperties.class)
+@EnableAutoConfiguration(exclude={MustacheAutoConfiguration.class})
 public class WebConfig implements EnvironmentAware {
 
 	Logger logger = LoggerFactory.getLogger(WebConfig.class);

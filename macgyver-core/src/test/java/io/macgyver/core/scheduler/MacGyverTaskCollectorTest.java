@@ -22,7 +22,5 @@ public class MacGyverTaskCollectorTest {
 	public void testIt() {
 		MacGyverTaskCollector c = new MacGyverTaskCollector();
 		Assertions.assertThat(c.enhanceCronExpression("* * * * *")).isEqualTo("* * * * *");
-		Assertions.assertThat(c.enhanceCronExpression("* * * * * ?")).isEqualTo("* * * * *");
-		Assertions.assertThat(c.enhanceCronExpression("1 2 3 4 5 ?")).isEqualTo("2 3 4 5 *");
-	}
+    }
 }

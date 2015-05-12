@@ -52,27 +52,7 @@ public class MacGyverTaskCollector implements TaskCollector {
 	String enhanceCronExpression(String input) {
 		input = input.trim();
 		String output = input;
-		if (output.contains("?")) {
-			logger.warn("TRANSITIONAL: cron expression looks like a quartz expression: "
-					+ input);
-			output = output.replace("?", "*");
-
-		}
-		String[] tokens = Strings.split(output, ' ');
-		if (tokens.length > 5) {
-			StringBuffer sb = new StringBuffer();
-			for (int i = 0; i < tokens.length; i++) {
-				if (i > 0) {
-					sb.append(tokens[i] + " ");
-				}
-			}
-			output = sb.toString().trim();
-
-		}
-		if (!input.equals(output)) {
-			logger.warn("TRANSITIONAL: converted cron expression from '{}' to '{}'", input,
-					output);
-		}
+		
 		return output;
 	}
 
