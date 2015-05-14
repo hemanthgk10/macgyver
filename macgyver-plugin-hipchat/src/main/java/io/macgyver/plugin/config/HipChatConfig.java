@@ -16,7 +16,7 @@ package io.macgyver.plugin.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import io.macgyver.chat.hipchat.HipChatServiceFactory;
+import io.macgyver.plugin.hipchat.HipChatServiceFactory;
 
 @Configuration
 public class HipChatConfig {
