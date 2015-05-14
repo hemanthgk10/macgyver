@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.macgyver.chat.hipchat;
+package io.macgyver.plugin.hipchat;
 
 import io.macgyver.core.service.ServiceDefinition;
 import io.macgyver.core.service.ServiceRegistry;
@@ -24,11 +24,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import com.ning.http.client.AsyncHttpClient;
 
 public class HipChatServiceFactory extends
-		io.macgyver.core.service.ServiceFactory<HipChat> {
-
-	@Autowired
-	@Qualifier("macAsyncHttpClient")
-	AsyncHttpClient client;
+		io.macgyver.core.service.ServiceFactory<HipChatClientImpl> {
 
 	public HipChatServiceFactory() {
 		super("hipchat");
@@ -36,9 +32,12 @@ public class HipChatServiceFactory extends
 	}
 
 	@Override
-	protected HipChat doCreateInstance(ServiceDefinition def) {
-		HipChat c = new HipChat(client);
-		c.setApiKey(def.getProperties().getProperty("apiKey"));
+	protected HipChatClientImpl doCreateInstance(ServiceDefinition def) {
+		
+		String token = def.getProperties().getProperty("token", "");
+		String url = def.getProperties().getProperty("url","https://api.hipchat.com");
+		HipChatClientImpl c = new HipChatClientImpl(url, token);
+		
 		return c;
 	}
 
