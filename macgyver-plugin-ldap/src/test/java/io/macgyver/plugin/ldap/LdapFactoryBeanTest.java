@@ -11,9 +11,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.macgyver.ldap;
+package io.macgyver.plugin.ldap;
 
 import io.macgyver.core.service.ServiceRegistry;
+import io.macgyver.plugin.ldap.LdapServiceFactory;
 import io.macgyver.test.MacGyverIntegrationTest;
 
 import org.junit.Assert;

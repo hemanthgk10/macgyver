@@ -13,7 +13,7 @@
  */
 package io.macgyver.plugin.config;
 
-import io.macgyver.ldap.LdapServiceFactory;
+import io.macgyver.plugin.ldap.LdapServiceFactory;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
