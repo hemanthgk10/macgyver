@@ -28,6 +28,11 @@ public class RestException extends MacGyverException {
 		this.statusCode = statusCode;
 	}
 	
+	public RestException(int statusCode, String message) { 
+		super("status: " + statusCode + "; message: " + message);
+		this.statusCode = statusCode;
+	}
+	
 	public int getStatusCode() {
 		return statusCode;
 	}

@@ -203,6 +203,8 @@ public class OkRest {
 					sb.append(URLEncoder.encode(x.getKey(), "UTF8"));
 					sb.append("=");
 					sb.append(URLEncoder.encode(x.getValue(), "UTF8"));
+					
+					count++;
 				}
 			}
 			return sb.toString();

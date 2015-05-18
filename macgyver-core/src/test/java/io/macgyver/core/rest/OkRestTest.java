@@ -32,6 +32,19 @@ public class OkRestTest {
 				.toString());
 		return okRest;
 	}
+	
+	@Test
+	public void testMultiParamPath() throws IOException, InterruptedException { 
+		mockServer.enqueue(new MockResponse().setBody("{}"));
+
+		OkRest okRest = new OkRest(okClient,mockServer.getUrl("/test").toString()); 
+		okRest.queryParameter("abc", "def").queryParameter("xyz","123").request().get().execute().body();	
+		RecordedRequest rr = mockServer.takeRequest();
+		
+		Assertions.assertThat(rr.getPath()).isEqualTo("/test?abc=def&xyz=123");
+	
+	}
+	
 
 	@Test
 	public void testPath() {
