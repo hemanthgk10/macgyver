@@ -105,12 +105,13 @@ public class HipChatClientImpl implements HipChatClient {
 							.queryParameter(entry.getKey(), entry.getValue());
 				}
 			}
+			
 			Response response = rest.request().get().execute();
 			if (response.isSuccessful()) {
 				return mapper.readTree(response.body().charStream());
 			}
 
-			throw new RestException(response.code());
+			throw new RestException(response.code(), response.message());
 		} catch (IOException e) {
 			throw new RestException(e);
 		}
