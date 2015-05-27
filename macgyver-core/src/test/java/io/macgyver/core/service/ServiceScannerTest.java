@@ -50,7 +50,7 @@ public class ServiceScannerTest extends MacGyverIntegrationTest {
 
 			@Override
 			public void call(NodeInfo t1) {
-				System.out.println(t1.getNeoRxClient());
+				//System.out.println(t1.getNeoRxClient());
 				
 			}};
 		ts.addDecorationAction(action);

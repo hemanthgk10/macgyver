@@ -1,4 +1,5 @@
 include   'macgyver-core',
+    'macgyver-plugin-artifactory',
     'macgyver-plugin-atlassian',
     'macgyver-plugin-ci',
     'macgyver-plugin-ci-jenkins',
