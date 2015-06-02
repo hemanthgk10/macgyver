@@ -17,6 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.macgyver.core.test.StandaloneServiceBuilder;
 import io.macgyver.test.MacGyverIntegrationTest;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -74,6 +75,68 @@ public class JiraClientTest   {
 		assertThat(recordedRequest.getHeader("Content-Type"))
 				.contains("application/json");
 
+	assertThat(recordedRequest.getPath()).isEqualTo("/rest/issue");
+
+	}
+	
+	/**
+	 * This is not a test of the actual JIRA REST API.  
+	 */
+	@Test
+	public void testGetIssue() throws Exception {
+
+	
+		
+		mockServer.enqueue(new MockResponse().setBody("{\"foo\":\"bar\"}"));
+		JiraClientImpl c = new JiraClientImpl(mockServer.getUrl("/rest").toExternalForm(), "username", "password");
+		
+		JsonNode n = c.getIssue("JIRA-999");
+		
+		RecordedRequest rr = mockServer.takeRequest();
+		
+		Assertions.assertThat(n).isNotNull();
+		Assertions.assertThat(rr.getPath()).isEqualTo("/rest/issue/JIRA-999");
+		
+	}
+	/**
+	 * This is not a test of the actual JIRA REST API.  But it does test that the payload and auth headers
+	 * are intact.
+	 * @throws Exception
+	 */
+	@Test
+	public void testPostPath() throws Exception {
+
+	
+		
+		mockServer.enqueue(new MockResponse().setBody("{\"foo\":\"bar\"}"));
+	
+
+		// create a jira client that points to our mock server
+		JiraClient client = StandaloneServiceBuilder
+				.forServiceFactory(JiraServiceFactory.class)
+				.property("url", mockServer.getUrl("/rest").toString())
+				.property("username", "JerryGarcia")
+				.property("password", "Ripple").build(JiraClient.class);
+
+		JsonNode body = new ObjectMapper().createObjectNode().put("hello",
+				"world");
+		JsonNode response = client.postJson("issue/JIRA-123", body);
+
+		assertThat(response.path("foo").asText()).isEqualTo("bar");
+		
+		// Now we can go back and make sure that what we sent matches what we
+		// think we should have sent
+		
+		RecordedRequest recordedRequest = mockServer.takeRequest();
+		
+	
+		// Make sure we sent heaers appropriately
+		assertThat(recordedRequest.getHeader("authorization"))
+				.contains("Basic SmVycnlHYXJjaWE6UmlwcGxl");  // basic auth for JerryGarcia/Ripple
+		assertThat(recordedRequest.getHeader("Content-Type"))
+				.contains("application/json");
+
+		assertThat(recordedRequest.getPath()).isEqualTo("/rest/issue/JIRA-123");
 	
 
 	}

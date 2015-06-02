@@ -13,6 +13,8 @@
  */
 package io.macgyver.plugin.atlassian.jira;
 
+import java.io.IOException;
+
 import retrofit.http.Body;
 import retrofit.http.GET;
 import retrofit.http.POST;
@@ -22,12 +24,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 public interface JiraClient {
 
-	@GET("/issue/{issue}")
-	JsonNode getIssue(@Path("issue") String issue);
+	JsonNode getIssue( String issue) throws IOException;
 
-	@GET("/{path}")
-	JsonNode getJson(@Path(value="path",encode=false) String path);
+
+	JsonNode getJson(String path) throws IOException;
 	
-	@POST("/{path}")
-	JsonNode postJson(@Path(value="path",encode=false) String path, @Body JsonNode body);
+
+	JsonNode postJson(String path, @Body JsonNode body) throws IOException;
 }
