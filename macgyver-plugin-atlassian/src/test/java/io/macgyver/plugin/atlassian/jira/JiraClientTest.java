@@ -140,4 +140,17 @@ public class JiraClientTest   {
 	
 
 	}
+	
+	@Test
+	public void testGetClient() {
+		JiraClient client = StandaloneServiceBuilder
+				.forServiceFactory(JiraServiceFactory.class)
+				.property("url", mockServer.getUrl("/rest").toString())
+				.property("username", "JerryGarcia")
+				.property("password", "Ripple").build(JiraClient.class);
+		
+		Assertions.assertThat(client.getOkRestTarget()).isNotNull();
+		Assertions.assertThat(client.getOkRestTarget().getOkRestClient()).isNotNull();
+		Assertions.assertThat(client.getOkRestTarget().getOkRestClient().getOkHttpClient()).isNotNull();
+	}
 }

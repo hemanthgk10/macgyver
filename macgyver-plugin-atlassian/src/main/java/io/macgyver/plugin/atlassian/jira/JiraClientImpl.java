@@ -11,7 +11,7 @@ import com.squareup.okhttp.OkHttpClient;
 
 public class JiraClientImpl implements JiraClient {
 
-	OkRestTarget target;
+	private OkRestTarget target;
 	
 	public JiraClientImpl(String url, String username, String password) {
 		
@@ -35,6 +35,12 @@ public class JiraClientImpl implements JiraClient {
 	@Override
 	public JsonNode postJson(String path, JsonNode body) throws IOException{
 		return target.path(path).post(body).execute(JsonNode.class);
+	}
+	
+	
+	@Override
+	public OkRestTarget getOkRestTarget() {
+		return target;
 	}
 
 }

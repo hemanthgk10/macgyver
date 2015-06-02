@@ -13,6 +13,8 @@
  */
 package io.macgyver.plugin.atlassian.jira;
 
+import io.macgyver.okrest.OkRestTarget;
+
 import java.io.IOException;
 
 import retrofit.http.Body;
@@ -31,4 +33,7 @@ public interface JiraClient {
 	
 
 	JsonNode postJson(String path, @Body JsonNode body) throws IOException;
+	
+	public OkRestTarget getOkRestTarget();
+	
 }
