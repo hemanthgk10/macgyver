@@ -1,18 +1,8 @@
 package io.macgyver.plugin.artifactory;
 
-import io.macgyver.core.rest.OkRest;
-import io.macgyver.core.rest.OkRest.InvocationBuilder;
 import io.macgyver.okrest.OkRestTarget;
 
 import java.io.IOException;
-import java.util.List;
-
-import org.assertj.core.util.Lists;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 
 public class GavcSearchBuilder extends AbstractSearchBuilder<GavcSearchBuilder>  {
 

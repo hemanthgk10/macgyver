@@ -13,22 +13,24 @@
  */
 package io.macgyver.plugin.ci.jenkins;
 
-import io.macgyver.core.rest.RetrofitBuilder;
-import io.macgyver.core.rest.RetrofitServiceFactory;
 import io.macgyver.core.service.ServiceDefinition;
+import io.macgyver.core.service.ServiceFactory;
 
-
-public class JenkinsServiceFactory extends RetrofitServiceFactory<JenkinsClient>{
+public class JenkinsServiceFactory extends ServiceFactory<JenkinsClient> {
 
 	public JenkinsServiceFactory() {
-		super("jenkins",JenkinsClient.class.getName());
-	
+		super("jenkins");
+
 	}
 
 	@Override
-	protected RetrofitBuilder doCreateRetrofitBuilder(RetrofitBuilder b,
-			ServiceDefinition def) {
-		return b;
+	protected JenkinsClient doCreateInstance(ServiceDefinition def) {
+		JenkinsClientImpl c = new JenkinsClientImpl(def.getProperties()
+				.getProperty("url"), def.getProperties()
+				.getProperty("username"), def.getProperties().getProperty(
+				"password"));
+
+		return c;
 	}
 
 }
