@@ -129,27 +129,41 @@ public class HipChatClientImpl implements HipChatClient {
 
 	@Override
 	public void post(String path, JsonNode body) {
-		getOkRest()
-				.path(path)
-				.request()
-				.post(RequestBody.create(MediaType.parse("application/json"),
-						body.toString()));
+		try {
+			getOkRest()
+					.path(path)
+					.request()
+					.post(RequestBody.create(MediaType.parse("application/json"),
+							body.toString()))
+					.execute();
+		} catch (IOException e) { 
+			throw new RestException(e);
+		}
 
 	}
 
 	@Override
 	public void put(String path, JsonNode body) {
-		getOkRest()
-				.path(path)
-				.request()
-				.put(RequestBody.create(MediaType.parse("application/json"),
-						body.toString()));
+		try { 
+			getOkRest()	
+			.path(path)
+			.request()
+			.put(RequestBody.create(MediaType.parse("application/json"),
+					body.toString()))
+			.execute();
+		} catch (IOException e) { 
+			throw new RestException(e);
+		}
 
 	}
 
 	@Override
 	public void delete(String path) {
-		getOkRest().path(path).request().delete();
+		try {
+			getOkRest().path(path).request().delete().execute();
+		} catch (IOException e) { 
+			throw new RestException(e);
+		}
 
 	}
 
