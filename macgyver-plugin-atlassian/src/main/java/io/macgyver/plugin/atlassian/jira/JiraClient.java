@@ -17,10 +17,7 @@ import io.macgyver.okrest.OkRestTarget;
 
 import java.io.IOException;
 
-import retrofit.http.Body;
-import retrofit.http.GET;
-import retrofit.http.POST;
-import retrofit.http.Path;
+
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -32,7 +29,7 @@ public interface JiraClient {
 	JsonNode getJson(String path) throws IOException;
 	
 
-	JsonNode postJson(String path, @Body JsonNode body) throws IOException;
+	JsonNode postJson(String path, JsonNode body) throws IOException;
 	
 	public OkRestTarget getOkRestTarget();
 	

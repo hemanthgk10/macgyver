@@ -13,9 +13,6 @@
  */
 package io.macgyver.plugin.atlassian.jira;
 
-import retrofit.converter.JacksonConverter;
-import io.macgyver.core.rest.RetrofitBuilder;
-import io.macgyver.core.rest.RetrofitServiceFactory;
 import io.macgyver.core.service.ServiceDefinition;
 import io.macgyver.core.service.ServiceFactory;
 
