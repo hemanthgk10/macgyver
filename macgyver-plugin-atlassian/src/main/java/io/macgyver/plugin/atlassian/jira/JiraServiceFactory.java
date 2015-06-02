@@ -17,21 +17,24 @@ import retrofit.converter.JacksonConverter;
 import io.macgyver.core.rest.RetrofitBuilder;
 import io.macgyver.core.rest.RetrofitServiceFactory;
 import io.macgyver.core.service.ServiceDefinition;
+import io.macgyver.core.service.ServiceFactory;
 
 
-public class JiraServiceFactory extends RetrofitServiceFactory<JiraClient>{
+public class JiraServiceFactory extends ServiceFactory<JiraClient>{
 
 	public JiraServiceFactory() {
-		super("jira",JiraClient.class.getName());
+		super("jira");
 	
 	}
 
 	
 	@Override
-	protected RetrofitBuilder doCreateRetrofitBuilder(RetrofitBuilder b, ServiceDefinition def) {
-		RetrofitBuilder builder = b.converter(new JacksonConverter()).basicAuth(def.getProperties().getProperty("username"), def.getProperties().getProperty("password"));
-	
-		return builder;
+	protected Object doCreateInstance(ServiceDefinition def) {
+		JiraClientImpl c = new JiraClientImpl(def.getProperties().getProperty("url"), def.getProperties().getProperty("username"), def.getProperties().getProperty("password"));
+		
+		return c;
 	}
+
+
 
 }
