@@ -13,8 +13,12 @@
  */
 package io.macgyver.plugin.hipchat;
 
-import io.macgyver.core.rest.OkRest;
-import io.macgyver.core.rest.RestException;
+
+
+import io.macgyver.okrest.OkRestClient;
+import io.macgyver.okrest.OkRestException;
+import io.macgyver.okrest.OkRestResponse;
+import io.macgyver.okrest.OkRestTarget;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -24,6 +28,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -32,11 +37,8 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.ning.http.client.AsyncHttpClient;
 import com.squareup.okhttp.Interceptor;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
-import com.squareup.okhttp.Interceptor.Chain;
+
 
 public class HipChatClientImpl implements HipChatClient {
 
@@ -44,7 +46,8 @@ public class HipChatClientImpl implements HipChatClient {
 
 	Logger logger = LoggerFactory.getLogger(HipChatClientImpl.class);
 	String token;
-	OkRest okRest;
+	OkRestClient okRestClient;
+	OkRestTarget base;
 	String url;
 	ObjectMapper mapper = new ObjectMapper();
 	String version = "v2";
@@ -76,15 +79,15 @@ public class HipChatClientImpl implements HipChatClient {
 		Preconditions.checkNotNull(token);
 		this.url = url;
 		this.token = token;
-
-		OkHttpClient client = new OkHttpClient();
-		client.interceptors().add(new BearerTokenInterceptor(token));
-		this.okRest = new OkRest(client, url);
-
+		
+		okRestClient = new OkRestClient();
+		
+		okRestClient.getOkHttpClient().interceptors().add(new BearerTokenInterceptor(token));
+		base = okRestClient.uri(url);
 	}
 
-	public OkRest getOkRest() {
-		return okRest.path(version);
+	public OkRestTarget getBaseTarget() {
+		return base.path(version);
 	}
 
 	public String getToken() {
@@ -97,24 +100,23 @@ public class HipChatClientImpl implements HipChatClient {
 
 	@Override
 	public JsonNode get(String path, Map<String, String> params) {
-		try {
-			OkRest rest = getOkRest().path(path);
+		try { 
+			OkRestTarget target = getBaseTarget().path(path);
 			if (params != null) {
 				for (Map.Entry<String, String> entry : params.entrySet()) {
-					rest = rest
+					target = target
 							.queryParameter(entry.getKey(), entry.getValue());
 				}
 			}
 			
-			Response response = rest.request().get().execute();
-			if (response.isSuccessful()) {
-				return mapper.readTree(response.body().charStream());
-			}
-
-			throw new RestException(response.code(), response.message());
-		} catch (IOException e) {
-			throw new RestException(e);
+			OkRestResponse response = target.get().execute();
+			return response.getBody(JsonNode.class);
+		} catch (IOException e) { 
+			//not sure what to do here
+			return mapper.createObjectNode().put("error", "get failed: " + e.getMessage());
+		
 		}
+			
 
 	}
 
@@ -130,14 +132,12 @@ public class HipChatClientImpl implements HipChatClient {
 	@Override
 	public void post(String path, JsonNode body) {
 		try {
-			getOkRest()
+			getBaseTarget()
 					.path(path)
-					.request()
-					.post(RequestBody.create(MediaType.parse("application/json"),
-							body.toString()))
+					.post(body)
 					.execute();
 		} catch (IOException e) { 
-			throw new RestException(e);
+			//IDK what to do here
 		}
 
 	}
@@ -145,14 +145,12 @@ public class HipChatClientImpl implements HipChatClient {
 	@Override
 	public void put(String path, JsonNode body) {
 		try { 
-			getOkRest()	
-			.path(path)
-			.request()
-			.put(RequestBody.create(MediaType.parse("application/json"),
-					body.toString()))
-			.execute();
+			getBaseTarget()	
+				.path(path)
+				.put(body)
+				.execute();
 		} catch (IOException e) { 
-			throw new RestException(e);
+			//do something here
 		}
 
 	}
@@ -160,9 +158,9 @@ public class HipChatClientImpl implements HipChatClient {
 	@Override
 	public void delete(String path) {
 		try {
-			getOkRest().path(path).request().delete().execute();
+			getBaseTarget().path(path).delete().execute();
 		} catch (IOException e) { 
-			throw new RestException(e);
+			//idk 
 		}
 
 	}
@@ -172,10 +170,10 @@ public class HipChatClientImpl implements HipChatClient {
 		try {
 			ObjectNode n = mapper.createObjectNode();
 			n.put("message", message);
-			getOkRest().path("/room").path(roomId).path("notification")
-					.request().post(n).execute();
+			getBaseTarget().path("/room").path(roomId).path("notification")
+					.post(n).execute();
 		} catch (IOException e) {
-			throw new RestException(e);
+			//IDK
 		}
 
 	}
@@ -197,10 +195,10 @@ public class HipChatClientImpl implements HipChatClient {
 			n.put("message_format", format);
 			n.put("color", color);
 			
-			getOkRest().path("/room").path(roomId).path("notification")
-					.request().post(n).execute();
+			getBaseTarget().path("/room").path(roomId).path("notification")
+					.post(n).execute();
 		} catch (IOException e) {
-			throw new RestException(e);
+			//IDK
 		}
 		
 	}
