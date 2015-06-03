@@ -100,7 +100,7 @@ public class HipChatClientImpl implements HipChatClient {
 
 	@Override
 	public JsonNode get(String path, Map<String, String> params) {
-		try { 
+
 			OkRestTarget target = getBaseTarget().path(path);
 			if (params != null) {
 				for (Map.Entry<String, String> entry : params.entrySet()) {
@@ -111,11 +111,7 @@ public class HipChatClientImpl implements HipChatClient {
 			
 			OkRestResponse response = target.get().execute();
 			return response.getBody(JsonNode.class);
-		} catch (IOException e) { 
-			//not sure what to do here
-			return mapper.createObjectNode().put("error", "get failed: " + e.getMessage());
-		
-		}
+
 			
 
 	}
@@ -131,50 +127,41 @@ public class HipChatClientImpl implements HipChatClient {
 
 	@Override
 	public void post(String path, JsonNode body) {
-		try {
+
 			getBaseTarget()
 					.path(path)
 					.post(body)
 					.execute();
-		} catch (IOException e) { 
-			//IDK what to do here
-		}
+
 
 	}
 
 	@Override
 	public void put(String path, JsonNode body) {
-		try { 
+
 			getBaseTarget()	
 				.path(path)
 				.put(body)
 				.execute();
-		} catch (IOException e) { 
-			//do something here
-		}
+
 
 	}
 
 	@Override
 	public void delete(String path) {
-		try {
+
 			getBaseTarget().path(path).delete().execute();
-		} catch (IOException e) { 
-			//idk 
-		}
+
 
 	}
 
 	@Override
 	public void sendRoomNotification(String roomId, String message) {
-		try {
+
 			ObjectNode n = mapper.createObjectNode();
 			n.put("message", message);
 			getBaseTarget().path("/room").path(roomId).path("notification")
 					.post(n).execute();
-		} catch (IOException e) {
-			//IDK
-		}
 
 	}
 
@@ -188,7 +175,7 @@ public class HipChatClientImpl implements HipChatClient {
 	@Override
 	public void sendRoomNotification(String roomId, String message,
 			String format, String color, boolean notify) {
-		try {
+		
 			ObjectNode n = mapper.createObjectNode();
 			n.put("message", message);
 			n.put("notify", notify);
@@ -197,9 +184,7 @@ public class HipChatClientImpl implements HipChatClient {
 			
 			getBaseTarget().path("/room").path(roomId).path("notification")
 					.post(n).execute();
-		} catch (IOException e) {
-			//IDK
-		}
+
 		
 	}
 

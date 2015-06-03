@@ -15,6 +15,7 @@ package io.macgyver.core.rest;
 
 import io.macgyver.core.MacGyverException;
 
+@Deprecated
 public class RestException extends MacGyverException {
 
 	int statusCode;
