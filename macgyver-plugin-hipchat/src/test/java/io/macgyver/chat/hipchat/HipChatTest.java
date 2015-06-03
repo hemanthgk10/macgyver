@@ -8,6 +8,7 @@ import java.util.Map;
 
 import io.macgyver.core.rest.OkRest;
 import io.macgyver.core.rest.RestException;
+import io.macgyver.okrest.OkRestException;
 import io.macgyver.plugin.hipchat.HipChatClient;
 import io.macgyver.plugin.hipchat.HipChatClient.Color;
 import io.macgyver.plugin.hipchat.HipChatClient.Format;
@@ -145,7 +146,7 @@ public class HipChatTest {
 
 			client.get("user", "max-results", "1");
 
-		} catch (RestException e) {
+		} catch (OkRestException e) {
 			Assertions.assertThat(e.getStatusCode()).isEqualTo(401);
 		}
 
