@@ -27,6 +27,7 @@ import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 import com.thoughtworks.proxy.toys.decorate.Decorator;
 
+@Deprecated
 public class OkRest {
 
 	public static final MediaType APPLICATION_JSON = MediaType.parse("application/json");

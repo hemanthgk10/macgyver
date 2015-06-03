@@ -1,6 +1,6 @@
 package io.macgyver.plugin.hipchat;
 
-import io.macgyver.core.rest.OkRest;
+import io.macgyver.okrest.OkRestTarget;
 
 import java.util.Map;
 
@@ -43,7 +43,7 @@ public interface HipChatClient {
 	        return val;
 	    }
 	}
-	public OkRest getOkRest();
+	public OkRestTarget getBaseTarget();
 
 	public JsonNode get(String path, Map<String, String> params);
 

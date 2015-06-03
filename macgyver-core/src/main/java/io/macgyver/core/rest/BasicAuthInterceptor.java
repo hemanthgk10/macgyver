@@ -6,6 +6,8 @@ import com.squareup.okhttp.Credentials;
 import com.squareup.okhttp.Interceptor;
 import com.squareup.okhttp.Response;
 
+
+@Deprecated
 public class BasicAuthInterceptor implements Interceptor {
 
 	
