@@ -13,8 +13,14 @@
  */
 package io.macgyver.plugin.ci.jenkins;
 
+import io.macgyver.core.rest.BasicAuthInterceptor;
 import io.macgyver.core.rest.RestException;
 import io.macgyver.core.rest.UrlBuilder;
+import io.macgyver.okrest.OkRestClient;
+import io.macgyver.okrest.OkRestException;
+import io.macgyver.okrest.OkRestResponse;
+import io.macgyver.okrest.OkRestTarget;
+import io.macgyver.okrest.OkRestWrapperException;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,7 +36,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -41,14 +46,14 @@ import com.squareup.okhttp.FormEncodingBuilder;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Request.Builder;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 
 public class JenkinsClientImpl implements JenkinsClient {
 
 	Logger logger = LoggerFactory.getLogger(JenkinsClientImpl.class);
-	OkHttpClient client = new OkHttpClient();
+
+	OkRestTarget target;
 
 	private String urlBase;
 
@@ -59,34 +64,20 @@ public class JenkinsClientImpl implements JenkinsClient {
 		this.urlBase = urlBase;
 		this.username = username;
 		this.password = password;
-	}
 
-	Builder injectAuth(Builder b) {
-		if (!Strings.isNullOrEmpty(username)
-				|| !Strings.isNullOrEmpty(password)) {
-			b = b.addHeader("Authorization",
-					com.squareup.okhttp.Credentials.basic(username, password));
+		target = new OkRestClient().uri(urlBase);
+
+		if (!Strings.isNullOrEmpty(username)) {
+			target.getOkHttpClient().interceptors()
+					.add(new BasicAuthInterceptor(username, password));
 		}
-		return b;
 	}
 
 	@Override
 	public JsonNode getJson(String path) {
-		try {
 
-			Request request = injectAuth(new Request.Builder())
-					.url(new UrlBuilder(urlBase).path(path).build()).get()
-					.build();
+		return target.path(path).get().execute(JsonNode.class);
 
-			Response response = client.newCall(request).execute();
-			throwRestExceptionOnError(response);
-			JsonNode n = new ObjectMapper().readTree(response.body()
-					.byteStream());
-
-			return n;
-		} catch (IOException e) {
-			throw new RestException(e);
-		}
 	}
 
 	@Override
@@ -97,52 +88,32 @@ public class JenkinsClientImpl implements JenkinsClient {
 	@Override
 	public JsonNode getJob(String jobName) {
 
-		return getJson(new UrlBuilder("job").path(jobName).path("api/json")
-				.build());
+		return target.path("job").path(jobName).path("api").path("json").get()
+				.execute(JsonNode.class);
 
 	}
 
 	@Override
 	public JsonNode getBuild(String jobName, int buildNumber) {
 
-		return getJson(new UrlBuilder("job").path(jobName).path("api/json")
-				.build());
+		// this is wrong
+		return target.path("job").path(jobName).path("api").path("json").get()
+				.execute(JsonNode.class);
 
-	}
-
-	protected void throwRestExceptionOnError(Response r) {
-		int sc = r.code();
-		String body = null;
-		if (sc > 299) {
-
-			try {
-				body = r.body().string();
-
-			} catch (Exception e) {
-			}
-			logger.warn("sc={} body: {}", sc, body);
-			throw new RestException(sc);
-		}
 	}
 
 	@Override
 	public org.jdom2.Document getJobConfig(String jobName) {
+
 		try {
+			OkRestResponse rr = target.path("job").path(jobName)
+					.path("config.xml").get().execute();
 
-			String url = new UrlBuilder(urlBase).path("job").path(jobName)
-					.path("config.xml").build();
-
-			Request request = injectAuth(new Request.Builder()).url(url).get()
-					.build();
-
-			Response response = client.newCall(request).execute();
-			throwRestExceptionOnError(response);
-
-			return new SAXBuilder().build(response.body().byteStream());
-
+			return new SAXBuilder().build(rr.response().body().byteStream());
 		} catch (IOException | JDOMException e) {
-			throw new RestException(e);
+			throw new OkRestWrapperException(e);
 		}
+
 	}
 
 	@Override
@@ -164,9 +135,10 @@ public class JenkinsClientImpl implements JenkinsClient {
 			RequestBody formBody = new FormEncodingBuilder().add("script",
 					groovy).build();
 
-			Request request = injectAuth(new Request.Builder()).url(url)
-					.post(formBody).build();
+			Request request = new Request.Builder().url(url).post(formBody)
+					.build();
 
+			OkHttpClient client = target.getOkHttpClient();
 			Response response = client.newCall(request).execute();
 
 			throwRestExceptionOnError(response);
@@ -174,7 +146,16 @@ public class JenkinsClientImpl implements JenkinsClient {
 			return response.body().string();
 
 		} catch (IOException e) {
-			throw new RestException(e);
+			throw new OkRestWrapperException(e);
+		}
+	}
+
+	protected void throwRestExceptionOnError(Response r) {
+		int sc = r.code();
+
+		if (sc > 299) {
+	
+			throw new OkRestException(sc);
 		}
 	}
 
@@ -188,13 +169,13 @@ public class JenkinsClientImpl implements JenkinsClient {
 			RequestBody formBody = new FormEncodingBuilder().add("__dummy__",
 					"").build();
 
-			Request request = injectAuth(new Request.Builder())
+			Request request = new Request.Builder()
 					.addHeader("Accept", "application/json").url(url)
 					.post(formBody).build();
 
-			Response response = client.newCall(request).execute();
+			OkHttpClient client = target.getOkHttpClient();
 
-			throwRestExceptionOnError(response);
+			Response response = client.newCall(request).execute();
 
 			Optional<String> qp = extractQueuePath(response.header("Location"));
 
@@ -207,7 +188,7 @@ public class JenkinsClientImpl implements JenkinsClient {
 			}
 
 		} catch (IOException e) {
-			throw new RestException(e);
+			throw new OkRestWrapperException(e);
 		}
 	}
 
@@ -240,7 +221,8 @@ public class JenkinsClientImpl implements JenkinsClient {
 
 			RequestBody formBody = builder.build();
 
-			Request request = injectAuth(new Request.Builder())
+			OkHttpClient client = target.getOkHttpClient();
+			Request request = new Request.Builder()
 					.addHeader("Accept", "application/json").url(url)
 					.post(formBody).build();
 
@@ -251,15 +233,15 @@ public class JenkinsClientImpl implements JenkinsClient {
 			Optional<String> qp = extractQueuePath(response.header("Location"));
 
 			if (qp.isPresent()) {
-				return getJson(new UrlBuilder(qp.get()).path("api/json")
-						.build());
+				return target.path(qp.get()).path("api").path("json").get().execute(JsonNode.class);
+				
 			} else {
 				throw new IllegalStateException(
 						"jenkins should have returned a Locaton header");
 			}
 
 		} catch (IOException e) {
-			throw new RestException(e);
+			throw new OkRestWrapperException(e);
 		}
 	}
 
@@ -288,23 +270,20 @@ public class JenkinsClientImpl implements JenkinsClient {
 	@Override
 	public JsonNode getBuildQueue() {
 
-		return getJson(new UrlBuilder("queue/api/json")
-				.build());
+		return getJson(new UrlBuilder("queue/api/json").build());
 	}
 
 	@Override
 	public JsonNode getLoadStats() {
-		return getJson(new UrlBuilder("overallLoad/api/json")
-		.build());
+		return getJson(new UrlBuilder("overallLoad/api/json").build());
 	}
 
 	@Override
 	public void restart() {
 		try {
 			postWithoutResult("restart");
-		}
-		catch (RestException e) {
-			if (e.getStatusCode()==503) {
+		} catch (RestException e) {
+			if (e.getStatusCode() == 503) {
 				return;
 			}
 			throw e;
@@ -315,20 +294,19 @@ public class JenkinsClientImpl implements JenkinsClient {
 	public void restartAfterJobsComplete() {
 		try {
 			postWithoutResult("safeRestart");
-		}
-		catch (RestException e) {
-			if (e.getStatusCode()==503) {
+		} catch (RestException e) {
+			if (e.getStatusCode() == 503) {
 				return;
 			}
 			throw e;
 		}
-		
+
 	}
 
 	@Override
 	public void quietDown() {
 		postWithoutResult("quietDown");
-		
+
 	}
 
 	protected void postWithoutResult(String path) {
@@ -336,29 +314,30 @@ public class JenkinsClientImpl implements JenkinsClient {
 
 			String url = new UrlBuilder(urlBase).path(path).build();
 
+			Request request = new Request.Builder()
+					.addHeader("Accept", "application/json")
+					.url(url)
+					.post(RequestBody.create(
+							MediaType.parse("application/json"), "{}")).build();
 
-
-			Request request = injectAuth(new Request.Builder())
-					.addHeader("Accept", "application/json").url(url)
-					.post(RequestBody.create(MediaType.parse("application/json"), "{}")).build();
-
+			OkHttpClient client = target.getOkHttpClient();
 			Response response = client.newCall(request).execute();
 
 			throwRestExceptionOnError(response);
 
-	
-
 		} catch (IOException e) {
-			throw new RestException(e);
+			throw new OkRestWrapperException(e);
 		}
 	}
+
 	@Override
 	public void cancelQuietDown() {
 		postWithoutResult("cancelQuietDown");
 	}
-	
+
 	public String getServerId() {
-		return Hashing.sha1().hashString(getServerUrl(), Charsets.UTF_8).toString();
+		return Hashing.sha1().hashString(getServerUrl(), Charsets.UTF_8)
+				.toString();
 	}
 
 	@Override

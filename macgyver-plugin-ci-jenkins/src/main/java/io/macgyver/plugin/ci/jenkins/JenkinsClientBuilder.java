@@ -13,8 +13,9 @@
  */
 package io.macgyver.plugin.ci.jenkins;
 
-import com.google.gwt.thirdparty.guava.common.base.Preconditions;
-import com.google.gwt.thirdparty.guava.common.base.Strings;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+
 
 public class JenkinsClientBuilder {
 
