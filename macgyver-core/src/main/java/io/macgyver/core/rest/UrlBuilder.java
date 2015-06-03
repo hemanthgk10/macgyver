@@ -24,6 +24,7 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.thirdparty.guava.common.collect.Lists;
 import com.google.gwt.thirdparty.guava.common.collect.Maps;
 
+@Deprecated
 public class UrlBuilder {
 
 	private String base;
