@@ -13,18 +13,15 @@
  */
 package io.macgyver.plugin.artifactory;
 
-import java.io.IOException;
-
-import io.macgyver.core.rest.OkRest;
 import io.macgyver.okrest.OkRestLoggingInterceptor;
-import io.macgyver.okrest.OkRestTarget;
+
+import java.io.IOException;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Rule;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.squareup.okhttp.Response;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.RecordedRequest;
 import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;

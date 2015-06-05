@@ -14,7 +14,6 @@
 package io.macgyver.plugin.ci.jenkins;
 
 import io.macgyver.core.rest.BasicAuthInterceptor;
-import io.macgyver.core.rest.RestException;
 import io.macgyver.core.rest.UrlBuilder;
 import io.macgyver.okrest.OkRestClient;
 import io.macgyver.okrest.OkRestException;
@@ -57,13 +56,10 @@ public class JenkinsClientImpl implements JenkinsClient {
 
 	private String urlBase;
 
-	private String username;
-	private String password;
 
 	protected JenkinsClientImpl(String urlBase, String username, String password) {
 		this.urlBase = urlBase;
-		this.username = username;
-		this.password = password;
+
 
 		target = new OkRestClient().uri(urlBase);
 
@@ -282,7 +278,7 @@ public class JenkinsClientImpl implements JenkinsClient {
 	public void restart() {
 		try {
 			postWithoutResult("restart");
-		} catch (RestException e) {
+		} catch (OkRestException e) {
 			if (e.getStatusCode() == 503) {
 				return;
 			}
@@ -294,7 +290,7 @@ public class JenkinsClientImpl implements JenkinsClient {
 	public void restartAfterJobsComplete() {
 		try {
 			postWithoutResult("safeRestart");
-		} catch (RestException e) {
+		} catch (OkRestException e) {
 			if (e.getStatusCode() == 503) {
 				return;
 			}
