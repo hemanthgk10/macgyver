@@ -13,9 +13,10 @@
  */
 package io.macgyver.plugin.github;
 
-import io.macgyver.core.rest.OkRest;
+
 import io.macgyver.core.service.ServiceRegistry;
 import io.macgyver.core.test.StandaloneServiceBuilder;
+import io.macgyver.okrest.OkRestTarget;
 import io.macgyver.test.MacGyverIntegrationTest;
 
 import java.io.IOException;
@@ -54,7 +55,7 @@ public class GitHubTest extends MacGyverIntegrationTest {
 		Assertions.assertThat(gh).isNotNull();
 		
 		
-		OkRest x = (OkRest) sb.buildCollaborator("Api");
+		OkRestTarget x = (OkRestTarget) sb.buildCollaborator("Api");
 		
 		Assertions.assertThat(x.getUrl()).isEqualTo("https://api.github.com");
 		
