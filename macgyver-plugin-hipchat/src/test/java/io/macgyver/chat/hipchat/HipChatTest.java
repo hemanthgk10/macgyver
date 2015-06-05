@@ -14,18 +14,13 @@
 package io.macgyver.chat.hipchat;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import io.macgyver.okrest.OkRestException;
+import io.macgyver.plugin.hipchat.HipChatClient;
+import io.macgyver.plugin.hipchat.HipChatClientImpl;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-
-import io.macgyver.core.rest.OkRest;
-import io.macgyver.core.rest.RestException;
-import io.macgyver.okrest.OkRestException;
-import io.macgyver.plugin.hipchat.HipChatClient;
-import io.macgyver.plugin.hipchat.HipChatClient.Color;
-import io.macgyver.plugin.hipchat.HipChatClient.Format;
-import io.macgyver.plugin.hipchat.HipChatClientImpl;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
@@ -33,8 +28,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Response;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.RecordedRequest;
 import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;

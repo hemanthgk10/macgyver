@@ -13,6 +13,9 @@
  */
 package io.macgyver.core.rest;
 
+import io.macgyver.okrest.OkRestException;
+import io.macgyver.okrest.OkRestWrapperException;
+
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
@@ -23,7 +26,7 @@ public class RestExceptionTest {
 	public void testX() {
 		RuntimeException x = new RuntimeException("abc123");
 		
-		RestException e = new RestException(x);
+		OkRestException e = new OkRestWrapperException(x);
 		
 		Assertions.assertThat(e.getStatusCode()).isEqualTo(400);
 		

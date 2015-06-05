@@ -14,10 +14,11 @@
 package io.macgyver.plugin.github;
 
 import io.macgyver.core.rest.BasicAuthInterceptor;
-import io.macgyver.core.rest.OkRest;
 import io.macgyver.core.service.BasicServiceFactory;
 import io.macgyver.core.service.ServiceDefinition;
 import io.macgyver.core.service.ServiceRegistry;
+import io.macgyver.okrest.OkRestClient;
+import io.macgyver.okrest.OkRestTarget;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -114,7 +115,7 @@ public class GitHubServiceFactory extends BasicServiceFactory<GitHub> {
 		if (Strings.isNullOrEmpty(url)) {
 			url = "https://api.github.com";
 		}
-		OkRest rest = new OkRest(c).url(url);
+		OkRestTarget rest = new OkRestClient(c).url(url);
 
 		registry.registerCollaborator(primaryDefinition.getName() + "Api", rest);
 
