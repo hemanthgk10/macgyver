@@ -15,9 +15,9 @@ configurations {
 
 dependencies {
 
+	compile project(':macgyver-plugin-cloud')
     testCompile project(':macgyver-test')
-    compile project(":macgyver-core")
-    compile project(':macgyver-plugin-cloud')
-    compile project(':macgyver-plugin-cmdb')
+     
+     
 }
 
