@@ -13,23 +13,17 @@
  */
 package io.macgyver.plugin.cloud.vsphere;
 
-import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor;
 import io.macgyver.neorx.rest.NeoRxClient;
-import io.macgyver.plugin.cloud.vsphere.RefreshingServiceInstance;
-import io.macgyver.plugin.cloud.vsphere.VSphereScanner;
 import io.macgyver.test.MacGyverIntegrationTest;
 
 import java.net.URL;
-import java.util.Calendar;
 
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableSet;
 import com.thoughtworks.proxy.factory.CglibProxyFactory;
 import com.thoughtworks.proxy.toys.delegate.DelegationMode;
 import com.thoughtworks.proxy.toys.hotswap.HotSwapping;

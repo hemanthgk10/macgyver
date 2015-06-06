@@ -17,15 +17,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 
-import org.assertj.core.api.Assertions;
-import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vmware.vim25.ManagedObjectReference;
-
-import io.macgyver.plugin.cloud.vsphere.VSphereScanner;
 
 public class VSphereScannerTest {
 

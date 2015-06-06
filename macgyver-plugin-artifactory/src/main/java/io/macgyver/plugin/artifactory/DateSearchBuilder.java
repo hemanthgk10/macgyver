@@ -13,15 +13,13 @@
  */
 package io.macgyver.plugin.artifactory;
 
+import io.macgyver.okrest.OkRestTarget;
+
 import java.io.IOException;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
-import io.macgyver.okrest.OkRestTarget;
 
 public class DateSearchBuilder extends AbstractSearchBuilder<DateSearchBuilder> {
 

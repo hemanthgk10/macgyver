@@ -13,10 +13,11 @@
  */
 package io.macgyver.plugin.github;
 
-import io.macgyver.core.rest.BasicAuthInterceptor;
+
 import io.macgyver.core.service.BasicServiceFactory;
 import io.macgyver.core.service.ServiceDefinition;
 import io.macgyver.core.service.ServiceRegistry;
+import io.macgyver.okrest.BasicAuthInterceptor;
 import io.macgyver.okrest.OkRestClient;
 import io.macgyver.okrest.OkRestTarget;
 

@@ -13,8 +13,6 @@
  */
 package io.macgyver.plugin.cmdb;
 
-import io.macgyver.core.MacGyverException;
-
 import io.macgyver.neorx.rest.NeoRxClient;
 
 import org.slf4j.Logger;

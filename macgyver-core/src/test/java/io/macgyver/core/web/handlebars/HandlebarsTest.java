@@ -19,10 +19,7 @@ import java.util.Map;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
-import org.springframework.boot.autoconfigure.mustache.web.MustacheViewResolver;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Maps;
 import com.samskivert.mustache.Mustache;
 

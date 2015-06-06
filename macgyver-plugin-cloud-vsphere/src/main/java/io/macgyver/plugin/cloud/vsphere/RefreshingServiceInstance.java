@@ -18,13 +18,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.rmi.RemoteException;
 
-import net.sf.cglib.proxy.Enhancer;
-
-import org.springframework.aop.framework.ProxyFactory;
-
-import com.thoughtworks.proxy.toys.hotswap.HotSwapping;
 import com.thoughtworks.proxy.toys.hotswap.Swappable;
-import com.vmware.vim25.mo.ServerConnection;
 import com.vmware.vim25.mo.ServiceInstance;
 
 /**

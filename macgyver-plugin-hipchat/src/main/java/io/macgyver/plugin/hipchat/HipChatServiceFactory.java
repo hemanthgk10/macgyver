@@ -14,14 +14,6 @@
 package io.macgyver.plugin.hipchat;
 
 import io.macgyver.core.service.ServiceDefinition;
-import io.macgyver.core.service.ServiceRegistry;
-
-import java.util.Set;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-
-import com.ning.http.client.AsyncHttpClient;
 
 public class HipChatServiceFactory extends
 		io.macgyver.core.service.ServiceFactory<HipChatClientImpl> {

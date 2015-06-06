@@ -1,16 +1,13 @@
 package io.macgyver.plugin.cloud.cloudstack;
 
-import io.macgyver.okrest.OkRestLoggingInterceptor;
-
 import org.assertj.core.api.Assertions;
 import org.junit.Rule;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
 import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
 import com.squareup.okhttp.mockwebserver.RecordedRequest;
+import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
 
 public class CloudStackClientImplTest {
 

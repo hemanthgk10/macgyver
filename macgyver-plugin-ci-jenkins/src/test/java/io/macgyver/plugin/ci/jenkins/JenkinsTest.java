@@ -13,21 +13,12 @@
  */
 package io.macgyver.plugin.ci.jenkins;
 
-import io.macgyver.core.graph.NodeInfo;
 import io.macgyver.neorx.rest.NeoRxClient;
-import io.macgyver.plugin.ci.jenkins.JenkinsClient;
-import io.macgyver.plugin.ci.jenkins.JenkinsClientBuilder;
-import io.macgyver.plugin.ci.jenkins.JenkinsScanner;
 import io.macgyver.plugin.ci.jenkins.decorators.GitHubDecorator;
 
 import java.io.IOException;
 
 import org.assertj.core.api.Assertions;
-import org.jdom2.Document;
-import org.jdom2.Text;
-import org.jdom2.filter.Filters;
-import org.jdom2.xpath.XPathExpression;
-import org.jdom2.xpath.XPathFactory;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;

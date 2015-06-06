@@ -13,18 +13,17 @@
  */
 package io.macgyver.plugin.cmdb;
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-
 import io.macgyver.core.Kernel;
 import io.macgyver.core.web.vaadin.IndexedJsonContainer;
 import io.macgyver.core.web.vaadin.VaadinUtil;
 import io.macgyver.core.web.vaadin.ViewConfig;
 import io.macgyver.core.web.vaadin.ViewDecorators;
-
 import io.macgyver.neorx.rest.NeoRxClient;
+
+import java.util.Collection;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 
 import org.ocpsoft.prettytime.PrettyTime;
 import org.springframework.context.ApplicationContext;
@@ -32,17 +31,13 @@ import org.springframework.context.ApplicationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
-import com.vaadin.data.Container;
-import com.vaadin.data.Item;
 import com.vaadin.event.FieldEvents.BlurEvent;
 import com.vaadin.event.FieldEvents.BlurListener;
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener.ViewChangeEvent;
 import com.vaadin.server.Page;
-import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.shared.Position;
-import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;

@@ -15,7 +15,6 @@ package io.macgyver.plugin.atlassian.jira;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import io.macgyver.core.test.StandaloneServiceBuilder;
-import io.macgyver.test.MacGyverIntegrationTest;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Rule;
