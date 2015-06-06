@@ -12,10 +12,12 @@ import java.util.Set;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.assertj.core.util.Lists;
+
+
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.BaseEncoding;
 
@@ -49,6 +51,7 @@ public class RequestBuilder {
 						+ URLEncoder.encode(copy.get(x), "UTF-8");
 				kvPairs.add(kv);
 			}
+			
 			return Joiner.on("&").join(kvPairs);
 		
 		} catch (UnsupportedEncodingException e) {

@@ -11,17 +11,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.macgyver.plugin.cloud.vsphere.cmdb;
+package io.macgyver.plugin.cloud.vsphere;
+
+import io.macgyver.neorx.rest.NeoRxClient;
 
 import java.rmi.RemoteException;
 import java.util.Iterator;
 
-import io.macgyver.neorx.rest.NeoRxClient;
-import io.macgyver.plugin.cloud.vsphere.ManagedObjectTypes;
-import io.macgyver.plugin.cloud.vsphere.VSphereExceptionWrapper;
-import io.macgyver.plugin.cloud.vsphere.VSphereQueryTemplate;
-
-import org.jclouds.compute.domain.NodeMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,17 +26,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.gwt.thirdparty.guava.common.hash.Hashing;
+import com.google.common.hash.Hashing;
 import com.vmware.vim25.GuestInfo;
-import com.vmware.vim25.GuestNicInfo;
 import com.vmware.vim25.HostHardwareInfo;
 import com.vmware.vim25.ManagedObjectReference;
-import com.vmware.vim25.RuntimeFault;
-import com.vmware.vim25.Tag;
-import com.vmware.vim25.VirtualHardware;
 import com.vmware.vim25.VirtualMachineConfigInfo;
-import com.vmware.vim25.mo.Datastore;
 import com.vmware.vim25.mo.HostSystem;
 import com.vmware.vim25.mo.ServerConnection;
 import com.vmware.vim25.mo.ServiceInstance;

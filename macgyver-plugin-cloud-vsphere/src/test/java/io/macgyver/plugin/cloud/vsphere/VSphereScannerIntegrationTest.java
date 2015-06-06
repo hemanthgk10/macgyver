@@ -11,21 +11,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.macgyver.plugin.cloud.vsphere.cmdb;
+package io.macgyver.plugin.cloud.vsphere;
 
 import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor;
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.plugin.cloud.vsphere.RefreshingServiceInstance;
+import io.macgyver.plugin.cloud.vsphere.VSphereScanner;
 import io.macgyver.test.MacGyverIntegrationTest;
 
 import java.net.URL;
 import java.util.Calendar;
 
-import org.jclouds.ContextBuilder;
-import org.jclouds.compute.ComputeServiceContext;
-import org.jclouds.compute.domain.ComputeMetadata;
-import org.jclouds.concurrent.config.ExecutorServiceModule;
-import org.jclouds.sshj.config.SshjSshClientModule;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -92,25 +88,6 @@ public class VSphereScannerIntegrationTest extends MacGyverIntegrationTest {
 		
 	}
 	
-	@Test
-	@Ignore
-	public void testY() throws Exception {
-		
-		//https://github.com/if6was9/jclouds-labs/blob/master/vsphere/src/test/java/org/jclouds/vsphere/ContextBuilderTest.java
-	      ImmutableSet modules = ImmutableSet.of(new ExecutorServiceModule(sameThreadExecutor(), sameThreadExecutor()), new SshjSshClientModule());
-	      ComputeServiceContext context = ContextBuilder.newBuilder("vsphere")
-//	     
-	              .credentials(user, pass)
-	              .endpoint(url)
-	              .modules(modules)
-	              .buildView(ComputeServiceContext.class);
-		
-	      
-	      for(ComputeMetadata md: context.getComputeService().listNodes()) {
-	    	  logger.info("computeMetaData: {}",md);
-	      }
-	      
-	}
-	
+
 	
 }

@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.macgyver.plugin.cloud.vsphere.cmdb;
+package io.macgyver.plugin.cloud.vsphere;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
@@ -25,7 +25,7 @@ import org.mockito.Mockito;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vmware.vim25.ManagedObjectReference;
 
-import io.macgyver.plugin.cloud.vsphere.cmdb.VSphereScanner;
+import io.macgyver.plugin.cloud.vsphere.VSphereScanner;
 
 public class VSphereScannerTest {
 

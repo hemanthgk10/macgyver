@@ -16,7 +16,6 @@ package io.macgyver.plugin.cloud.vsphere;
 import io.macgyver.core.MacGyverException;
 import io.macgyver.core.service.BasicServiceFactory;
 import io.macgyver.core.service.ServiceDefinition;
-import io.macgyver.plugin.cloud.ComputeScannerManager;
 import it.sauronsoftware.cron4j.Scheduler;
 import it.sauronsoftware.cron4j.Task;
 import it.sauronsoftware.cron4j.TaskExecutionContext;
@@ -25,11 +24,7 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.WeakHashMap;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
@@ -37,13 +32,10 @@ import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.thoughtworks.proxy.factory.CglibProxyFactory;
 import com.thoughtworks.proxy.toys.delegate.DelegationMode;
 import com.thoughtworks.proxy.toys.hotswap.HotSwapping;
-import com.vmware.vim25.mo.ServerConnection;
 import com.vmware.vim25.mo.ServiceInstance;
 
 @Component
@@ -55,8 +47,6 @@ public class VSphereFactory extends BasicServiceFactory<ServiceInstance> {
 
 	CglibProxyFactory cglibProxyFactory = new CglibProxyFactory();
 
-	@Autowired
-	ComputeScannerManager computeScannerManager;
 
 	@Autowired
 	Scheduler scheduler;
@@ -126,8 +116,7 @@ public class VSphereFactory extends BasicServiceFactory<ServiceInstance> {
 	@Override
 	public void doConfigureDefinition(ServiceDefinition def) {
 		super.doConfigureDefinition(def);
-		computeScannerManager.register(new VSphereComputeServiceScanner(def
-				.getName()));
+	
 	}
 
 	@Override
