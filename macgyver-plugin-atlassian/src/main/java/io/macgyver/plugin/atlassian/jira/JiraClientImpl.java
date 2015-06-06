@@ -13,11 +13,11 @@
  */
 package io.macgyver.plugin.atlassian.jira;
 
-import java.io.IOException;
-
-import io.macgyver.core.rest.BasicAuthInterceptor;
+import io.macgyver.okrest.BasicAuthInterceptor;
 import io.macgyver.okrest.OkRestClient;
 import io.macgyver.okrest.OkRestTarget;
+
+import java.io.IOException;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.squareup.okhttp.OkHttpClient;

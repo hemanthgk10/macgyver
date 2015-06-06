@@ -13,22 +13,17 @@
  */
 package io.macgyver.core.service;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import io.macgyver.core.graph.NodeInfo;
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.test.MacGyverIntegrationTest;
 
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import rx.functions.Action1;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Optional;
 
 public class ServiceScannerTest extends MacGyverIntegrationTest {
 

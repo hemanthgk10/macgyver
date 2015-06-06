@@ -13,13 +13,13 @@
  */
 package io.macgyver.plugin.ci.jenkins;
 
-import io.macgyver.core.rest.BasicAuthInterceptor;
-import io.macgyver.core.rest.UrlBuilder;
+import io.macgyver.okrest.BasicAuthInterceptor;
 import io.macgyver.okrest.OkRestClient;
 import io.macgyver.okrest.OkRestException;
 import io.macgyver.okrest.OkRestResponse;
 import io.macgyver.okrest.OkRestTarget;
 import io.macgyver.okrest.OkRestWrapperException;
+import io.macgyver.okrest.compat.OkUriBuilder;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -126,7 +126,7 @@ public class JenkinsClientImpl implements JenkinsClient {
 	public String executeGroovyScript(String groovy) {
 		try {
 
-			String url = new UrlBuilder(urlBase).path("scriptText").build();
+			String url = new OkUriBuilder().uri(urlBase).path("scriptText").build().toString();
 
 			RequestBody formBody = new FormEncodingBuilder().add("script",
 					groovy).build();
@@ -159,8 +159,8 @@ public class JenkinsClientImpl implements JenkinsClient {
 	public JsonNode build(String jobName) {
 		try {
 
-			String url = new UrlBuilder(urlBase).path("job").path(jobName)
-					.path("build").build();
+			String url = new OkUriBuilder().uri(urlBase).path("job").path(jobName)
+					.path("build").build().toString();
 
 			RequestBody formBody = new FormEncodingBuilder().add("__dummy__",
 					"").build();
@@ -176,8 +176,8 @@ public class JenkinsClientImpl implements JenkinsClient {
 			Optional<String> qp = extractQueuePath(response.header("Location"));
 
 			if (qp.isPresent()) {
-				return getJson(new UrlBuilder(qp.get()).path("api/json")
-						.build());
+				return getJson(new OkUriBuilder().uri(qp.get()).path("api/json")
+						.build().toString());
 			} else {
 				throw new IllegalStateException(
 						"jenkins should have returned a Locaton header");
@@ -202,8 +202,8 @@ public class JenkinsClientImpl implements JenkinsClient {
 	public JsonNode buildWithParameters(String jobName, Map<String, String> m) {
 		try {
 
-			String url = new UrlBuilder(urlBase).path("job").path(jobName)
-					.path("buildWithParameters").build();
+			String url = new OkUriBuilder().uri(urlBase).path("job").path(jobName)
+					.path("buildWithParameters").build().toString();
 
 			FormEncodingBuilder builder = new FormEncodingBuilder();
 
@@ -266,12 +266,12 @@ public class JenkinsClientImpl implements JenkinsClient {
 	@Override
 	public JsonNode getBuildQueue() {
 
-		return getJson(new UrlBuilder("queue/api/json").build());
+		return getJson(new OkUriBuilder().path("queue/api/json").build().toString());
 	}
 
 	@Override
 	public JsonNode getLoadStats() {
-		return getJson(new UrlBuilder("overallLoad/api/json").build());
+		return getJson(new OkUriBuilder().path("overallLoad/api/json").build().toString());
 	}
 
 	@Override
@@ -308,7 +308,7 @@ public class JenkinsClientImpl implements JenkinsClient {
 	protected void postWithoutResult(String path) {
 		try {
 
-			String url = new UrlBuilder(urlBase).path(path).build();
+			String url = new OkUriBuilder().uri(urlBase).path(path).build().toString();
 
 			Request request = new Request.Builder()
 					.addHeader("Accept", "application/json")

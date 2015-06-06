@@ -13,10 +13,11 @@
  */
 package io.macgyver.plugin.github;
 
-import io.macgyver.core.rest.BasicAuthInterceptor;
+
 import io.macgyver.core.service.BasicServiceFactory;
 import io.macgyver.core.service.ServiceDefinition;
 import io.macgyver.core.service.ServiceRegistry;
+import io.macgyver.okrest.BasicAuthInterceptor;
 import io.macgyver.okrest.OkRestClient;
 import io.macgyver.okrest.OkRestTarget;
 
@@ -28,7 +29,7 @@ import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
 import org.kohsuke.github.extras.OkHttpConnector;
 
-import com.google.gwt.thirdparty.guava.common.base.Strings;
+import com.google.common.base.Strings;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.OkUrlFactory;
 

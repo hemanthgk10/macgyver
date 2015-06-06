@@ -16,26 +16,20 @@ package io.macgyver.plugin.hipchat;
 
 
 import io.macgyver.okrest.OkRestClient;
-import io.macgyver.okrest.OkRestException;
 import io.macgyver.okrest.OkRestResponse;
 import io.macgyver.okrest.OkRestTarget;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
-import com.ning.http.client.AsyncHttpClient;
 import com.squareup.okhttp.Interceptor;
 import com.squareup.okhttp.Response;
 

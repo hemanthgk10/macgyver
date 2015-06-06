@@ -47,7 +47,6 @@ public class GitHubResourceImpl extends Resource {
 	}
 	public String getContentAsString() throws IOException {
 		
-
 		return content.getContent();
 	}
 	@Override

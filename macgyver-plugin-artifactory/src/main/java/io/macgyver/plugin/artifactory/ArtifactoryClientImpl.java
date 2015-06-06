@@ -13,6 +13,11 @@
  */
 package io.macgyver.plugin.artifactory;
 
+import io.macgyver.okrest.BasicAuthInterceptor;
+import io.macgyver.okrest.OkRestClient;
+import io.macgyver.okrest.OkRestResponse;
+import io.macgyver.okrest.OkRestTarget;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -25,12 +30,6 @@ import com.google.common.base.Splitter;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closer;
 import com.google.common.io.Files;
-import com.squareup.okhttp.OkHttpClient;
-
-import io.macgyver.core.rest.BasicAuthInterceptor;
-import io.macgyver.okrest.OkRestClient;
-import io.macgyver.okrest.OkRestResponse;
-import io.macgyver.okrest.OkRestTarget;
 
 public class ArtifactoryClientImpl implements ArtifactoryClient {
 

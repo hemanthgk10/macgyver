@@ -13,15 +13,13 @@
  */
 package io.macgyver.core.test;
 
-import java.util.Properties;
-import java.util.UUID;
-
-import com.google.common.base.Preconditions;
-
 import io.macgyver.core.MacGyverException;
 import io.macgyver.core.service.ServiceDefinition;
 import io.macgyver.core.service.ServiceFactory;
 import io.macgyver.core.service.ServiceRegistry;
+
+import java.util.Properties;
+import java.util.UUID;
 
 /**
  * StandaloneServiceBuilder allows services to be constructed without the entire

@@ -17,7 +17,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.macgyver.test.MacGyverIntegrationTest;
 
 import java.io.IOException;
-import java.net.URL;
 
 import javax.inject.Inject;
 
