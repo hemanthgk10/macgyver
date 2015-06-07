@@ -24,7 +24,7 @@ import io.macgyver.okrest.OkRestTarget;
 public interface ArtifactoryClient {
 
 	OkRestTarget getBaseTarget();
-	GavcSearchBuilder searchGAVC();
+	GAVCSearchBuilder searchGAVC();
 	PropertySearchBuilder searchProperties();
 	DateSearchBuilder searchDate();
 	AQLSearchBuilder searchAQL();

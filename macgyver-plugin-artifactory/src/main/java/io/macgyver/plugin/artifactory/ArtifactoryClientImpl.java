@@ -65,8 +65,8 @@ public class ArtifactoryClientImpl implements ArtifactoryClient {
 	}
 
 	@Override
-	public GavcSearchBuilder searchGAVC() {
-		return new GavcSearchBuilder(getBaseTarget());
+	public GAVCSearchBuilder searchGAVC() {
+		return new GAVCSearchBuilder(getBaseTarget());
 	}
 	public PropertySearchBuilder searchProperties() {
 		return new PropertySearchBuilder(getBaseTarget());

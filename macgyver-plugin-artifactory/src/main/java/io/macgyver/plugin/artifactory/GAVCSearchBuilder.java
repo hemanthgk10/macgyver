@@ -17,30 +17,30 @@ import io.macgyver.okrest.OkRestTarget;
 
 import java.io.IOException;
 
-public class GavcSearchBuilder extends AbstractSearchBuilder<GavcSearchBuilder>  {
+public class GAVCSearchBuilder extends AbstractSearchBuilder<GAVCSearchBuilder>  {
 
 
 
-	public GavcSearchBuilder(OkRestTarget r) {
+	public GAVCSearchBuilder(OkRestTarget r) {
 		super(r,"/api/search/gavc");
 	}
 
-	public GavcSearchBuilder group(String group) {
+	public GAVCSearchBuilder group(String group) {
 		target = target.queryParameter("g", group);
 		return this;
 	}
 
-	public GavcSearchBuilder artifact(String artifact) {
+	public GAVCSearchBuilder artifact(String artifact) {
 		target = target.queryParameter("a", artifact);
 		return this;
 	}
 
-	public GavcSearchBuilder version(String version) {
+	public GAVCSearchBuilder version(String version) {
 		target = target.queryParameter("v", version);
 		return this;
 	}
 
-	public GavcSearchBuilder classifier(String classifier) {
+	public GAVCSearchBuilder classifier(String classifier) {
 		target = target.queryParameter("c", classifier);
 		return this;
 	}
