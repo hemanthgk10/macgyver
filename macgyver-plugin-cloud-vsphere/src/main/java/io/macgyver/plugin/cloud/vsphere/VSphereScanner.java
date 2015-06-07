@@ -92,7 +92,7 @@ public class VSphereScanner {
 		String setClause = createSetClause("c", n);
 
 		String cypher = String
-				.format("merge (c:ComputeHost {macId:{macId}}) on match set %s ,c.lastUpdateTs=timestamp() ON CREATE SET %s, c.lastUpdateTs=timestamp() return c",
+				.format("merge (c:ComputeHost {macId:{macId}}) on match set %s ,c.updateTs=timestamp() ON CREATE SET %s, c.updateTs=timestamp() return c",
 						setClause, setClause);
 
 		JsonNode computeHost = client.execCypher(cypher, n).toBlocking()
@@ -101,7 +101,7 @@ public class VSphereScanner {
 		JsonNode vcenter = ensureController();
 
 		String vcenterMacId = vcenter.get("macId").asText();
-		cypher = "match (c:ComputeController {macId:{vcenterMacId}}), (h:ComputeHost {macId:{hostMacId} }) MERGE (c)-[r:MANAGES]->(h) ON CREATE SET r.lastUpdateTs=timestamp() ON MATCH SET r.lastUpdateTs=timestamp() return r";
+		cypher = "match (c:ComputeController {macId:{vcenterMacId}}), (h:ComputeHost {macId:{hostMacId} }) MERGE (c)-[r:MANAGES]->(h) ON CREATE SET r.updateTs=timestamp() ON MATCH SET r.updateTs=timestamp() return r";
 		client.execCypher(cypher, "vcenterMacId", vcenterMacId, "hostMacId",
 				computeHost.get("macId").asText());
 	}
@@ -112,8 +112,8 @@ public class VSphereScanner {
 
 		String cypher = "merge (c:ComputeInstance {macId:{macId}}) on match set "
 				+ setClause
-				+ ",c.lastUpdateTs=timestamp() ON CREATE SET "
-				+ setClause + ", c.lastUpdateTs=timestamp() return c";
+				+ ",c.updateTs=timestamp() ON CREATE SET "
+				+ setClause + ", c.updateTs=timestamp() return c";
 
 		client.execCypher(cypher, n).toBlocking().first();
 
@@ -152,19 +152,19 @@ public class VSphereScanner {
 			GuestInfo g = vm.getGuest();
 			setVal(n, "name", vm.getName());
 			setVal(n, "macId", getMacUuid(vm));
-			setVal(n, "vmwInstanceUuid", cfg.getInstanceUuid());
-			setVal(n, "vmwMorVal", moVal);
-			setVal(n, "vmwMorType", moType);
-			setVal(n, "vmwAnnotation", cfg.getAnnotation());
-			setVal(n, "vmwGuestToolsVersion", g.getToolsVersion());
-			setVal(n, "vmwGuestId", g.getGuestId());
-			setVal(n, "vmwGuestFamily", g.getGuestFamily());
-			setVal(n, "vmwGuestFullName", g.getGuestFullName());
-			setVal(n, "vmwGuestIpAddress", g.getIpAddress());
-			setVal(n, "vmwGuestId", g.getGuestId());
-			setVal(n, "vmwGuestHostName", g.getHostName());
-			setVal(n, "vmwGuestAlternateName", cfg.getAlternateGuestName());
-			setVal(n, "vmwLocationId", cfg.getLocationId());
+			setVal(n, "vmw_instanceUuid", cfg.getInstanceUuid());
+			setVal(n, "vmw_morVal", moVal);
+			setVal(n, "vmw_morType", moType);
+			setVal(n, "vmw_annotation", cfg.getAnnotation());
+			setVal(n, "vmw_guestToolsVersion", g.getToolsVersion());
+			setVal(n, "vmw_guestId", g.getGuestId());
+			setVal(n, "vmw_guestFamily", g.getGuestFamily());
+			setVal(n, "vmw_guestFullName", g.getGuestFullName());
+			setVal(n, "vmw_guestIpAddress", g.getIpAddress());
+			setVal(n, "vmw_guestId", g.getGuestId());
+			setVal(n, "vmw_guestHostName", g.getHostName());
+			setVal(n, "vmw_guestAlternateName", cfg.getAlternateGuestName());
+			setVal(n, "vmw_locationId", cfg.getLocationId());
 
 		} catch (Exception e) {
 			logger.warn("", e);
@@ -182,12 +182,12 @@ public class VSphereScanner {
 		ManagedObjectReference mor = host.getMOR();
 		HostHardwareInfo hh = host.getHardware();
 		ObjectNode n = mapper.createObjectNode().put("macId", getMacId(host))
-				.put("name", host.getName()).put("vmwMorType", mor.getType())
-				.put("vmwMorVal", mor.getVal()).put("vmwHardwareModel",
+				.put("name", host.getName()).put("vmw_morType", mor.getType())
+				.put("vmw_morVal", mor.getVal()).put("vmw_hardwareModel",
 
 				hh.getSystemInfo().getModel())
-				.put("vmwCpuCoreCount", hh.getCpuInfo().getNumCpuCores())
-				.put("vmwMemorySize", hh.getMemorySize());
+				.put("vmw_cpuCoreCount", hh.getCpuInfo().getNumCpuCores())
+				.put("vmw_memorySize", hh.getMemorySize());
 
 		return n;
 	}
@@ -196,7 +196,7 @@ public class VSphereScanner {
 
 		logger.debug("updating relationship between host={} and vm={}",
 				h.getName(), vm.getName());
-		String cypher = "match (h:ComputeHost {macId:{hostMacUuid} }), (c:ComputeInstance {macId: {computeMacUuid}}) MERGE (h)-[r:HOSTS]->(c) ON CREATE SET r.lastUpdateTs=timestamp() ON MATCH SET r.lastUpdateTs=timestamp() return r";
+		String cypher = "match (h:ComputeHost {macId:{hostMacUuid} }), (c:ComputeInstance {macId: {computeMacUuid}}) MERGE (h)-[r:HOSTS]->(c) ON CREATE SET r.updateTs=timestamp(),r.createTs=timestamp() ON MATCH SET r.updateTs=timestamp() return r";
 		client.execCypher(cypher, "hostMacUuid", getMacId(h), "computeMacUuid",
 				getMacUuid(vm));
 
@@ -252,7 +252,7 @@ public class VSphereScanner {
 		logger.info(
 				"clearing stale ComputeHost->ComputeInstance relationships for host: {}",
 				host.getName());
-		String cypher = "match (h:ComputeHost {macId:{macId}})-[r:HOSTS]-(c:ComputeInstance) where r.lastUpdateTs<{ts} delete r";
+		String cypher = "match (h:ComputeHost {macId:{macId}})-[r:HOSTS]-(c:ComputeInstance) where r.updateTs<{ts} delete r";
 		
 		// this is for logging only
 			
