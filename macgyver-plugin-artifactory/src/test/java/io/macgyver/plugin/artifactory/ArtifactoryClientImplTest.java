@@ -31,7 +31,124 @@ public class ArtifactoryClientImplTest {
 	@Rule
 	public MockWebServerRule mockServer = new MockWebServerRule();
 
-
+	@Test
+	public void testMockAql() throws InterruptedException{
+		
+		String  aql = "items.find\n" + 
+				"(\n" + 
+				"    {\n" + 
+				"        \"$and\":\n" + 
+				"        [\n" + 
+				"            {\"repo\":{\"$eq\":\"central-cache\"}},\n" + 
+				"            {\"name\":{\"$match\":\"guava-18*.jar\"}}\n" + 
+			
+				"        ]\n" + 
+				"    }\n" + 
+				").include(\"*\")";
+		
+		
+		String response = "{\n" + 
+				"    \"range\": {\n" + 
+				"        \"end_pos\": 4,\n" + 
+				"        \"start_pos\": 0,\n" + 
+				"        \"total\": 4\n" + 
+				"    },\n" + 
+				"    \"results\": [\n" + 
+				"        {\n" + 
+				"            \"actual_md5\": \"a2b3b121c9e5fcdf15f68055e5cd84a9\",\n" + 
+				"            \"actual_sha1\": \"418be347c254422b51adee3cacb10e3f69e279ec\",\n" + 
+				"            \"created\": \"2014-10-21T10:47:18.717-07:00\",\n" + 
+				"            \"created_by\": \"myuser\",\n" + 
+				"            \"depth\": 6,\n" + 
+				"            \"id\": 2790739,\n" + 
+				"            \"modified\": \"2014-08-25T11:48:35.000-07:00\",\n" + 
+				"            \"modified_by\": \"myuser\",\n" + 
+				"            \"name\": \"guava-18.0-javadoc.jar\",\n" + 
+				"            \"original_md5\": \"a2b3b121c9e5fcdf15f68055e5cd84a9\",\n" + 
+				"            \"original_sha1\": \"418be347c254422b51adee3cacb10e3f69e279ec\",\n" + 
+				"            \"path\": \"com/google/guava/guava/18.0\",\n" + 
+				"            \"repo\": \"central-cache\",\n" + 
+				"            \"size\": 5185956,\n" + 
+				"            \"type\": \"file\",\n" + 
+				"            \"updated\": \"2014-10-21T10:47:18.871-07:00\"\n" + 
+				"        },\n" + 
+				"        {\n" + 
+				"            \"actual_md5\": \"9475fa46958a75ef885d21a45f4bd1b9\",\n" + 
+				"            \"actual_sha1\": \"ad97fe8faaf01a3d3faacecd58e8fa6e78a973ca\",\n" + 
+				"            \"created\": \"2014-09-10T09:26:46.155-07:00\",\n" + 
+				"            \"created_by\": \"myuser\",\n" + 
+				"            \"depth\": 6,\n" + 
+				"            \"id\": 1848104,\n" + 
+				"            \"modified\": \"2014-08-25T11:48:35.000-07:00\",\n" + 
+				"            \"modified_by\": \"myuser\",\n" + 
+				"            \"name\": \"guava-18.0-sources.jar\",\n" + 
+				"            \"original_md5\": \"9475fa46958a75ef885d21a45f4bd1b9\",\n" + 
+				"            \"original_sha1\": \"ad97fe8faaf01a3d3faacecd58e8fa6e78a973ca\",\n" + 
+				"            \"path\": \"com/google/guava/guava/18.0\",\n" + 
+				"            \"repo\": \"central-cache\",\n" + 
+				"            \"size\": 1277909,\n" + 
+				"            \"type\": \"file\",\n" + 
+				"            \"updated\": \"2014-09-10T09:26:46.187-07:00\"\n" + 
+				"        },\n" + 
+				"        {\n" + 
+				"            \"actual_md5\": \"947641f6bb535b1d942d1bc387c45290\",\n" + 
+				"            \"actual_sha1\": \"cce0823396aa693798f8882e64213b1772032b09\",\n" + 
+				"            \"created\": \"2014-09-08T10:45:37.779-07:00\",\n" + 
+				"            \"created_by\": \"myuser\",\n" + 
+				"            \"depth\": 6,\n" + 
+				"            \"id\": 1662383,\n" + 
+				"            \"modified\": \"2014-08-25T11:48:34.000-07:00\",\n" + 
+				"            \"modified_by\": \"myuser\",\n" + 
+				"            \"name\": \"guava-18.0.jar\",\n" + 
+				"            \"original_md5\": \"947641f6bb535b1d942d1bc387c45290\",\n" + 
+				"            \"original_sha1\": \"cce0823396aa693798f8882e64213b1772032b09\",\n" + 
+				"            \"path\": \"com/google/guava/guava/18.0\",\n" + 
+				"            \"repo\": \"central-cache\",\n" + 
+				"            \"size\": 2256213,\n" + 
+				"            \"type\": \"file\",\n" + 
+				"            \"updated\": \"2014-09-08T10:45:37.896-07:00\"\n" + 
+				"        },\n" + 
+				"        {\n" + 
+				"            \"actual_md5\": \"a8efd08d9dda2ab593ae7eaa99170475\",\n" + 
+				"            \"actual_sha1\": \"9bd0d5bc8a4269bb2b5584d5498e281633c677eb\",\n" + 
+				"            \"created\": \"2014-09-02T12:31:15.949-07:00\",\n" + 
+				"            \"created_by\": \"myuser\",\n" + 
+				"            \"depth\": 6,\n" + 
+				"            \"id\": 1441564,\n" + 
+				"            \"modified\": \"2014-08-05T12:16:43.000-07:00\",\n" + 
+				"            \"modified_by\": \"myuser\",\n" + 
+				"            \"name\": \"guava-18.0-rc1.jar\",\n" + 
+				"            \"original_md5\": \"a8efd08d9dda2ab593ae7eaa99170475\",\n" + 
+				"            \"original_sha1\": \"9bd0d5bc8a4269bb2b5584d5498e281633c677eb\",\n" + 
+				"            \"path\": \"com/google/guava/guava/18.0-rc1\",\n" + 
+				"            \"repo\": \"central-cache\",\n" + 
+				"            \"size\": 2256450,\n" + 
+				"            \"type\": \"file\",\n" + 
+				"            \"updated\": \"2014-09-02T12:31:16.178-07:00\"\n" + 
+				"        }\n" + 
+				"    ]\n" + 
+				"}\n" + 
+				"";
+		
+		mockServer.enqueue(new MockResponse().setBody(response).addHeader("Content-type","application/json"));
+		
+		ArtifactoryClientImpl c = new ArtifactoryClientImpl(mockServer.getUrl(
+				"/artifactory").toExternalForm(), "grateful", "dead");
+		c.getBaseTarget().getOkHttpClient().interceptors()
+				.add(new OkRestLoggingInterceptor());
+		
+		
+		JsonNode n = c.searchAQL().aql(aql).execute();
+		
+		RecordedRequest rr = mockServer.takeRequest();
+		
+		Assertions.assertThat(rr.getHeader("Content-type")).isEqualTo("text/plain");
+		Assertions.assertThat(rr.getHeader("Authorization")).isEqualTo("Basic Z3JhdGVmdWw6ZGVhZA==");
+		Assertions.assertThat(rr.getBody().readUtf8()).contains("$and").contains("guava-18*.jar");
+		
+		// ensure we got the response we expect
+		Assertions.assertThat(n.path("results").get(0).get("actual_md5").asText()).isEqualTo("a2b3b121c9e5fcdf15f68055e5cd84a9");
+	}
 
 	@Test
 	public void testMockGavcSearch() throws IOException, InterruptedException {
@@ -92,7 +209,7 @@ public class ArtifactoryClientImplTest {
 		c.getBaseTarget().getOkHttpClient().interceptors()
 				.add(new OkRestLoggingInterceptor());
 
-		JsonNode n = c.gavcSearch().artifact("myartifact").version("1.0.1")
+		JsonNode n = c.searchGAVC().artifact("myartifact").version("1.0.1")
 				.withInfo(true).withProperties(true).inRepo("lib-release")
 				.execute();
 		RecordedRequest rr = mockServer.takeRequest();
@@ -118,7 +235,7 @@ public class ArtifactoryClientImplTest {
 		c.getBaseTarget().getOkHttpClient().interceptors()
 				.add(new OkRestLoggingInterceptor());
 
-		n = c.gavcSearch().artifact("myartifact").version("1.0.1")
+		n = c.searchGAVC().artifact("myartifact").version("1.0.1")
 				.withInfo(true).withProperties(true).inRepo("lib-release")
 				.execute();
 		rr = mockServer.takeRequest();
@@ -148,7 +265,7 @@ public class ArtifactoryClientImplTest {
 		c.getBaseTarget().getOkHttpClient().interceptors()
 				.add(new OkRestLoggingInterceptor());
 
-		n = c.gavcSearch().artifact("myartifact").version("1.0.1")
+		n = c.searchGAVC().artifact("myartifact").version("1.0.1")
 				.withInfo(true).withProperties(false).inRepo("lib-release")
 				.execute();
 		rr = mockServer.takeRequest();
@@ -176,7 +293,7 @@ public class ArtifactoryClientImplTest {
 		c.getBaseTarget().getOkHttpClient().interceptors()
 				.add(new OkRestLoggingInterceptor());
 
-		n = c.gavcSearch().artifact("myartifact").version("1.0.1")
+		n = c.searchGAVC().artifact("myartifact").version("1.0.1")
 				.withInfo(false).withProperties(false).inRepo("lib-release")
 				.execute();
 		rr = mockServer.takeRequest();
@@ -251,7 +368,7 @@ public class ArtifactoryClientImplTest {
 		c.getBaseTarget().getOkHttpClient().interceptors()
 				.add(new OkRestLoggingInterceptor());
 
-		JsonNode n = c.propertySearch().property("artifactId","myartifact")
+		JsonNode n = c.searchProperties().property("artifactId","myartifact")
 				.withInfo(true).withProperties(true).inRepo("lib-release")
 				.execute();
 		RecordedRequest rr = mockServer.takeRequest();

@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Splitter;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closer;
@@ -64,14 +65,14 @@ public class ArtifactoryClientImpl implements ArtifactoryClient {
 	}
 
 	@Override
-	public GavcSearchBuilder gavcSearch() {
+	public GavcSearchBuilder searchGAVC() {
 		return new GavcSearchBuilder(getBaseTarget());
 	}
-	public PropertySearchBuilder propertySearch() {
+	public PropertySearchBuilder searchProperties() {
 		return new PropertySearchBuilder(getBaseTarget());
 	}
 	
-	public DateSearchBuilder dateSearch() {
+	public DateSearchBuilder searchDate() {
 		return new DateSearchBuilder(getBaseTarget());
 	}
 
@@ -127,5 +128,14 @@ public class ArtifactoryClientImpl implements ArtifactoryClient {
 		File f = new File(Files.createTempDir(),x);
 		
 		return fetchArtifactToFile(path, f);
+	}
+
+	@Override
+	public AQLSearchBuilder searchAQL() {
+	
+		return new AQLSearchBuilder(base);
+		
+		
+	
 	}
 }

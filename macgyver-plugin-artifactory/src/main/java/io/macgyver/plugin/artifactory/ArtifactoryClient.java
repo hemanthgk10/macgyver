@@ -17,15 +17,17 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 import io.macgyver.okrest.OkRestTarget;
 
 public interface ArtifactoryClient {
 
 	OkRestTarget getBaseTarget();
-	GavcSearchBuilder gavcSearch();
-	PropertySearchBuilder propertySearch();
-	DateSearchBuilder dateSearch();
-	
+	GavcSearchBuilder searchGAVC();
+	PropertySearchBuilder searchProperties();
+	DateSearchBuilder searchDate();
+	AQLSearchBuilder searchAQL();
 	File fetchArtifactToDir(String path, File target) throws IOException;
 	File fetchArtifactToFile(String path, File out) throws IOException;
 	File fetchArtifactToTempFile(String path) throws IOException;
