@@ -18,6 +18,8 @@ import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.test.MacGyverIntegrationTest;
 
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import rx.functions.Action1;
@@ -27,6 +29,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ServiceScannerTest extends MacGyverIntegrationTest {
 
+	Logger logger = LoggerFactory.getLogger(ServiceScannerTest.class);
+	
 	@Autowired
 	NeoRxClient neorx;
 	
@@ -58,7 +62,7 @@ public class ServiceScannerTest extends MacGyverIntegrationTest {
 
 			@Override
 			public void call(NodeInfo t1) {
-				//System.out.println(t1.getNeoRxClient());
+				logger.debug("");
 				
 			}};
 		ts.addDecorationAction(action);
