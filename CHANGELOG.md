@@ -1,5 +1,12 @@
 ## Changes
 
+
+### 0.90.5
+* fix update timestamp for ComputeInstance updates
+
+### 0.90.4
+* basic working cloudstack plugin
+
 ### 0.86.1
 * add MockWebServer (from Square OkHttp)
 * upgrade junit to 4.12
