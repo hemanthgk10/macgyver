@@ -69,7 +69,7 @@ public class ComputeInstancesView extends VerticalLayout implements View {
 		table.addStyleName("small");
 		// Define two columns for the built-in container
 		table.addContainerProperty("name", String.class, null);
-		table.addContainerProperty("lastUpdatePrettyTs",String.class,null);
+		table.addContainerProperty("prettyUpdateTs",String.class,null);
 
 		table.setWidth("100%");
 		table.setHeight("100%");
@@ -93,7 +93,7 @@ public class ComputeInstancesView extends VerticalLayout implements View {
 		addComponent(table);
 
 		table.setColumnHeader("name", "Name");
-		table.setColumnHeader("lastUpdatePrettyTs", "Last Update");
+		table.setColumnHeader("prettyUpdateTs", "Last Update");
 
 		BlurListener bl = new BlurListener() {
 
@@ -169,12 +169,12 @@ public class ComputeInstancesView extends VerticalLayout implements View {
 			ObjectNode objectNode = (ObjectNode) node;
 			if (filter(searchValue, node)) {
 
-				long lastContact = node.path("lastUpdateTs").asLong(0);
+				long lastContact = node.path("updateTs").asLong(0);
 				if (lastContact > 0) {
 				
 					String pretty = pt.format(new Date(lastContact));
 
-					objectNode.put("lastUpdatePrettyTs", pretty);
+					objectNode.put("prettyUpdateTs", pretty);
 				}
 
 				container.addJsonObject(objectNode);
