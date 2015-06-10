@@ -213,7 +213,7 @@ public class ArtifactoryClientImplTest {
 				.withInfo(true).withProperties(true).inRepo("lib-release")
 				.execute();
 		RecordedRequest rr = mockServer.takeRequest();
-		System.out.println(rr.getHeaders());
+
 		Assertions
 				.assertThat(rr.getPath())
 				.isEqualTo(
@@ -239,7 +239,7 @@ public class ArtifactoryClientImplTest {
 				.withInfo(true).withProperties(true).inRepo("lib-release")
 				.execute();
 		rr = mockServer.takeRequest();
-		System.out.println(rr.getHeaders());
+		
 		Assertions
 				.assertThat(rr.getPath())
 				.isEqualTo(
@@ -269,7 +269,7 @@ public class ArtifactoryClientImplTest {
 				.withInfo(true).withProperties(false).inRepo("lib-release")
 				.execute();
 		rr = mockServer.takeRequest();
-		System.out.println(rr.getHeaders());
+	
 		Assertions
 				.assertThat(rr.getPath())
 				.isEqualTo(
@@ -297,7 +297,7 @@ public class ArtifactoryClientImplTest {
 				.withInfo(false).withProperties(false).inRepo("lib-release")
 				.execute();
 		rr = mockServer.takeRequest();
-		System.out.println(rr.getHeaders());
+	
 		Assertions
 				.assertThat(rr.getPath())
 				.isEqualTo(
@@ -372,7 +372,7 @@ public class ArtifactoryClientImplTest {
 				.withInfo(true).withProperties(true).inRepo("lib-release")
 				.execute();
 		RecordedRequest rr = mockServer.takeRequest();
-		System.out.println(rr.getHeaders());
+	
 		Assertions
 				.assertThat(rr.getPath())
 				.isEqualTo(
