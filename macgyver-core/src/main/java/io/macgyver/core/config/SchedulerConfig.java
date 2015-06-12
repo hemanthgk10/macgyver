@@ -20,6 +20,7 @@ import io.macgyver.neorx.rest.NeoRxClient;
 import it.sauronsoftware.cron4j.SchedulerListener;
 import it.sauronsoftware.cron4j.TaskCollector;
 
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,6 +31,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class SchedulerConfig {
 
+	Logger logger = LoggerFactory.getLogger(SchedulerConfig.class);
+
 	@Value("${scheduler.enabled:true}")
 	boolean schedulerEnabled = true;
 
@@ -38,47 +41,51 @@ public class SchedulerConfig {
 
 	@Autowired
 	NeoRxClient neo4j;
-	
-	
 
-	
 	@Bean
 	public ScheduleScanner macAutoScheduler() {
 		return new ScheduleScanner();
 	}
 
-
 	@Bean
 	public TaskCollector macTaskCollector() {
-		return new MacGyverTaskCollector();
+		MacGyverTaskCollector taskCollector = new MacGyverTaskCollector();
+		if (!schedulerEnabled) {
+			logger.warn("scheduler.config={} -- scheduler will run but tasks will not execute",schedulerEnabled);
+		}
+		taskCollector.setEnabled(schedulerEnabled);
+		return taskCollector;
 	}
-	
+
 	@Bean
 	public SchedulerListener macSchedulerListener() {
 		return new MacGyverScheduleListener();
 	}
+
 	@Bean
 	public it.sauronsoftware.cron4j.Scheduler macScheduler() {
 		final it.sauronsoftware.cron4j.Scheduler scheduler = new it.sauronsoftware.cron4j.Scheduler();
 		scheduler.addTaskCollector(macTaskCollector());
 		scheduler.setDaemon(true);
 		scheduler.addSchedulerListener(macSchedulerListener());
-		LoggerFactory.getLogger(SchedulerConfig.class).info("starting scheduler: {}",scheduler);
+		LoggerFactory.getLogger(SchedulerConfig.class).info(
+				"starting scheduler: {}", scheduler);
 		scheduler.start();
-		
+
 		Runnable r = new Runnable() {
 
 			@Override
 			public void run() {
-				LoggerFactory.getLogger(it.sauronsoftware.cron4j.Scheduler.class).info("heartbeat");
-				
+				LoggerFactory.getLogger(
+						it.sauronsoftware.cron4j.Scheduler.class).info(
+						"heartbeat");
+
 			}
-			
+
 		};
-		String key = scheduler.schedule("* * * * *",r);
-		
-		
+		String key = scheduler.schedule("* * * * *", r);
+
 		return scheduler;
 	}
-	
+
 }

@@ -33,12 +33,25 @@ public class MacGyverTaskCollector implements TaskCollector {
 	@Autowired
 	NeoRxClient client;
 
+	boolean enabled=true;
+
 	public MacGyverTaskCollector() {
 
 	}
 
 	public MacGyverTaskCollector(NeoRxClient c) {
 		this.client = c;
+	}
+
+	public boolean isEnabled() {
+		return enabled;
+	}
+	/**
+	 * Enable/Disable MacGyver Scheduler
+	 * @param b
+	 */
+	public void setEnabled(boolean b) {
+		this.enabled=b;
 	}
 
 	public List<JsonNode> fetchSchedule() {
@@ -51,12 +64,16 @@ public class MacGyverTaskCollector implements TaskCollector {
 	String enhanceCronExpression(String input) {
 		input = input.trim();
 		String output = input;
-		
+
 		return output;
 	}
 
 	protected TaskTable toTaskTable(List<JsonNode> list) {
 		TaskTable tt = new TaskTable();
+		if (!isEnabled()) {
+			logger.warn("scheduler is disabled--no tasks will be run");
+			return tt;
+		}
 		for (JsonNode n : list) {
 			try {
 
@@ -74,6 +91,7 @@ public class MacGyverTaskCollector implements TaskCollector {
 			}
 
 		}
+
 		return tt;
 	}
 
