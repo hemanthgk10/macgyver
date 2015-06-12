@@ -13,6 +13,8 @@
  */
 package io.macgyver.core.scheduler;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
@@ -21,6 +23,12 @@ public class MacGyverTaskCollectorTest {
 	@Test
 	public void testIt() {
 		MacGyverTaskCollector c = new MacGyverTaskCollector();
-		Assertions.assertThat(c.enhanceCronExpression("* * * * *")).isEqualTo("* * * * *");
+		assertThat(c.enhanceCronExpression("* * * * *")).isEqualTo("* * * * *");
+		
+		assertThat(c.isEnabled()).isTrue();
+		
+		c.setEnabled(false);
+		
+		assertThat(c.isEnabled()).isFalse();
     }
 }
