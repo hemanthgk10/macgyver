@@ -22,7 +22,7 @@ import org.springframework.context.annotation.Configuration;
 public class ArtifactoryConfig {
 
 	@Bean
-	public ArtifactoryServiceFactory arifactoryServiceFactory() {
+	public ArtifactoryServiceFactory artifactoryServiceFactory() {
 		return new ArtifactoryServiceFactory();
 	}
 }

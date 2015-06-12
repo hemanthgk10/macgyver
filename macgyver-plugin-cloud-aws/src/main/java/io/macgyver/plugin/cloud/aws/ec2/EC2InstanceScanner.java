@@ -113,7 +113,7 @@ public class EC2InstanceScanner {
 		target.put("privateDnsName", Strings.emptyToNull(n.path("privateDnsName").asText(null)));
 		target.put("state", Strings.emptyToNull(n.path("state").path("name").asText(null)));
 		target.put("launchTs", n.path("launchTime").asLong(0));
-		System.out.println(m.writerWithDefaultPrettyPrinter().writeValueAsString(n));
+
 		return target;
 	}
 	String mangleName(String f) {
