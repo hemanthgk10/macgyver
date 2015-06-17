@@ -14,6 +14,7 @@
 package io.macgyver.plugin.ci.jenkins;
 
 import io.macgyver.okrest.BasicAuthInterceptor;
+import io.macgyver.okrest.OkRestLoggingInterceptor;
 import io.macgyver.okrest.OkRestClient;
 import io.macgyver.okrest.OkRestException;
 import io.macgyver.okrest.OkRestResponse;
@@ -35,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -42,6 +44,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
 import com.squareup.okhttp.FormEncodingBuilder;
+import com.squareup.okhttp.Headers;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
@@ -172,21 +175,33 @@ public class JenkinsClientImpl implements JenkinsClient {
 			OkHttpClient client = target.getOkHttpClient();
 
 			Response response = client.newCall(request).execute();
-
-			Optional<String> qp = extractQueuePath(response.header("Location"));
-
-			if (qp.isPresent()) {
-				return getJson(new OkUriBuilder().uri(qp.get()).path("api/json")
-						.build().toString());
+			
+			String locationHeader = response.header("Location");
+			
+			if (Strings.isNullOrEmpty(locationHeader)) { 
+			
+				JsonNode responseAsJson = new ObjectMapper().readTree(response.body().string());
+				
+				return responseAsJson;
 			} else {
-				throw new IllegalStateException(
-						"jenkins should have returned a Locaton header");
+				
+				Optional<String> qp = extractQueuePath(locationHeader);
+
+				if (qp.isPresent()) {
+					return getJson(new OkUriBuilder().uri(qp.get()).path("api/json")
+							.build().toString());
+				} else {
+					throw new IllegalStateException(
+							"jenkins should have returned a Locaton header");
+				}
+
 			}
 
 		} catch (IOException e) {
 			throw new OkRestWrapperException(e);
 		}
 	}
+
 
 	Optional<String> extractQueuePath(String location) {
 		Pattern p = Pattern.compile(".*(\\/queue\\/item\\/\\d+)[$\\/]*.*");
@@ -221,20 +236,31 @@ public class JenkinsClientImpl implements JenkinsClient {
 			Request request = new Request.Builder()
 					.addHeader("Accept", "application/json").url(url)
 					.post(formBody).build();
+			
 
 			Response response = client.newCall(request).execute();
-
+			
 			throwRestExceptionOnError(response);
-
-			Optional<String> qp = extractQueuePath(response.header("Location"));
-
-			if (qp.isPresent()) {
-				return target.path(qp.get()).path("api").path("json").get().execute(JsonNode.class);
+			
+			String locationHeader = response.header("Location");
+			
+			if (Strings.isNullOrEmpty(locationHeader)) { 
+			
+				JsonNode responseAsJson = new ObjectMapper().readTree(response.body().string());
+				return responseAsJson;
 				
 			} else {
-				throw new IllegalStateException(
-						"jenkins should have returned a Locaton header");
+				Optional<String> qp = extractQueuePath(locationHeader);
+
+				if (qp.isPresent()) {
+					return target.path(qp.get()).path("api").path("json").get().execute(JsonNode.class);
+					
+				} else {
+					throw new IllegalStateException(
+							"jenkins should have returned a Locaton header");
+				}
 			}
+		
 
 		} catch (IOException e) {
 			throw new OkRestWrapperException(e);
