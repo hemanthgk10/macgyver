@@ -75,7 +75,7 @@ public class GitHubDecorator implements io.macgyver.core.graph.NodeInfo.Action {
 		}
 
 		if (projectUrl.isPresent()) {
-			String cypher = "match (j:CIJob) where ID(j)={nodeId} MERGE (j)-[r:BUILDS]->(s:SCMRepo {url:{projectUrl}, type:'github'})"
+			String cypher = "match (j:CIJob) where ID(j)={nodeId} MERGE (s:SCMRepo {url:{projectUrl}, type:'github'}) MERGE (j)-[r:BUILDS]->(s)"
 					+ " ON CREATE set r.createTs=timestamp(), s.createTs=timestamp(), r.updateTs=timestamp(), s.updateTs=timestamp() "
 					+ " ON MATCH  set r.updateTs=timestamp(), s.updateTs=timestamp()";
 			t1.getNeoRxClient().execCypher(cypher, params);
