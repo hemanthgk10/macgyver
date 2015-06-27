@@ -79,9 +79,10 @@ public class A10ClientImpl implements A10Client {
 	private String url;
 	LoadingCache<String, String> tokenCache;
 
-	public static final int DEFAULT_TOKEN_CACHE_DURATION = 10;
+	public static final int DEFAULT_TOKEN_CACHE_DURATION = 5;
 	private static final TimeUnit DEFAULT_TOKEN_CACHE_DURATION_TIME_UNIT = TimeUnit.MINUTES;
 
+	public static final String INVALID_SESSION_ID_CODE="1009";
 	ObjectMapper mapper = new ObjectMapper();
 	public boolean validateCertificates = true;
 
@@ -168,6 +169,9 @@ public class A10ClientImpl implements A10Client {
 					.asText();
 
 			logger.warn("error response: {}", response);
+			if (code!=null && INVALID_SESSION_ID_CODE.equals(code)) {
+				tokenCache.invalidateAll();
+			}
 			A10RemoteException x = new A10RemoteException(code, msg);
 			throw x;
 
@@ -180,7 +184,7 @@ public class A10ClientImpl implements A10Client {
 	 * By forcibly setting the the authentication token, we can prevent an
 	 * implicit call to authenticate(). This helps simplify mocked server
 	 * exchanges.
-	 * 
+	 *
 	 * @param token
 	 */
 	public void setAuthToken(String token) {
@@ -190,7 +194,7 @@ public class A10ClientImpl implements A10Client {
 	/**
 	 * Performs an authentication, caches the resulting authentication token,
 	 * and returns it.
-	 * 
+	 *
 	 * @return
 	 */
 	public String authenticate() {
@@ -255,6 +259,7 @@ public class A10ClientImpl implements A10Client {
 		return m;
 	}
 
+	@Override
 	@Deprecated
 	public ObjectNode invoke(String method, String... args) {
 		return invokeJson(method, args);
@@ -280,15 +285,18 @@ public class A10ClientImpl implements A10Client {
 		return invokeXml(method, null, toMap(args));
 	}
 
+	@Override
 	@Deprecated
 	public ObjectNode invoke(String method, Map<String, String> params) {
 		return invokeJson(method, params);
 	}
 
+	@Override
 	public ObjectNode invokeJson(String method, Map<String, String> params) {
 		return invokeJson(method, null, params);
 	}
 
+	@Override
 	public ObjectNode invokeJson(String method, JsonNode body,
 			Map<String, String> params) {
 		if (params == null) {
@@ -526,7 +534,7 @@ public class A10ClientImpl implements A10Client {
 	/**
 	 * The A10 control port has a brain-dead HTTPS stack that is unable to
 	 * negotiate TLS versions.
-	 * 
+	 *
 	 * @return
 	 */
 	List<ConnectionSpec> getA10CompatibleConnectionSpecs() {
@@ -565,6 +573,7 @@ public class A10ClientImpl implements A10Client {
 		}
 	}
 
+	@Override
 	public String toString() {
 		return MoreObjects.toStringHelper(this).add("url", url).toString();
 	}
