@@ -32,9 +32,9 @@ import com.google.common.io.CharStreams;
 /**
  * The purpose of bootstrap is to collect configuration settings that need to be
  * configured before they are passed to Spring for initialization.
- * 
+ *
  * @author rschoening
- * 
+ *
  */
 public class Bootstrap {
 
@@ -45,7 +45,7 @@ public class Bootstrap {
 	protected Properties bootstrapProps = new Properties();
 
 	private File macgyverHome;
-	
+
 	public static Bootstrap getInstance() {
 		if (instance == null) {
 			throw new IllegalStateException();
@@ -68,13 +68,16 @@ public class Bootstrap {
 	public File getConfigDir() {
 		return new File(getMacGyverHome(),"config");
 	}
+	public File getLogDir() {
+		return new File(getMacGyverHome(),"logs");
+	}
 	public File getDataDir() {
 		return new File(getMacGyverHome(),"data");
 	}
 	public File getScriptsDir() {
 		return new File(getMacGyverHome(),"scripts");
 	}
-	
+
 
 	AtomicBoolean initialized = new AtomicBoolean(false);
 
@@ -82,27 +85,27 @@ public class Bootstrap {
 		return new File(getConfigDir(),name);
 	}
 	protected File findLocation(String name) throws  MalformedURLException {
-		
 
-		
+
+
 		String syspropKey = "macgyver."+name.toLowerCase()+".dir";
 		String val = System.getProperty(syspropKey);
 		if (!Strings.isNullOrEmpty(val)) {
 			logger.info("resolved location ("+name+") via sysprop: "+syspropKey+"="+val);
 			return new File(val);
 		}
-		
-		
-	
-		
+
+
+
+
 		String envKey = "MACGYVER_EXT_"+name.toUpperCase().trim()+"_DIR";
 		val = System.getenv(envKey);
 		if (!Strings.isNullOrEmpty(val)) {
 			logger.info("resolved location ("+name+") via env var: "+envKey+"="+val);
 			return new File(val);
 		}
-	
-		
+
+
 		val = new File(getMacGyverHome(),name).getAbsolutePath();
 		logger.info("resolved location ("+name+") via macgyver.home: "+val);
 		return new File(val);
@@ -112,35 +115,35 @@ public class Bootstrap {
 		//	throw new IllegalStateException("Already initialized");
 			//return;
 		}
-	
+
 		bootstrapProps.putAll(p);
-		
+
 		String val = bootstrapProps.getProperty("macgyver.home");
-		
+
 		Preconditions.checkNotNull(val,"macgyver.home must be set");
 		macgyverHome = new File(val).getAbsoluteFile();
-		
-		
-			
-		
+
+
+
+
 			logger.info("macgyver home    : {}",getMacGyverHome());
 			logger.info("macgyver config  : {}",getConfigDir());
 			logger.info("macgyver scripts : {}",getScriptsDir());
 			logger.info("macgyver   data  : {}",getDataDir());
 			logger.info("macgyver    web  : {}",getWebDir());
-			
-	
+
+
 
 			// need to move this block upstream to Bootstrap
-		
-			String templateRoots = computeTemplateRoots();
-		
 
-		
+			String templateRoots = computeTemplateRoots();
+
+
+
 
 		initialized.set(true);
 
-	
+
 	}
 	public static String computeTemplateRoots() {
 		try {
@@ -192,6 +195,6 @@ public class Bootstrap {
 		}
 		logger.info(bannerText);
 	}
-	
-	
+
+
 }

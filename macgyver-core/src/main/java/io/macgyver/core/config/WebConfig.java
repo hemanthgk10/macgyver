@@ -13,6 +13,9 @@
  */
 package io.macgyver.core.config;
 
+import java.io.File;
+
+import io.macgyver.core.Bootstrap;
 import io.macgyver.core.web.handlebars.DummyHandlebarsController;
 import io.macgyver.core.web.handlebars.MacGyverMustacheTemplateLoader;
 import io.macgyver.core.web.handlebars.MacGyverMustacheViewResolver;
@@ -24,6 +27,9 @@ import io.macgyver.core.web.vaadin.MacGyverVaadinServlet;
 import io.macgyver.core.web.vaadin.ViewDecorators;
 import io.macgyver.core.web.vaadin.views.admin.AdminPlugin;
 
+import org.apache.catalina.valves.AccessLogValve;
+import org.apache.catalina.valves.ExtendedAccessLogValve;
+import org.apache.catalina.valves.RemoteIpValve;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -36,7 +42,10 @@ import org.springframework.boot.autoconfigure.mustache.MustacheEnvironmentCollec
 import org.springframework.boot.autoconfigure.mustache.MustacheProperties;
 import org.springframework.boot.autoconfigure.mustache.MustacheResourceTemplateLoader;
 import org.springframework.boot.autoconfigure.web.WebMvcAutoConfiguration;
+import org.springframework.boot.context.embedded.ConfigurableEmbeddedServletContainer;
+import org.springframework.boot.context.embedded.EmbeddedServletContainerCustomizer;
 import org.springframework.boot.context.embedded.ServletRegistrationBean;
+import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Bean;
@@ -54,9 +63,9 @@ import com.samskivert.mustache.Mustache.Collector;
 @Configuration
 @ComponentScan(basePackageClasses = { HomeController.class })
 @AutoConfigureAfter(WebMvcAutoConfiguration.class)
-@EnableGlobalMethodSecurity(securedEnabled = true, proxyTargetClass = true,prePostEnabled=true)
+@EnableGlobalMethodSecurity(securedEnabled = true, proxyTargetClass = true, prePostEnabled = true)
 @EnableConfigurationProperties(MustacheProperties.class)
-@EnableAutoConfiguration(exclude={MustacheAutoConfiguration.class})
+@EnableAutoConfiguration(exclude = { MustacheAutoConfiguration.class })
 public class WebConfig implements EnvironmentAware {
 
 	Logger logger = LoggerFactory.getLogger(WebConfig.class);
@@ -87,9 +96,7 @@ public class WebConfig implements EnvironmentAware {
 				if (bean instanceof RequestMappingHandlerMapping
 						&& "requestMappingHandlerMapping".equals(beanName)) {
 					RequestMappingHandlerMapping m = ((RequestMappingHandlerMapping) bean);
-					
-					
-					
+
 				}
 
 				return bean;
@@ -108,37 +115,32 @@ public class WebConfig implements EnvironmentAware {
 		return new MacgyverWeb();
 	}
 
-
-
-
 	@Bean
 	public ServletRegistrationBean macVaadinServlet() {
-		ServletRegistrationBean sb = new ServletRegistrationBean(new MacGyverVaadinServlet(), "/ui/*","/VAADIN/*");
+		ServletRegistrationBean sb = new ServletRegistrationBean(
+				new MacGyverVaadinServlet(), "/ui/*", "/VAADIN/*");
 		sb.addInitParameter("ui", MacGyverUI.class.getName());
-	//	sb.addInitParameter("legacyPropertyToString","false");
+		// sb.addInitParameter("legacyPropertyToString","false");
 		return sb;
 	}
-	
+
 	@Bean
 	public ViewDecorators macViewDecorators() {
 		return new ViewDecorators();
 	}
-	
+
 	@Bean
 	public AdminPlugin macAdminUIDecorator() {
 		return new AdminPlugin();
 	}
-	
-	
+
 	@Bean
 	public MustacheResourceTemplateLoader macMustacheTemplateLoader() {
-		
+
 		return new MacGyverMustacheTemplateLoader();
-		
 
 	}
-	
-	
+
 	@Bean
 	public Mustache.Compiler macMustacheCompiler() {
 		return Mustache.compiler().withLoader(macMustacheTemplateLoader())
@@ -151,27 +153,74 @@ public class WebConfig implements EnvironmentAware {
 		return collector;
 	}
 
-
 	@Autowired
 	MustacheProperties mustacheProperties;
-		
-	@Bean
-		public MacGyverMustacheViewResolver macMustacheViewResolver() {
-			MacGyverMustacheViewResolver resolver = new MacGyverMustacheViewResolver();
-			resolver.setPrefix(mustacheProperties.getPrefix());
-			resolver.setSuffix(mustacheProperties.getSuffix());
-			resolver.setCache(mustacheProperties.isCache());
-			resolver.setViewNames(mustacheProperties.getViewNames());
-			resolver.setContentType(mustacheProperties.getContentType());
-			resolver.setCharset(mustacheProperties.getCharset());
-			resolver.setCompiler(macMustacheCompiler());
-			resolver.setOrder(Ordered.LOWEST_PRECEDENCE - 10);
-			return resolver;
-		}
 
-	
+	@Bean
+	public MacGyverMustacheViewResolver macMustacheViewResolver() {
+		MacGyverMustacheViewResolver resolver = new MacGyverMustacheViewResolver();
+		resolver.setPrefix(mustacheProperties.getPrefix());
+		resolver.setSuffix(mustacheProperties.getSuffix());
+		resolver.setCache(mustacheProperties.isCache());
+		resolver.setViewNames(mustacheProperties.getViewNames());
+		resolver.setContentType(mustacheProperties.getContentType());
+		resolver.setCharset(mustacheProperties.getCharset());
+		resolver.setCompiler(macMustacheCompiler());
+		resolver.setOrder(Ordered.LOWEST_PRECEDENCE - 10);
+		return resolver;
+	}
+
 	@Bean
 	public DummyHandlebarsController macDummyHandlebarsController() {
 		return new DummyHandlebarsController();
+	}
+
+	@Bean
+	public EmbeddedServletContainerCustomizer macAccessLogCustomizer() {
+
+		EmbeddedServletContainerCustomizer customizer = new EmbeddedServletContainerCustomizer() {
+
+			@Override
+			public void customize(ConfigurableEmbeddedServletContainer container) {
+				if (container instanceof TomcatEmbeddedServletContainerFactory) {
+					File dir = Bootstrap.getInstance().getLogDir();
+					try {
+						dir.mkdirs();
+					}
+					catch (Exception ignore) {}
+					if (dir.exists() && dir.isDirectory()) {
+						logger.info(
+								"configuring access logs to be logged to: {}",
+								dir);
+						TomcatEmbeddedServletContainerFactory factory = (TomcatEmbeddedServletContainerFactory) container;
+
+						RemoteIpValve remoteIpValve = new RemoteIpValve();
+						remoteIpValve.setTrustedProxies("10\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}|192\\.168\\.\\d{1,3}\\.\\d{1,3}|169\\.254\\.\\d{1,3}\\.\\d{1,3}|127\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}|::1|0:0:0:0:0:0:0:1");
+
+						factory.addContextValves(remoteIpValve);
+
+						AccessLogValve accessLogValve = new AccessLogValve();
+						accessLogValve.setEnabled(true);
+						accessLogValve.setBuffered(false);
+						accessLogValve.setCheckExists(true);
+						accessLogValve.setDirectory(dir.getAbsolutePath());
+						accessLogValve.setRotatable(true);
+						accessLogValve.setRequestAttributesEnabled(true);
+						accessLogValve.setPattern( "%h %l %u %t \"%r\" %s %b \"%{Referer}i\" \"%{User-Agent}i\"");
+
+
+						accessLogValve.setSuffix(".log");
+
+						factory.addContextValves(accessLogValve);
+					}
+					else {
+						logger.warn("cannot configure access log -- log directory does not exist: {}",dir);
+					}
+				} else {
+					logger.error("WARNING! this customizer does not support your configured container");
+				}
+			}
+		};
+		return customizer;
 	}
 }
