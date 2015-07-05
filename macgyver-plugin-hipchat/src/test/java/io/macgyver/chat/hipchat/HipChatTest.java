@@ -44,10 +44,10 @@ public class HipChatTest {
 		client = new HipChatClientImpl(mockServer.getUrl("/").toString(),
 				"dummy");
 	}
-	
+
 	@Test
-	public void testMultiParams() throws IOException, InterruptedException { 
-		
+	public void testMultiParams() throws IOException, InterruptedException {
+
 		String simulatedResponse = "{\n"
 				+ "    \"items\": [\n"
 				+ "        {\n"
@@ -64,18 +64,20 @@ public class HipChatTest {
 				+ "        \"self\": \"https://api.hipchat.com/v2/user\"\n"
 				+ "    },\n" + "    \"maxResults\": 1,\n"
 				+ "    \"startIndex\": 0\n" + "}";
-		
+
 		mockServer.enqueue(new MockResponse().setBody(simulatedResponse));
-		
+
 		client.get("user", "max-results","1000", "expand","items");
 		RecordedRequest rr = mockServer.takeRequest();
-		
-		Assertions.assertThat(rr.getPath()).isEqualTo("/v2/user?max-results=1000&expand=items");
-		
+
+		Assertions.assertThat(rr.getPath()).startsWith("/v2/user?");
+		Assertions.assertThat(rr.getPath()).contains("max-results=1000");
+		Assertions.assertThat(rr.getPath()).contains("expand=items");
+
 	}
-	
+
 	@Test
-	public void testParamsInMap() throws IOException, InterruptedException { 
+	public void testParamsInMap() throws IOException, InterruptedException {
 		String simulatedResponse = "{\n"
 				+ "    \"items\": [\n"
 				+ "        {\n"
@@ -92,20 +94,22 @@ public class HipChatTest {
 				+ "        \"self\": \"https://api.hipchat.com/v2/user\"\n"
 				+ "    },\n" + "    \"maxResults\": 1,\n"
 				+ "    \"startIndex\": 0\n" + "}";
-		
+
 		mockServer.enqueue(new MockResponse().setBody(simulatedResponse));
-		
+
 		Map<String, String> params = new HashMap<>();
 		params.put("max-results","1000");
 		params.put("expand","items");
-		
+
 		client.get("user",params);
 		RecordedRequest rr = mockServer.takeRequest();
-		
-		Assertions.assertThat(rr.getPath()).isEqualTo("/v2/user?max-results=1000&expand=items");
-		
+
+		assertThat(rr.getPath()).startsWith("/v2/user");
+
+		assertThat(rr.getPath()).contains("max-results=1000");
+		assertThat(rr.getPath()).contains("expand=items");
 	}
-	
+
 
 	@Test
 	public void testX() throws IOException, InterruptedException {

@@ -1,5 +1,7 @@
 ## Changes
 
+### 0.91.0
+* upgrade to jdk 8
 
 ### 0.90.5
 * fix update timestamp for ComputeInstance updates
