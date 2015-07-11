@@ -5,8 +5,7 @@ machine:
         - neo4j
     environment:
         TERM: dumb
-
-        
+        JAVA_OPTS: "-Xms256m -Xmx512m"
         
         
 test:
