@@ -1,8 +1,6 @@
 machine:
     java:
         version: oraclejdk8
-    services:
-        - neo4j
     environment:
         TERM: dumb
         JAVA_OPTS: "-Xms256m -Xmx512m"
