@@ -26,8 +26,8 @@ import javax.sql.DataSource;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.google.common.base.Throwables;
-import com.jolbox.bonecp.BoneCPConfig;
-import com.jolbox.bonecp.BoneCPDataSource;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
 public class DataSourceFactory extends ServiceFactory<DataSource> {
 
@@ -40,15 +40,26 @@ public class DataSourceFactory extends ServiceFactory<DataSource> {
 		try {
 			Properties p = new Properties();
 			// set some defaults
-			p.put("defaultAutoCommit", Boolean.TRUE.toString());
-			p.put("lazyInit", Boolean.TRUE.toString());
+			p.put("autoCommit", Boolean.TRUE.toString());
+
 			p.putAll(def.getProperties());
 
-			BoneCPConfig cp = new BoneCPConfig(p);
+			if (p.contains("driverClass")) {
+				p.put("driverClassName", p.getProperty("driverClass"));
+				p.remove("driverClass");
+			}
+			if (p.contains("defaultAutoCommit")) {
+				p.put("autoCommit", p.getProperty("defaultAutoCommit"));
+				p.remove("defaultAutoCommit");
+			}
 
-			BoneCPDataSource ds = new BoneCPDataSource(cp);
 
-			
+			HikariConfig cp = new HikariConfig(p);
+
+
+			HikariDataSource ds = new HikariDataSource(cp);
+
+
 			return ds;
 		} catch (Exception e) {
 			Throwables.propagateIfPossible(e, MacGyverException.class);
@@ -60,7 +71,7 @@ public class DataSourceFactory extends ServiceFactory<DataSource> {
 
 
 
-	
+
 
 	@Override
 	protected void doCreateCollaboratorInstances(
@@ -74,10 +85,10 @@ public class DataSourceFactory extends ServiceFactory<DataSource> {
 	public void doCreateCollaboratorDefinitions(Set<ServiceDefinition> defSet,
 			ServiceDefinition primary) {
 		ServiceDefinition def = new ServiceDefinition(primary.getName()+"Template", primary.getName(), primary.getProperties(), this);
-		
+
 		defSet.add(def);
-		
+
 	}
 
-	
+
 }
