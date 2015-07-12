@@ -16,7 +16,7 @@ target/
 build/
 workspace
 *.bak
-x
+.gnupg/
 macgyver-grails/target
 logs/
 *.jceks
