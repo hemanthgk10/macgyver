@@ -25,47 +25,51 @@ import java.util.WeakHashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
+import com.splunk.HttpService;
+import com.splunk.SSLSecurityProtocol;
 import com.splunk.Service;
 
 public class SplunkServiceFactory extends BasicServiceFactory<Service> {
 
 	@Autowired
 	TokenRefreshManager tokenRefresh;
-	
+
 	public SplunkServiceFactory() {
 		super("Splunk");
-		
+
 	}
-
-
-
-
 
 	@Override
 	protected Service doCreateInstance(ServiceDefinition def) {
 
 		Properties p = def.getProperties();
 
-		Map<String,Object> args = Maps.newHashMap();
-		
-		for (Map.Entry<Object,Object> entry: p.entrySet()) {
-			args.put(entry.getKey().toString(),entry.getValue());
+		Map<String, Object> args = Maps.newHashMap();
+
+		for (Map.Entry<Object, Object> entry : p.entrySet()) {
+			args.put(entry.getKey().toString(), entry.getValue());
 		}
-		
+
 		Object portObject = args.get("port");
-		if (portObject!=null) {
+		if (portObject != null) {
 			args.put("port", Integer.parseInt(portObject.toString()));
 		}
-	
+
+		String sslSecurityProtocol = p.getProperty("sslSecurityProtocol");
+		if (!Strings.isNullOrEmpty(sslSecurityProtocol)) {
+			// Set globally for the splunk client.  Wrong, but little we can do about it.
+			HttpService.setSslSecurityProtocol(SSLSecurityProtocol
+					.valueOf(sslSecurityProtocol));
+		}
+
 		Service service = Service.connect(args);
-		
+
 		tokenRefresh.registerService(service);
 
 		return service;
 
 	}
-
-
 
 }

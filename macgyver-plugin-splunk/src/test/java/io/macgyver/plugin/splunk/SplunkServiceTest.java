@@ -19,37 +19,34 @@ import io.macgyver.test.MacGyverIntegrationTest;
 
 import java.io.IOException;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.splunk.HttpService;
+import com.splunk.SSLSecurityProtocol;
 import com.splunk.ServiceArgs;
 
-public class SplunkServiceTest extends MacGyverIntegrationTest {
+public class SplunkServiceTest  {
 
-	@Autowired
-	ServiceRegistry registry;
-	
-	
-	String apiKey;
-	
-	@org.junit.Before
-	public void checkIfKeyIsAvailable() {
-	
-	}
-	
+
+
 	@Test
-	public void testX() throws IOException {
-		
-	
-	
-		
-		
+	public void testSecurityProtocol() throws IOException {
+
+
+
+
+		Assertions.assertThat(SSLSecurityProtocol.valueOf("TLSv1_2")).isSameAs(SSLSecurityProtocol.TLSv1_2);
+		Assertions.assertThat(SSLSecurityProtocol.valueOf("TLSv1_1")).isSameAs(SSLSecurityProtocol.TLSv1_1);
+		Assertions.assertThat(SSLSecurityProtocol.valueOf("TLSv1")).isSameAs(SSLSecurityProtocol.TLSv1);
+
 	}
-	
-	
 
 
-	
+
+
+
 
 
 }

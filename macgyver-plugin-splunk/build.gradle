@@ -16,10 +16,9 @@ mainClassName = 'io.macgyver.core.ServerMain'
 
 dependencies {
 
-  
-    testCompile project(':macgyver-test')
-	 compile project(':macgyver-core')
-	 compile "com.splunk:splunk:1.3.0"
+	testCompile project(':macgyver-test')
+	compile project(':macgyver-core')
+	compile "com.splunk:splunk:1.4.0.0"
 
 }
 
