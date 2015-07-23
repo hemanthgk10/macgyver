@@ -140,7 +140,7 @@ subprojects {
 			
 				beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 			
-	            repository(id: 'macgyver-bintray', url: 'https://api.bintray.com/maven/robschoening/io-macgyver/neorx'){
+	            repository(id: 'macgyver-bintray', url: 'https://api.bintray.com/maven/robschoening/io-macgyver/io-macgyver'){
 	                authentication(userName: BINTRAY_USER, password: BINTRAY_KEY)
 				}
                 pom.project {
