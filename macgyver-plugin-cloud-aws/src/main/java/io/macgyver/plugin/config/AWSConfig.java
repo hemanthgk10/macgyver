@@ -1,4 +1,4 @@
-package io.macgyver.pluin.config;
+package io.macgyver.plugin.config;
 
 import io.macgyver.plugin.cloud.aws.AWSServiceFactory;
 
