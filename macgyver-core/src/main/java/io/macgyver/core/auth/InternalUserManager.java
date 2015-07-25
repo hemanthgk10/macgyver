@@ -160,7 +160,7 @@ public class InternalUserManager {
 				logger.info("adding admin user");
 				List<String> roleList = Lists.newArrayList(
 						"ROLE_MACGYVER_SHELL", "ROLE_MACGYVER_UI",
-						"ROLE_MACGYVER_ADMIN", "ROLE_MACGYVER_USER");
+						"ROLE_MACGYVER_ADMIN", "ROLE_MACGYVER_USER","ROLE_NEO4J_WRITE","ROLE_NEO4J_READ");
 
 				createUser("admin", roleList);
 				setPassword("admin", "admin");

@@ -14,6 +14,7 @@
 package io.macgyver.core.config;
 
 import java.io.File;
+import java.util.Map;
 
 import io.macgyver.core.Bootstrap;
 import io.macgyver.core.web.handlebars.DummyHandlebarsController;
@@ -22,6 +23,7 @@ import io.macgyver.core.web.handlebars.MacGyverMustacheViewResolver;
 import io.macgyver.core.web.mvc.CoreApiController;
 import io.macgyver.core.web.mvc.HomeController;
 import io.macgyver.core.web.mvc.MacgyverWeb;
+import io.macgyver.core.web.neo4j.Neo4jProxyServlet;
 import io.macgyver.core.web.vaadin.MacGyverUI;
 import io.macgyver.core.web.vaadin.MacGyverVaadinServlet;
 import io.macgyver.core.web.vaadin.ViewDecorators;
@@ -30,6 +32,7 @@ import io.macgyver.core.web.vaadin.views.admin.AdminPlugin;
 import org.apache.catalina.valves.AccessLogValve;
 import org.apache.catalina.valves.ExtendedAccessLogValve;
 import org.apache.catalina.valves.RemoteIpValve;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -57,6 +60,8 @@ import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.samskivert.mustache.Mustache;
 import com.samskivert.mustache.Mustache.Collector;
 
@@ -186,8 +191,8 @@ public class WebConfig implements EnvironmentAware {
 					File dir = Bootstrap.getInstance().getLogDir();
 					try {
 						dir.mkdirs();
+					} catch (Exception ignore) {
 					}
-					catch (Exception ignore) {}
 					if (dir.exists() && dir.isDirectory()) {
 						logger.info(
 								"configuring access logs to be logged to: {}",
@@ -195,7 +200,8 @@ public class WebConfig implements EnvironmentAware {
 						TomcatEmbeddedServletContainerFactory factory = (TomcatEmbeddedServletContainerFactory) container;
 
 						RemoteIpValve remoteIpValve = new RemoteIpValve();
-						remoteIpValve.setTrustedProxies("10\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}|192\\.168\\.\\d{1,3}\\.\\d{1,3}|169\\.254\\.\\d{1,3}\\.\\d{1,3}|127\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}|::1|0:0:0:0:0:0:0:1");
+						remoteIpValve
+								.setTrustedProxies("10\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}|192\\.168\\.\\d{1,3}\\.\\d{1,3}|169\\.254\\.\\d{1,3}\\.\\d{1,3}|127\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}|::1|0:0:0:0:0:0:0:1");
 
 						factory.addContextValves(remoteIpValve);
 
@@ -206,15 +212,16 @@ public class WebConfig implements EnvironmentAware {
 						accessLogValve.setDirectory(dir.getAbsolutePath());
 						accessLogValve.setRotatable(true);
 						accessLogValve.setRequestAttributesEnabled(true);
-						accessLogValve.setPattern( "%h %l %u %t \"%r\" %s %b \"%{Referer}i\" \"%{User-Agent}i\"");
-
+						accessLogValve
+								.setPattern("%h %l %u %t \"%r\" %s %b \"%{Referer}i\" \"%{User-Agent}i\"");
 
 						accessLogValve.setSuffix(".log");
 
 						factory.addContextValves(accessLogValve);
-					}
-					else {
-						logger.warn("cannot configure access log -- log directory does not exist: {}",dir);
+					} else {
+						logger.warn(
+								"cannot configure access log -- log directory does not exist: {}",
+								dir);
 					}
 				} else {
 					logger.error("WARNING! this customizer does not support your configured container");
@@ -223,4 +230,25 @@ public class WebConfig implements EnvironmentAware {
 		};
 		return customizer;
 	}
+
+
+	@Bean
+	public Neo4jProxyServlet macNeo4jProxyServlet() {
+
+		return new Neo4jProxyServlet();
+	}
+
+	@Bean
+	public ServletRegistrationBean macNeo4jProxyServletRegistrationBean() {
+		ServletRegistrationBean b = new ServletRegistrationBean();
+		b.setUrlMappings(Lists.newArrayList("/browser/*","/browser","/db/*"));
+		b.setServlet(macNeo4jProxyServlet());
+		Map<String, String> x = Maps.newHashMap();
+
+		b.setInitParameters(x);
+		b.setName("Neo4jProxyServlet");
+		return b;
+	}
+
+
 }
