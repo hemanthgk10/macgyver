@@ -18,6 +18,7 @@ import io.macgyver.core.PluginManager;
 import io.macgyver.core.auth.AuthUtil;
 import io.macgyver.core.auth.MacGyverRole;
 import io.macgyver.core.util.JsonNodes;
+import io.macgyver.core.web.neo4j.Neo4jProxyServlet;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -81,6 +82,7 @@ public class MacGyverUI extends UI {
 		return (MacGyverUI) UI.getCurrent();
 	}
 
+	@Override
 	public Navigator getNavigator() {
 		return navigator;
 	}
@@ -184,9 +186,9 @@ public class MacGyverUI extends UI {
 
 		ObjectNode top = mapper.createObjectNode();
 		ObjectNode menu = mapper.createObjectNode();
-		top.put("menu", menu);
+		top.set("menu", menu);
 		ArrayNode m0 = mapper.createArrayNode();
-		menu.put("items", m0);
+		menu.set("items", m0);
 
 		ObjectNode mn = mapper.createObjectNode();
 		mn.put("display", "MacGyver");
@@ -195,7 +197,7 @@ public class MacGyverUI extends UI {
 		home.put("display", "Home");
 		home.put("viewName", "home");
 		items.add(home);
-		mn.put("items", items);
+		mn.set("items", items);
 
 		m0.add(mn);
 
@@ -301,6 +303,28 @@ public class MacGyverUI extends UI {
 				b.setPrimaryStyleName("valo-menu-item");
 				menuItemsLayout.addComponent(b);
 			}
+
+			// temporary hack to get neo4j browser added
+			if (AuthUtil
+					.currentUserHasRole(Neo4jProxyServlet.Roles.ROLE_NEO4J_READ
+							.toString())
+					|| AuthUtil
+							.currentUserHasRole(Neo4jProxyServlet.Roles.ROLE_NEO4J_WRITE
+									.toString())) {
+				if (topItem.path("display").asText().equals("Admin")) {
+					Button b = new Button("Neo4j", new Button.ClickListener() {
+
+						@Override
+						public void buttonClick(ClickEvent event) {
+							UI.getCurrent().getPage().setLocation("/browser/");
+
+						}
+
+					});
+					b.setPrimaryStyleName("valo-menu-item");
+					menuItemsLayout.addComponent(b);
+				}
+			}
 		}
 
 		return menu;
@@ -371,7 +395,7 @@ public class MacGyverUI extends UI {
 			ArrayNode subItems = null;
 			if (!topLevelMenuNode.has("items")) {
 				subItems = mapper.createArrayNode();
-				topLevelMenuNode.put("items", subItems);
+				topLevelMenuNode.set("items", subItems);
 			} else {
 				subItems = topLevelMenuNode.withArray("items");
 			}
@@ -389,7 +413,7 @@ public class MacGyverUI extends UI {
 				subItem.put("display", subMenu);
 				subItem.put("viewName", viewName);
 				subItems.add(subItem);
-				JsonNodes.sort(subItems,JsonNodes.textComparator("display"));
+				JsonNodes.sort(subItems, JsonNodes.textComparator("display"));
 				// Xson.sortArray(subItems, "$.display");
 			}
 		}
