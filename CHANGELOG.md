@@ -1,5 +1,9 @@
 ## Changes
 
+### 0.92.0
+
+* expose Neo4j through UI with role-based access controls
+
 ### 0.91.0
 * upgrade to jdk 8
 
