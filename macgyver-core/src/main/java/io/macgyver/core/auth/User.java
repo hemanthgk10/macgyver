@@ -15,28 +15,29 @@ package io.macgyver.core.auth;
 
 import java.util.List;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
+
 public class User {
 
 	String username;
-	List<String> roles;
-	String scryptHash;
+
+	List<String> roles = Lists.newArrayList();
+
 	public String getUsername() {
 		return username;
 	}
-	public void setUsername(String username) {
-		this.username = username;
-	}
+
+
+
 	public List<String> getRoles() {
 		return roles;
 	}
-	public void setRoles(List<String> roles) {
-		this.roles = roles;
+
+	@Override
+	public String toString() {
+
+		return MoreObjects.toStringHelper(this).add("username", username).add("roles", roles).toString();
 	}
-	public String getScryptHash() {
-		return scryptHash;
-	}
-	public void setScryptHash(String scryptHash) {
-		this.scryptHash = scryptHash;
-	}
-	
 }

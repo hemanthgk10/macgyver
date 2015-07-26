@@ -27,7 +27,7 @@ import io.macgyver.core.MacGyverBeanFactoryPostProcessor;
 import io.macgyver.core.PluginManager;
 import io.macgyver.core.ScriptHookManager;
 import io.macgyver.core.Startup;
-import io.macgyver.core.auth.InternalUserManager;
+import io.macgyver.core.auth.UserManager;
 import io.macgyver.core.cluster.ClusterManager;
 import io.macgyver.core.crypto.Crypto;
 import io.macgyver.core.eventbus.EventBusPostProcessor;
@@ -195,8 +195,8 @@ public class CoreConfig implements EnvironmentAware {
 	}
 
 	@Bean(name = "macUserManager")
-	public InternalUserManager macUserManager() {
-		return new InternalUserManager();
+	public UserManager macUserManager() {
+		return new UserManager();
 	}
 
 	@Bean(name = "macGraphClient")

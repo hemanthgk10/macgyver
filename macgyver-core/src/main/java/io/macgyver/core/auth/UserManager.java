@@ -14,6 +14,7 @@
 package io.macgyver.core.auth;
 
 import io.macgyver.neorx.rest.NeoRxClient;
+import io.macgyver.neorx.rest.NeoRxFunctions;
 
 import java.util.List;
 
@@ -32,32 +33,27 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.lambdaworks.crypto.SCryptUtil;
 
-public class InternalUserManager {
+public class UserManager {
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
 	@Autowired
 	NeoRxClient neo4j;
 
-	public Optional<InternalUser> getInternalUser(final String id) {
 
-		String q = "match (u:User) where u.username={username} return u.username,u.roles";
+	public Optional<User> getInternalUser(final String id) {
+
+		String q = "match (u:User) where u.username={username} return u.username, 'dummy' as dummy";
 
 		JsonNode n = neo4j.execCypher(q, "username", id.toLowerCase())
 				.toBlocking().firstOrDefault(null);
 		if (n != null) {
-			InternalUser u = new InternalUser();
+
+			User u = new User();
 			u.username = n.get("u.username").asText();
 
-			u.roles = Lists.newArrayList();
-			JsonNode roles = n.get("u.roles");
+			u.roles = ImmutableList.copyOf(findRolesForUser(id.toLowerCase()));
 
-			if (roles != null && roles.isArray()) {
-				for (int i = 0; i < roles.size(); i++) {
-					u.roles.add(roles.get(i).asText());
-				}
-			}
-			u.roles = ImmutableList.copyOf(u.roles);
 
 			return Optional.of(u);
 		}
@@ -115,12 +111,14 @@ public class InternalUserManager {
 
 	public void setRoles(String username, List<String> roles) {
 
-		String c = "match (u:User) where u.username={username} set u.roles={roles}";
-		neo4j.execCypher(c, "username", username, "roles", roles);
+		for (String role: roles) {
+			addRoleToUser(username, role);
+		}
+
 
 	}
 
-	public InternalUser createUser(String username, List<String> roles) {
+	public User createUser(String username, List<String> roles) {
 
 		if (getInternalUser(username).isPresent()) {
 			throw new IllegalArgumentException("user already exists: "
@@ -132,7 +130,7 @@ public class InternalUserManager {
 		neo4j.execCypher(cypher, "username", username);
 
 		setRoles(username, roles);
-		InternalUser u = new InternalUser();
+		User u = new User();
 		u.username = username;
 		u.roles = Lists.newArrayList();
 
@@ -151,9 +149,18 @@ public class InternalUserManager {
 			logger.warn(e.toString());
 		}
 
-		if (neo4j.checkConnection()) {
+		try {
 
-			Optional<InternalUser> admin = getInternalUser("admin");
+			String cipher = "CREATE CONSTRAINT ON (r:Role) ASSERT r.name IS UNIQUE";
+			neo4j.execCypher(cipher);
+
+		} catch (Exception e) {
+			logger.warn(e.toString());
+		}
+
+		if (neo4j.checkConnection()) {
+			seedRoles();
+			Optional<User> admin = getInternalUser("admin");
 			if (admin.isPresent()) {
 				logger.debug("admin user already exists");
 			} else {
@@ -166,7 +173,67 @@ public class InternalUserManager {
 				setPassword("admin", "admin");
 
 			}
+
+			migrateRolesForUser("admin");
 		}
 
+	}
+
+
+	public List<String> findRolesForUser(String username) {
+
+		return neo4j
+				.execCypher(
+						"match (u:User{username:{username}})-[:HAS_ROLE]-(r:Role) return distinct r.name as role_name",
+						"username", username)
+				.flatMap(NeoRxFunctions.jsonNodeToString()).toList()
+				.toBlocking().first();
+
+	}
+
+
+	public void seedRoles() {
+		addRole(MacGyverRole.ROLE_MACGYVER_ADMIN.toString(),
+				"MacGyver Administrator");
+		addRole(MacGyverRole.ROLE_MACGYVER_USER.toString(), "MacGyver User");
+		addRole(MacGyverRole.ROLE_MACGYVER_SHELL.toString(),
+				"MacGyver Shell Access");
+		addRole(MacGyverRole.ROLE_NEO4J_READ.toString(),
+				"Read Access to Neo4j Console");
+		addRole(MacGyverRole.ROLE_NEO4J_WRITE.toString(),
+				"Read-Write Access Neo4j Console");
+/*
+		addRoleToUser("admin", MacGyverRole.ROLE_MACGYVER_ADMIN.toString());
+		addRoleToUser("admin", MacGyverRole.ROLE_MACGYVER_USER.toString());
+		addRoleToUser("admin", MacGyverRole.ROLE_MACGYVER_SHELL.toString());
+		addRoleToUser("admin", MacGyverRole.ROLE_NEO4J_READ.toString());
+		addRoleToUser("admin", MacGyverRole.ROLE_NEO4J_WRITE.toString());
+		*/
+	}
+
+	public void migrateRolesForUser(String username) {
+		JsonNode n = neo4j
+				.execCypher("match (u:User {username: {username}}) return u",
+						"username", username).toBlocking().first();
+
+		for (JsonNode s : Lists.newArrayList(n.path("roles").iterator())) {
+			String roleName = s.asText();
+			logger.info("adding role={} to user={}", roleName, username);
+			addRoleToUser(username, roleName);
+
+		}
+
+	}
+
+	public void addRole(String name, String description) {
+		String cypher = "merge (r:Role {name:{name}}) ON CREATE SET r.description={description} return r";
+		neo4j.execCypher(cypher, "name", name, "description", description);
+	}
+
+	public void addRoleToUser(String user, String role) {
+
+		String cypher = "match (u:User {username:{username}}),(r:Role {name:{role}}) MERGE (u)-[x:HAS_ROLE]-(r) return u,r";
+
+		neo4j.execCypher(cypher, "username", user, "role", role);
 	}
 }
