@@ -56,31 +56,35 @@ public class UserManagerTest extends MacGyverIntegrationTest {
 	@Test
 	public void testUpdateRoles() {
 
-		String roleA = "JUNIT_ROLE_"+UUID.randomUUID().toString();
-		String roleB = "JUNIT_ROLE_"+UUID.randomUUID().toString();
+		String roleA = "JUNIT_ROLE_" + UUID.randomUUID().toString();
+		String roleB = "JUNIT_ROLE_" + UUID.randomUUID().toString();
 		userManager.addRole(roleA, "Role A");
 		userManager.addRole(roleB, "Role B");
 		String username = "junit_user_" + UUID.randomUUID().toString();
-		userManager.createUser(username, Lists.newArrayList(roleA,roleA));
+		userManager.createUser(username, Lists.newArrayList(roleA, roleA));
 
-		Assert.assertTrue(userManager.getInternalUser(username).get().getRoles().contains(roleA));
-		Assert.assertFalse(userManager.getInternalUser(username).get().getRoles().contains(roleB));
-		userManager.setRoles(username, Lists.newArrayList(roleA,roleB));
+		Assert.assertTrue(userManager.getInternalUser(username).get()
+				.getRoles().contains(roleA));
+		Assert.assertFalse(userManager.getInternalUser(username).get()
+				.getRoles().contains(roleB));
+		userManager.setRoles(username, Lists.newArrayList(roleA, roleB));
 
-		Assert.assertTrue(userManager.getInternalUser(username).get().getRoles().contains(roleA));
-		Assert.assertTrue(userManager.getInternalUser(username).get().getRoles().contains(roleB));
+		Assert.assertTrue(userManager.getInternalUser(username).get()
+				.getRoles().contains(roleA));
+		Assert.assertTrue(userManager.getInternalUser(username).get()
+				.getRoles().contains(roleB));
 	}
-
 
 	@Test
 	public void testCreateUser() {
 		String username = "junit_user_" + UUID.randomUUID().toString();
 
-		User u= userManager.createUser(username, Lists.newArrayList("MAC"));
+		User u = userManager.createUser(username, Lists.newArrayList("MAC"));
 
 		User u2 = userManager.getInternalUser(username).get();
-		//userManager.createUser(username, Lists.newArrayList("MAC"));
+		// userManager.createUser(username, Lists.newArrayList("MAC"));
 	}
+
 	@Test
 	public void testSaveAndLoad() {
 		String username = "junit_user_" + UUID.randomUUID().toString();
@@ -92,7 +96,7 @@ public class UserManagerTest extends MacGyverIntegrationTest {
 
 	}
 
-	@Test(expected=IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class)
 	public void testUnique() {
 		String username = "junit_bob";
 		List<String> roles = Lists.newArrayList();
@@ -107,10 +111,14 @@ public class UserManagerTest extends MacGyverIntegrationTest {
 
 	@After
 	public void cleanup() {
-		neo4j.execCypher("match (x)-[y]-() where x.name=~'junit.*' delete y");
-		neo4j.execCypher("match (x)-[y]-() where x.name=~'JUNIT.*' delete y");
-		neo4j.execCypher("match (x)-[y]-() where x.name=~'junit.*' delete x");
-		neo4j.execCypher("match (x)-[y]-() where x.name=~'JUNIT.*' delete x");
+		try {
+			neo4j.execCypher("match (x)-[y]-() where x.name=~'junit.*' delete y");
+			neo4j.execCypher("match (x)-[y]-() where x.name=~'JUNIT.*' delete y");
+			neo4j.execCypher("match (x)-[y]-() where x.name=~'junit.*' delete x");
+			neo4j.execCypher("match (x)-[y]-() where x.name=~'JUNIT.*' delete x");
+		} catch (Exception e) {
+			// ignore
+		}
 	}
 
 }
