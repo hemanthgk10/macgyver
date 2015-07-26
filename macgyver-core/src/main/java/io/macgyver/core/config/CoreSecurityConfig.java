@@ -56,7 +56,7 @@ public class CoreSecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Override
 	public void configure(WebSecurity web) throws Exception {
-		
+
 		/*
 		 * Map<String, Object> map = Maps.newHashMap(); map.put("webSecurity",
 		 * web); hookScriptManager.invokeHook("configureWebSecurity", map);
@@ -102,6 +102,7 @@ public class CoreSecurityConfig extends WebSecurityConfigurerAdapter {
 	@Order(92)
 	public static class ApiWebSecurityConfigurationAdapter extends
 			WebSecurityConfigurerAdapter {
+		@Override
 		protected void configure(HttpSecurity http) throws Exception {
 			http.csrf().disable().antMatcher("/api/**").httpBasic();
 		}
@@ -121,9 +122,9 @@ public class CoreSecurityConfig extends WebSecurityConfigurerAdapter {
 	@SuppressWarnings("rawtypes")
 	@Bean
 	AccessDecisionManager macAccessDecisionManager() {
-		
+
 		List<AccessDecisionVoter> list = macAccessDecisionVoterList();
-		
+
 		return new MacGyverAccessDecisionManager(list);
 	}
 
@@ -131,6 +132,7 @@ public class CoreSecurityConfig extends WebSecurityConfigurerAdapter {
 	@Order(91)
 	public static class ApiPublicWebSecurityConfigurationAdapter extends
 			WebSecurityConfigurerAdapter {
+		@Override
 		protected void configure(HttpSecurity http) throws Exception {
 			http.antMatcher("/api/public/**").anonymous();
 
@@ -147,13 +149,14 @@ public class CoreSecurityConfig extends WebSecurityConfigurerAdapter {
 	public GrantedAuthoritiesTranslatorScriptHook macGrantedAuthoritiesTranslatorScriptHook() {
 		return new GrantedAuthoritiesTranslatorScriptHook();
 	}
-	
+
 	@Bean
 	public InternalAuthenticationProvider macInternalAuthenticationProvider() {
 		InternalAuthenticationProvider p = new InternalAuthenticationProvider();
 		p.setAuthoritiesMapper(macGrantedAuthoritiesTranslatorChain());
 		return p;
 	}
-	
+
+
 
 }

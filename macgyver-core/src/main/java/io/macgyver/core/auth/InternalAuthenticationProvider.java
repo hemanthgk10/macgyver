@@ -37,25 +37,24 @@ public class InternalAuthenticationProvider implements AuthenticationProvider {
 			.getLogger(InternalAuthenticationProvider.class);
 
 	@Autowired(required=true)
-	InternalUserManager userManager;
+	UserManager userManager;
 
 	@Autowired
 	AccessDecisionManager adm;
 
 	GrantedAuthoritiesMapper grantedAuthoritiesMapper;
-	
+
 	public void setAuthoritiesMapper(GrantedAuthoritiesMapper mapper) {
 		this.grantedAuthoritiesMapper = mapper;
 	}
-	
+
 	@Override
 	public Authentication authenticate(final Authentication authentication)
 			throws AuthenticationException {
-		
-		Optional<InternalUser> u = Optional.absent();
+
+		Optional<User> u = Optional.absent();
 		u = userManager.getInternalUser(authentication.getPrincipal().toString());
-		//userManager.getUserAsJsonObject(authentication
-			//	.getPrincipal().toString());
+
 		if (!u.isPresent()) {
 			throw new UsernameNotFoundException("user not found: "+authentication.getPrincipal().toString());
 		}
@@ -64,14 +63,14 @@ public class InternalAuthenticationProvider implements AuthenticationProvider {
 		if (!b) {
 			throw new BadCredentialsException("invalid credentials");
 		}
-		
+
 		List<GrantedAuthority> gaList = Lists.newArrayList();
 		for (String role: u.get().getRoles()) {
-			
+
 			GrantedAuthority ga = new SimpleGrantedAuthority(role);
 			gaList.add(ga);
 		}
-		
+
 
 
 
