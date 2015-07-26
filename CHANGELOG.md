@@ -3,6 +3,11 @@
 ### 0.92.0
 
 * expose Neo4j through UI with role-based access controls
+* refactor role management
+* upgrade versions:
+  * vaadin 7.4.8 -> 7.5.2
+  * spring-boot 1.2.4.RELEASE->1.2.5.RELEASE
+  * spring 4.1.6.RELEASE -> 4.1.7.RELEASE
 
 ### 0.91.0
 * upgrade to jdk 8
