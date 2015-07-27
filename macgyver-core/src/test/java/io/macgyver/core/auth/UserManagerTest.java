@@ -109,16 +109,6 @@ public class UserManagerTest extends MacGyverIntegrationTest {
 
 	}
 
-	@After
-	public void cleanup() {
-		try {
-			neo4j.execCypher("match (x)-[y]-() where x.name=~'junit.*' delete y");
-			neo4j.execCypher("match (x)-[y]-() where x.name=~'JUNIT.*' delete y");
-			neo4j.execCypher("match (x)-[y]-() where x.name=~'junit.*' delete x");
-			neo4j.execCypher("match (x)-[y]-() where x.name=~'JUNIT.*' delete x");
-		} catch (Exception e) {
-			// ignore
-		}
-	}
+
 
 }

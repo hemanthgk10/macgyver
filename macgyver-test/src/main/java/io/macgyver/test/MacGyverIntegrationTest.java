@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -50,19 +51,19 @@ public abstract class MacGyverIntegrationTest extends
 	protected static Logger logger = LoggerFactory
 			.getLogger(MacGyverIntegrationTest.class);
 
-	public static synchronized boolean isNeo4jAvailablex() {
+	public static synchronized boolean isNeo4jAvailable() {
 
-		
+
 		if (neo4jAvailable == null) {
-			
+
 			try {
 				neo4jAvailable = new NeoRxClient().checkConnection(); // TODO configurable endpoint
-				
+
 			} catch (Exception e) {
 				logger.info("problem communicating with neo4j", e);
 				neo4jAvailable = false;
 			}
-			
+
 			if (!neo4jAvailable) {
 				logger.warn("neo4j not available -- integration tests will be skipped");
 			}
@@ -77,21 +78,21 @@ public abstract class MacGyverIntegrationTest extends
 	@BeforeClass
 	public static void setup() throws IOException {
 
-		
+
 
 		String macGyverHome = System.getProperty("macgyver.home");
-	
+
 		if (Strings.isNullOrEmpty(macGyverHome)) {
 			File dir = new File("./src/test/resources/ext");
 			macGyverHome = dir.getAbsolutePath();
 			System.setProperty("macgyver.home", macGyverHome);
-			
+
 		}
-		
-	
+
+
 		logger.info("macgyver.home: " + macGyverHome);
 
-		
+
 		File f = new File(System.getProperty("user.home"),
 				".macgyver/private-test.properties");
 		if (f.exists()) {
@@ -108,15 +109,30 @@ public abstract class MacGyverIntegrationTest extends
 
 	@Before
 	public void checkNeo() {
-		Assume.assumeTrue(isNeo4jAvailablex());	
+		Assume.assumeTrue(isNeo4jAvailable());
 	}
 	/**
 	 * Allows integration tests to be written using properties that are held
 	 * outside the project.
-	 * 
+	 *
 	 * @param key
 	 */
 	public String getPrivateProperty(String key) {
 		return privateProperties.getProperty(key);
+	}
+
+	@After
+	public void cleanupTestData() {
+		if (neo4jAvailable!=null && neo4jAvailable.booleanValue()) {
+			NeoRxClient neo4j = applicationContext.getBean(NeoRxClient.class);
+			try {
+				neo4j.execCypher("match (x)-[y]-() where x.name=~'(i?)junit.*' delete y");
+
+				neo4j.execCypher("match (x) where x.name=~'(i?)junit.*' delete x");
+
+			} catch (Exception e) {
+				// ignore
+			}
+		}
 	}
 }
