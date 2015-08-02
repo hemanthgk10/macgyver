@@ -14,21 +14,22 @@
 package io.macgyver.core.scheduler;
 
 import io.macgyver.core.Kernel;
-import io.macgyver.core.cluster.ClusterManager;
 import io.macgyver.core.resource.Resource;
 import io.macgyver.core.script.ExtensionResourceProvider;
 import io.macgyver.core.script.ScriptExecutor;
 import io.macgyver.neorx.rest.NeoRxClient;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.io.StringReader;
-import java.util.Timer;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.ignite.services.Service;
+import org.apache.ignite.services.ServiceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -36,19 +37,16 @@ import com.google.common.base.Optional;
 import com.google.common.io.CharStreams;
 import com.google.common.io.LineProcessor;
 
-public class ScheduleScanner implements InitializingBean {
+public class IgniteSchedulerService implements Service, Runnable, Serializable {
 
-	static Logger logger = LoggerFactory.getLogger(ScheduleScanner.class);
-	@Autowired
-	it.sauronsoftware.cron4j.Scheduler scheduler;
+	static Logger logger = LoggerFactory
+			.getLogger(IgniteSchedulerService.class);
 
-	@Autowired
-	Kernel kernel;
+	ScheduledFuture scheduledFuture;
 
-	@Autowired
-	ExtensionResourceProvider extensionLoader;
+	MacGyverTaskCollector taskCollector;
 
-	Timer timer;
+	transient it.sauronsoftware.cron4j.Scheduler scheduler = new it.sauronsoftware.cron4j.Scheduler();
 
 	public static class CrontabLineProcessor implements
 			LineProcessor<Optional<ObjectNode>> {
@@ -87,30 +85,72 @@ public class ScheduleScanner implements InitializingBean {
 
 	}
 
-	public class ScanTask extends java.util.TimerTask {
+	@Override
+	public void cancel(ServiceContext ctx) {
+		scheduler.stop();
+		scheduledFuture.cancel(true);
 
-		@Override
-		public void run() {
-			try {
+	}
 
-				scan();
-			} catch (Exception e) {
-				logger.warn("", e);
+	@Override
+	public void init(ServiceContext ctx) throws Exception {
+		// we have a race/deadlock if we try to access spring from here
+	}
+
+	@Override
+	public void execute(ServiceContext ctx) throws Exception {
+		logger.info("execute...");
+		NeoRxClient client = Kernel.getApplicationContext().getBean(NeoRxClient.class);
+
+		taskCollector = new MacGyverTaskCollector(client);
+
+		scheduledFuture = Executors.newScheduledThreadPool(1)
+				.scheduleWithFixedDelay(this, 0, 10, TimeUnit.SECONDS);
+		final it.sauronsoftware.cron4j.Scheduler scheduler = new it.sauronsoftware.cron4j.Scheduler();
+		scheduler.addTaskCollector(taskCollector);
+		scheduler.setDaemon(true);
+		scheduler.addSchedulerListener(new MacGyverScheduleListener());
+		LoggerFactory.getLogger(IgniteSchedulerService.class).info(
+				"starting scheduler: {}", scheduler);
+		scheduler.start();
+
+		Runnable r = new Runnable() {
+
+			@Override
+			public void run() {
+				LoggerFactory.getLogger(
+						it.sauronsoftware.cron4j.Scheduler.class).info(
+						"heartbeat");
+
 			}
 
+		};
+		String key = scheduler.schedule("* * * * *", r);
+
+
+
+	}
+
+	@Override
+	public void run() {
+		try {
+			scan();
+		} catch (IOException e) {
+			logger.warn("", e);
 		}
 	}
 
+
+
 	public void scan() throws IOException {
 
-		if (!isMaster()) {
-			logger.info("only master will scan");
-			return;
-		}
+		ExtensionResourceProvider extensionLoader = Kernel.getInstance()
+				.getApplicationContext()
+				.getBean(ExtensionResourceProvider.class);
 		long scanTime = System.currentTimeMillis();
 		NeoRxClient client = Kernel.getApplicationContext().getBean(
 				NeoRxClient.class);
-	
+
 		ScriptExecutor se = new ScriptExecutor();
 		for (Resource r : extensionLoader.findResources()) {
 			if (logger.isDebugEnabled()) {
@@ -147,14 +187,6 @@ public class ScheduleScanner implements InitializingBean {
 
 	}
 
-	@Override
-	public void afterPropertiesSet() throws Exception {
-
-		timer = new Timer();
-		timer.schedule(new ScanTask(), 0L, TimeUnit.SECONDS.toMillis(10));
-
-	}
-
 	public static final String SCHEDULE_TOKEN = "#@Schedule";
 
 	public static Optional<ObjectNode> extractCronExpression(Resource r) {
@@ -173,10 +205,4 @@ public class ScheduleScanner implements InitializingBean {
 		return Optional.absent();
 
 	}
-
-	protected boolean isMaster() {
-		return Kernel.getApplicationContext().getBean(ClusterManager.class)
-				.isMaster();
-	}
-
 }

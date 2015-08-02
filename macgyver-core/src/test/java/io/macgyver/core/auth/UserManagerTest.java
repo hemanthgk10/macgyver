@@ -99,13 +99,18 @@ public class UserManagerTest extends MacGyverIntegrationTest {
 	@Test(expected = IllegalArgumentException.class)
 	public void testUnique() {
 		String username = "junit_bob";
+		neo4j.execCypher("match (x:User)-[r]-() where x.username={username} delete r","username",username);
+		neo4j.execCypher("match (x:User) where x.username={username} delete x","username",username);
+
 		List<String> roles = Lists.newArrayList();
 
 		userManager.createUser(username, roles);
 
-		Assert.assertTrue(userManager.getInternalUser("bob").isPresent());
+		Assert.assertTrue(userManager.getInternalUser(username).isPresent());
 
 		userManager.createUser(username, roles);
+
+
 
 	}
 

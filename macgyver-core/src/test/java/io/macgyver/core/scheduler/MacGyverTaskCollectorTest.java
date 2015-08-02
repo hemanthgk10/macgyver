@@ -24,11 +24,7 @@ public class MacGyverTaskCollectorTest {
 	public void testIt() {
 		MacGyverTaskCollector c = new MacGyverTaskCollector();
 		assertThat(c.enhanceCronExpression("* * * * *")).isEqualTo("* * * * *");
-		
-		assertThat(c.isEnabled()).isTrue();
-		
-		c.setEnabled(false);
-		
-		assertThat(c.isEnabled()).isFalse();
+
+
     }
 }
