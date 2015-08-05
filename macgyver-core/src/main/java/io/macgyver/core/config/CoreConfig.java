@@ -13,11 +13,7 @@
  */
 package io.macgyver.core.config;
 
-
-import groovy.lang.Binding;
-import groovy.lang.GroovyShell;
 import io.macgyver.core.Bootstrap;
-import io.macgyver.core.ConfigurationException;
 import io.macgyver.core.ContextRefreshApplicationListener;
 import io.macgyver.core.CoreBindingSupplier;
 import io.macgyver.core.CorePlugin;
@@ -29,6 +25,7 @@ import io.macgyver.core.ScriptHookManager;
 import io.macgyver.core.Startup;
 import io.macgyver.core.auth.UserManager;
 import io.macgyver.core.cluster.ClusterManager;
+import io.macgyver.core.cluster.NeoRxTcpDiscoveryIpFinder;
 import io.macgyver.core.crypto.Crypto;
 import io.macgyver.core.eventbus.EventBusPostProcessor;
 import io.macgyver.core.eventbus.MacGyverAsyncEventBus;
@@ -39,39 +36,40 @@ import io.macgyver.core.script.ExtensionResourceProvider;
 import io.macgyver.core.service.ServiceRegistry;
 import io.macgyver.neorx.rest.NeoRxClient;
 
-import java.io.File;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
-import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 
+import org.apache.ignite.Ignite;
+import org.apache.ignite.IgniteScheduler;
+import org.apache.ignite.Ignition;
+import org.apache.ignite.configuration.IgniteConfiguration;
+import org.apache.ignite.spi.deployment.DeploymentSpi;
+import org.apache.ignite.spi.deployment.local.LocalDeploymentSpi;
+import org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.jmx.export.MBeanExporter;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.hazelcast.config.Config;
-import com.hazelcast.core.Hazelcast;
-import com.hazelcast.core.HazelcastInstance;
 import com.ning.http.client.AsyncHttpClient;
 
 @Configuration
 public class CoreConfig implements EnvironmentAware {
 
-	@Value(value = "${hazelcast.multicast.enabled:true}")
-	private boolean hazelcastMulticastEnabled = false;
 
-	private static final int HAZELCAST_PORT_DEFAULT = 8000;
+	public static final String MACGYVER_GRID_NAME="macgyver";
 
 	@Autowired
 	org.springframework.core.env.Environment env;
@@ -93,9 +91,11 @@ public class CoreConfig implements EnvironmentAware {
 		MacGyverEventBus b = new MacGyverEventBus();
 		return b;
 	}
+
 	@Bean(name = "macAsyncEventBus")
 	public MacGyverAsyncEventBus macAyncEventBus() {
-		MacGyverAsyncEventBus b = new MacGyverAsyncEventBus("macAsyncEventBus",Executors.newCachedThreadPool());
+		MacGyverAsyncEventBus b = new MacGyverAsyncEventBus("macAsyncEventBus",
+				Executors.newCachedThreadPool());
 		return b;
 	}
 
@@ -170,7 +170,7 @@ public class CoreConfig implements EnvironmentAware {
 	 * SpringAuthenticationProperties authenticationProperties = new
 	 * SpringAuthenticationProperties(); authenticationProperties.setRoles(new
 	 * String[] {"FOOR"});
-	 * 
+	 *
 	 * return authenticationProperties; }
 	 */
 
@@ -208,10 +208,12 @@ public class CoreConfig implements EnvironmentAware {
 			url = "http://localhost:7474";
 		}
 		logger.info("neo4j.uri: {}", url);
-		
-		boolean validateCerts=false;
-		
-		NeoRxClient client = new NeoRxClient(url,env.getProperty("neo4j.username"),env.getProperty("neo4j.password"),validateCerts);
+
+		boolean validateCerts = false;
+
+		NeoRxClient client = new NeoRxClient(url,
+				env.getProperty("neo4j.username"),
+				env.getProperty("neo4j.password"), validateCerts);
 
 		return client;
 
@@ -235,52 +237,7 @@ public class CoreConfig implements EnvironmentAware {
 
 	}
 
-	@Bean
-	public HazelcastInstance macHazelcast() {
 
-		String groupString = "macgyver";
-		String[] p = env.getActiveProfiles();
-		Arrays.sort(p);
-		if (p != null) {
-			for (int i = 0; i < p.length; i++) {
-				groupString = groupString + "-" + p[i];
-			}
-		}
-		logger.info("hazelcast group name: " + groupString);
-
-		Config cfg = new Config();
-		cfg.getNetworkConfig().setPort(HAZELCAST_PORT_DEFAULT);
-		cfg.getGroupConfig().setName(groupString);
-
-		if (!hazelcastMulticastEnabled) {
-			logger.warn("disabling hazelcast multicast discovery to speed things up");
-		}
-
-		cfg.getNetworkConfig().getJoin().getMulticastConfig()
-				.setEnabled(hazelcastMulticastEnabled);
-
-		File f = new File(Bootstrap.getInstance().getConfigDir(),
-				"hazelcast.groovy");
-
-		if (f.exists()) {
-			try {
-				logger.info("sourcing hazelcast groovy config: {}",f);
-				Binding b = new Binding();
-				b.setVariable("config", cfg);
-				GroovyShell groovy = new GroovyShell(b);
-				groovy.evaluate(f);
-				cfg = (Config) groovy.getVariable("config");
-			} catch (ConfigurationException e) {
-				throw e;
-			} catch (IOException | RuntimeException e) {
-				throw new ConfigurationException(e);
-			}
-		} else {
-			logger.info("hazelcast groovy config file not found: {}",f);
-		}
-
-		return Hazelcast.newHazelcastInstance(cfg);
-	}
 
 	@Bean
 	public PluginManager macPluginManager() {
@@ -296,6 +253,38 @@ public class CoreConfig implements EnvironmentAware {
 	public ClusterManager macClusterManager() {
 		return new ClusterManager();
 	}
-	
 
+	@Autowired(required=false)
+	@Qualifier("mbeanExporter")
+	MBeanExporter springMBeanExporter;
+
+	@Bean TcpDiscoverySpi macIgniteTcpDiscoverySpi() throws MalformedURLException{
+		TcpDiscoverySpi spi = new TcpDiscoverySpi();
+		spi.setIpFinder(new NeoRxTcpDiscoveryIpFinder(macGraphClient()));
+
+		return spi;
+	}
+	@Bean
+	public Ignite macIgnite() throws MalformedURLException {
+
+		if (springMBeanExporter!=null) {
+			// this bean borks the SpringMBeanExporter, so exclude it...
+			springMBeanExporter.addExcludedBean("macIgnite");
+		}
+
+		IgniteConfiguration cfg = new IgniteConfiguration();
+		cfg.setPeerClassLoadingEnabled(false);
+		cfg.setGridName(MACGYVER_GRID_NAME);
+
+		cfg.setDiscoverySpi(macIgniteTcpDiscoverySpi());
+
+		DeploymentSpi x = new LocalDeploymentSpi();
+
+		cfg.setDeploymentSpi(x);
+
+		Ignite ignite = Ignition.start(cfg);
+
+
+		return ignite;
+	}
 }

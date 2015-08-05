@@ -16,8 +16,10 @@ package io.macgyver.core;
 import io.macgyver.core.eventbus.MacGyverEventBus;
 
 import org.slf4j.Logger;
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -25,9 +27,9 @@ import org.springframework.core.env.Environment;
 
 /**
  * Simple wrapper to start server.
- * 
+ *
  * @author rschoening
- * 
+ *
  */
 
 @Configuration
@@ -39,7 +41,7 @@ public class ServerMain {
 	static Logger logger = org.slf4j.LoggerFactory.getLogger(ServerMain.class);
 
 	static boolean daemonized = false;
-	
+
 	public static void main(String[] args) throws Exception {
 
 		daemonizeIfRequired();
@@ -49,12 +51,18 @@ public class ServerMain {
 		if (!daemonized) {
 			logger.info("process not daemonized; set -Dmacgyver.daemon=true to daemonize");
 		}
-		
-		SpringApplication app = new SpringApplication(ServerMain.class);
 
-		app.addInitializers(new SpringContextInitializer());
+		ApplicationListener<ApplicationEvent> x = new ApplicationListener<ApplicationEvent>() {
 
-		ConfigurableApplicationContext ctx = app.run(args);
+			@Override
+			public void onApplicationEvent(ApplicationEvent event) {
+				logger.info("onApplicationEvent({})",event);
+
+			}
+		};
+		ConfigurableApplicationContext ctx = new SpringApplicationBuilder()
+				.sources(ServerMain.class)
+				.initializers(new SpringContextInitializer()).listeners(x).run(args);
 
 		Environment env = ctx.getEnvironment();
 

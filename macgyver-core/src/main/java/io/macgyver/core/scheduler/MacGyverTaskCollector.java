@@ -22,7 +22,6 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -30,10 +29,7 @@ public class MacGyverTaskCollector implements TaskCollector {
 
 	Logger logger = LoggerFactory.getLogger(MacGyverTaskCollector.class);
 
-	@Autowired
 	NeoRxClient client;
-
-	boolean enabled=true;
 
 	public MacGyverTaskCollector() {
 
@@ -43,16 +39,7 @@ public class MacGyverTaskCollector implements TaskCollector {
 		this.client = c;
 	}
 
-	public boolean isEnabled() {
-		return enabled;
-	}
-	/**
-	 * Enable/Disable MacGyver Scheduler
-	 * @param b
-	 */
-	public void setEnabled(boolean b) {
-		this.enabled=b;
-	}
+
 
 	public List<JsonNode> fetchSchedule() {
 		List<JsonNode> list = client
@@ -70,10 +57,7 @@ public class MacGyverTaskCollector implements TaskCollector {
 
 	protected TaskTable toTaskTable(List<JsonNode> list) {
 		TaskTable tt = new TaskTable();
-		if (!isEnabled()) {
-			logger.warn("scheduler is disabled--no tasks will be run");
-			return tt;
-		}
+
 		for (JsonNode n : list) {
 			try {
 

@@ -18,10 +18,6 @@ import io.macgyver.test.MacGyverIntegrationTest;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.hazelcast.config.Config;
-import com.hazelcast.core.Hazelcast;
-import com.hazelcast.core.HazelcastInstance;
-
 public class ClusterManagerTest extends MacGyverIntegrationTest {
 
 	@Autowired
@@ -30,13 +26,7 @@ public class ClusterManagerTest extends MacGyverIntegrationTest {
 	@Test
 	public void testCluster() {
 
-		Config cfg = new Config();
-		cfg.getGroupConfig().setName("macgyver");
-		HazelcastInstance i = Hazelcast.newHazelcastInstance(cfg);
 
-		logger.info("members: {}", i.getCluster().getMembers());
-
-		logger.info("isMaster: {}", clusterManager.isMaster());
 
 	}
 }
