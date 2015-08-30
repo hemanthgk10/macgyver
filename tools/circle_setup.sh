@@ -15,4 +15,5 @@ sudo service postgresql stop
 sudo echo "wrapper.java.maxmemory=1750" >>/var/lib/neo4j/conf/neo4j-wrapper.conf 
 sudo echo "wrapper.java.initmemory=256" >>/var/lib/neo4j/conf/neo4j-wrapper.conf 
 sudo sed -i.bak 's/auth_enabled=true/auth_enabled=false/' /var/lib/neo4j/conf/neo4j-server.properties
-#sudo nohup service neo4j-service start
+sudo echo "dbms.pagecache.memory=100m" >>/var/lib/neo4j/conf/neo4j-server.properties
+sudo nohup service neo4j-service start

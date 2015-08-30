@@ -1,0 +1,27 @@
+
+    
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'maven'
+apply plugin: 'application'
+
+configurations {
+    all*.exclude group: 'org.codehaus.groovy', module: 'groovy'
+    all*.exclude group: 'log4j'
+    all*.exclude group: 'xml-apis'
+    all*.exclude group: 'commons-logging'
+}
+
+
+mainClassName = 'io.macgyver.core.ServerMain'
+
+dependencies {  
+    
+    testCompile project(':macgyver-test')
+    compile project(':macgyver-core')
+	compile project(":macgyver-plugin-cloud-aws")
+	compile 'com.amazonaws:amazon-kinesis-client:1.6.0'
+	compile 'com.amazonaws:amazon-kinesis-producer:0.10.1'
+	
+    
+}

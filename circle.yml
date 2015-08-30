@@ -11,7 +11,7 @@ machine:
         
 dependencies:
     override:
-        - ./gradlew eclipse:
+        - ./gradlew downloadDependencies:
             environment:
                 TERM: dumb
             pwd:

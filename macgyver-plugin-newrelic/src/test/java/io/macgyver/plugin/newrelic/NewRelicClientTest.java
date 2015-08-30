@@ -65,7 +65,7 @@ public class NewRelicClientTest extends MacGyverIntegrationTest {
 			Assert.fail("expected exception");
 		} catch (Exception e) {
 			Assertions.assertThat(e).isInstanceOf(
-					ServiceInvocationException.class).hasMessageContaining("Invalid API Key");
+					ServiceInvocationException.class).hasMessageContaining("API").hasMessageContaining("nvalid");
 		}
 	}
 
