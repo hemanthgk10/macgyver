@@ -82,6 +82,8 @@ dependencies {
     
     compile 'org.jdom:jdom2:2.0.6'
 	
+	compile 'com.moandjiezana.toml:toml4j:0.4.0'
+	
    /* compile(group: 'javax.validation', name: 'validation-api', version: '1.1.0.Final') { 
           artifact { 
               name = "validation-api" 
