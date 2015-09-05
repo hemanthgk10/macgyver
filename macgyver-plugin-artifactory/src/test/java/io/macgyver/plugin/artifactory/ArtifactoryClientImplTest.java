@@ -24,12 +24,12 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.RecordedRequest;
-import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
 
 public class ArtifactoryClientImplTest {
 
 	@Rule
-	public MockWebServerRule mockServer = new MockWebServerRule();
+	public MockWebServer mockServer = new MockWebServer();
 
 	@Test
 	public void testMockAql() throws InterruptedException{

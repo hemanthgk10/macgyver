@@ -21,13 +21,13 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.RecordedRequest;
-import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
 
 public class CloudStackClientImplTest {
 
 	Logger logger = LoggerFactory.getLogger(CloudStackClientImplTest.class);
 	@Rule
-	public MockWebServerRule mockServer = new MockWebServerRule();
+	public MockWebServer mockServer = new MockWebServer();
 
 	@Test
 	public void testUsernamePasswordAuth() throws InterruptedException {
@@ -62,7 +62,7 @@ public class CloudStackClientImplTest {
 		Assertions.assertThat(rr.getPath()).isEqualTo("/client/api");
 		
 
-		Assertions.assertThat(rr.getBody().readUtf8()).contains("username=scott","password=tiger","response=json","domain=/","command=login");
+		Assertions.assertThat(rr.getBody().readUtf8()).contains("username=scott","password=tiger","response=json","command=login");
 
 		Assertions.assertThat(c.cache.getIfPresent(CloudStackClientImpl.CACHE_KEY)).isNotNull().isInstanceOf(JsonNode.class);
 		
