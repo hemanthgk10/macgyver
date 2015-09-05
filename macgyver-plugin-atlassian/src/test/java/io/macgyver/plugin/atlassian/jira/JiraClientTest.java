@@ -26,14 +26,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.RecordedRequest;
-import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
 
 public class JiraClientTest   {
 
 	Logger logger = LoggerFactory.getLogger(JiraClientTest.class);
 
 	@Rule
-	public final MockWebServerRule mockServer = new MockWebServerRule();
+	public final MockWebServer mockServer = new MockWebServer();
 
 	
 	/**

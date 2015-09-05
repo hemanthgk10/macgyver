@@ -36,12 +36,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.RecordedRequest;
-import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
 
 public class A10ClientTest {
 
 	@Rule
-	public MockWebServerRule mockServer = new MockWebServerRule();
+	public MockWebServer mockServer = new MockWebServer();
 
 	public A10ClientImpl testClient = null;
 
