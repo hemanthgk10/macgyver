@@ -62,7 +62,7 @@ public class CloudStackClientImplTest {
 		Assertions.assertThat(rr.getPath()).isEqualTo("/client/api");
 		
 
-		Assertions.assertThat(rr.getBody().readUtf8()).contains("username=scott","password=tiger","response=json","domain=/","command=login");
+		Assertions.assertThat(rr.getBody().readUtf8()).contains("username=scott","password=tiger","response=json","command=login");
 
 		Assertions.assertThat(c.cache.getIfPresent(CloudStackClientImpl.CACHE_KEY)).isNotNull().isInstanceOf(JsonNode.class);
 		
