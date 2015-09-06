@@ -16,6 +16,8 @@ package io.macgyver.core.auth;
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.neorx.rest.NeoRxFunctions;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -40,7 +42,6 @@ public class UserManager {
 	@Autowired
 	NeoRxClient neo4j;
 
-
 	public Optional<User> getInternalUser(final String id) {
 
 		String q = "match (u:User) where u.username={username} return u.username, 'dummy' as dummy";
@@ -53,7 +54,6 @@ public class UserManager {
 			u.username = n.get("u.username").asText();
 
 			u.roles = ImmutableList.copyOf(findRolesForUser(id.toLowerCase()));
-
 
 			return Optional.of(u);
 		}
@@ -111,10 +111,9 @@ public class UserManager {
 
 	public void setRoles(String username, List<String> roles) {
 
-		for (String role: roles) {
+		for (String role : roles) {
 			addRoleToUser(username, role);
 		}
-
 
 	}
 
@@ -126,7 +125,7 @@ public class UserManager {
 		}
 		username = username.trim().toLowerCase();
 
-		String cypher = "create (u:User {username:{username}})";
+		String cypher = "create (u:User {username:{username}}) return u";
 		neo4j.execCypher(cypher, "username", username);
 
 		setRoles(username, roles);
@@ -165,11 +164,11 @@ public class UserManager {
 				logger.debug("admin user already exists");
 			} else {
 				logger.info("adding admin user");
-				List<String> roleList = Lists.newArrayList(
-						"ROLE_MACGYVER_SHELL", "ROLE_MACGYVER_UI",
-						"ROLE_MACGYVER_ADMIN", "ROLE_MACGYVER_USER","ROLE_NEO4J_WRITE","ROLE_NEO4J_READ");
+				List<String> roleList = Lists.newArrayList();
 
 				createUser("admin", roleList);
+				
+				addUserToGroup("MACGYVER_ADMIN","admin");
 				setPassword("admin", "admin");
 
 			}
@@ -179,18 +178,45 @@ public class UserManager {
 
 	}
 
+	public Collection<String> findRolesForUser(String username) {
 
-	public List<String> findRolesForUser(String username) {
+		HashSet<String> roles = new HashSet<>();
+
+		// First grab all the users with roles directly attached to them
+		neo4j.execCypher(
+				"match (u:User{username:{username}})-[:HAS_ROLE]-(r:Role) return distinct r.name as role_name",
+				"username", username)
+				.flatMap(NeoRxFunctions.jsonNodeToString())
+				.forEach(role -> roles.add(role));
+
+		// Now grab roles that are indirectly attached via groups
+		neo4j.execCypher(
+				"match (u:User {username:{username}})-[:HAS_MEMBER]-(g:Group)-[]-(r:Role) return r.name as role_name",
+				"username", username)
+				.flatMap(NeoRxFunctions.jsonNodeToString())
+				.forEach(role -> roles.add(role));
+		
+		// Add the groups themselves as well
+		neo4j.execCypher(
+				"match (u:User {username:{username}})-[:HAS_MEMBER]-(g:Group) return g.name as group_name",
+				"username", username)
+				.flatMap(NeoRxFunctions.jsonNodeToString())
+				.forEach(role -> roles.add(InternalGroupRoleTranslator.normalizeUpperCase("GROUP_"+role)));
+		// Note that this will NOT include roles for externally managed groups
+		return roles;
+
+	}
+
+	public Collection<String> findRolesForGroup(String group) {
 
 		return neo4j
 				.execCypher(
-						"match (u:User{username:{username}})-[:HAS_ROLE]-(r:Role) return distinct r.name as role_name",
-						"username", username)
+						"match (g:Group{name:{name}})-[:HAS_ROLE]-(r:Role) return distinct r.name as role_name",
+						"name", group)
 				.flatMap(NeoRxFunctions.jsonNodeToString()).toList()
 				.toBlocking().first();
 
 	}
-
 
 	public void seedRoles() {
 		addRole(MacGyverRole.ROLE_MACGYVER_ADMIN.toString(),
@@ -202,13 +228,17 @@ public class UserManager {
 				"Read Access to Neo4j Console");
 		addRole(MacGyverRole.ROLE_NEO4J_WRITE.toString(),
 				"Read-Write Access Neo4j Console");
-/*
-		addRoleToUser("admin", MacGyverRole.ROLE_MACGYVER_ADMIN.toString());
-		addRoleToUser("admin", MacGyverRole.ROLE_MACGYVER_USER.toString());
-		addRoleToUser("admin", MacGyverRole.ROLE_MACGYVER_SHELL.toString());
-		addRoleToUser("admin", MacGyverRole.ROLE_NEO4J_READ.toString());
-		addRoleToUser("admin", MacGyverRole.ROLE_NEO4J_WRITE.toString());
-		*/
+		
+		addGroup("MACGYVER_ADMIN","Macgyver Admin");
+		
+		addRoleToGroup("MACGYVER_ADMIN", MacGyverRole.ROLE_MACGYVER_ADMIN.toString());
+		addRoleToGroup("MACGYVER_ADMIN", MacGyverRole.ROLE_MACGYVER_SHELL.toString());
+		addRoleToGroup("MACGYVER_ADMIN", MacGyverRole.ROLE_MACGYVER_USER.toString());
+		addRoleToGroup("MACGYVER_ADMIN", MacGyverRole.ROLE_NEO4J_READ.toString());
+		addRoleToGroup("MACGYVER_ADMIN", MacGyverRole.ROLE_NEO4J_WRITE.toString());
+		
+		
+		
 	}
 
 	public void migrateRolesForUser(String username) {
@@ -225,6 +255,11 @@ public class UserManager {
 
 	}
 
+	public void addGroup(String name, String description) {
+		String cypher = "merge (g:Group {name:{name}}) ON CREATE SET g.description={description} return g";
+		neo4j.execCypher(cypher, "name", name, "description", description);
+	}
+
 	public void addRole(String name, String description) {
 		String cypher = "merge (r:Role {name:{name}}) ON CREATE SET r.description={description} return r";
 		neo4j.execCypher(cypher, "name", name, "description", description);
@@ -235,5 +270,15 @@ public class UserManager {
 		String cypher = "match (u:User {username:{username}}),(r:Role {name:{role}}) MERGE (u)-[x:HAS_ROLE]-(r) return u,r";
 
 		neo4j.execCypher(cypher, "username", user, "role", role);
+	}
+
+	public void addRoleToGroup(String group, String role) {
+		String cypher = "match (g:Group {name:{name}}),(r:Role {name:{role}}) MERGE (g)-[x:HAS_ROLE]-(r) return g,r";
+
+		neo4j.execCypher(cypher, "name", group, "role", role);
+	}
+	public void addUserToGroup(String group, String username) {
+		String cypher = "match (g:Group {name:{name}}),(u:User {username:{username}}) MERGE (g)-[x:HAS_MEMBER]-(u) return x";
+		neo4j.execCypher(cypher, "username",username,"name",group);
 	}
 }

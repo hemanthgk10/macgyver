@@ -19,6 +19,7 @@ import io.macgyver.test.MacGyverIntegrationTest;
 import java.util.List;
 import java.util.UUID;
 
+import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
@@ -98,9 +99,12 @@ public class UserManagerTest extends MacGyverIntegrationTest {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testUnique() {
-		String username = "junit_bob";
-		neo4j.execCypher("match (x:User)-[r]-() where x.username={username} delete r","username",username);
-		neo4j.execCypher("match (x:User) where x.username={username} delete x","username",username);
+		String username = "junit_"+System.currentTimeMillis();
+		neo4j.execCypher(
+				"match (x:User)-[r]-() where x.username={username} delete r",
+				"username", username);
+		neo4j.execCypher("match (x:User) where x.username={username} delete x",
+				"username", username);
 
 		List<String> roles = Lists.newArrayList();
 
@@ -110,10 +114,41 @@ public class UserManagerTest extends MacGyverIntegrationTest {
 
 		userManager.createUser(username, roles);
 
+	}
 
+	@Test
+	public void testAddUserAndTestRoles() {
+		String username = "junit_" + System.currentTimeMillis();
+
+		userManager.createUser(username, Lists.newArrayList());
+
+		userManager.addUserToGroup("MACGYVER_ADMIN", username);
+
+		Assertions.assertThat(
+				userManager.getInternalUser(username).get().getRoles())
+				.contains("GROUP_MACGYVER_ADMIN", "ROLE_NEO4J_READ",
+						"ROLE_NEO4J_WRITE", "ROLE_MACGYVER_SHELL",
+						"ROLE_MACGYVER_USER");
 
 	}
 
+	@Test
+	public void testAddGroup() {
+		String testGroup = "junit_group_" + System.currentTimeMillis();
+		String role1 = "junit_role" + System.currentTimeMillis();
+		userManager.addGroup(testGroup, testGroup + " Description");
 
+		userManager.addRole(role1, "Test role");
+
+		userManager.addRoleToGroup(testGroup, role1);
+	}
+
+	@After
+	public void cleanup() {
+		neo4j.execCypher("match (m)-[r]-() where lower(m.username)=~\"junit_.*\" delete r");
+		neo4j.execCypher("match (m)-[r]-() where lower(m.name)=~\"junit_.*\" delete r");
+		neo4j.execCypher("match (m) where lower(m.username)=~\"junit_.*\" delete m");
+		neo4j.execCypher("match (m) where lower(m.name)=~\"junit.*\" delete m");
+	}
 
 }

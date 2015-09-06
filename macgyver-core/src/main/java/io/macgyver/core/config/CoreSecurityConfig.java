@@ -17,6 +17,7 @@ import io.macgyver.core.ScriptHookManager;
 import io.macgyver.core.auth.GrantedAuthoritiesTranslatorChain;
 import io.macgyver.core.auth.GrantedAuthoritiesTranslatorScriptHook;
 import io.macgyver.core.auth.InternalAuthenticationProvider;
+import io.macgyver.core.auth.InternalGroupRoleTranslator;
 import io.macgyver.core.auth.LogOnlyAccessDecisionVoter;
 import io.macgyver.core.auth.MacGyverAccessDecisionManager;
 
@@ -139,10 +140,16 @@ public class CoreSecurityConfig extends WebSecurityConfigurerAdapter {
 		}
 	}
 
+	@Bean
+	public InternalGroupRoleTranslator macInternalGroupRoleTranslator() {
+		return new InternalGroupRoleTranslator();
+	}
+	
 	@Bean(name="macGrantedAuthoritiesTranslatorChain")
 	public GrantedAuthoritiesTranslatorChain macGrantedAuthoritiesTranslatorChain() {
 		GrantedAuthoritiesTranslatorChain chain = new GrantedAuthoritiesTranslatorChain();
 		chain.addTranslator(macGrantedAuthoritiesTranslatorScriptHook());
+		chain.addTranslator(macInternalGroupRoleTranslator());
 		return chain;
 	}
 	@Bean
