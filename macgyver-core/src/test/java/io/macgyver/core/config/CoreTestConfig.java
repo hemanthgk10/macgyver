@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.macgyver.config;
+package io.macgyver.core.config;
 
 import io.macgyver.core.factory.TestBeanServiceFactory;
 import io.macgyver.core.web.mvc.MacgyverWeb;
@@ -27,7 +27,7 @@ public class CoreTestConfig {
 	}
 	
 	@Bean
-	public MacgyverWeb macWEb() {
+	public MacgyverWeb macWeb() {
 		return new MacgyverWeb();
 	}
 }
