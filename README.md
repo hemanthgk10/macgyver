@@ -6,7 +6,7 @@
 ##  Quick Start
 
 If you want to start using MacGyver without building it from source, 
-your best option is to clone the [macgyver-quickstart](https://github.com/if6was9/macgyver-quickstart) repository and follow the instructions there.
+your best option is to clone the [macgyver-quickstart](https://github.com/if6was9/macgyver-quickstart/blob/master/README.md) repository and follow the instructions there.
 
 
 ## Building From Source
