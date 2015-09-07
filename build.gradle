@@ -208,9 +208,8 @@ subprojects {
 			println "properties required to sign artifacts not set -- disabling code signing"
 		}
 		else {
-			println "xcc"
-			new File("${project.projectDir}/.gnupg").mkdirs()
-			ant.get(src: "https://robschoening.s3.amazonaws.com/macgyver/secring.gpg", dest: "./.gnupg/secring.gpg", verbose:true)
+			new File("./.gnupg").mkdirs()
+			ant.get(src: "${System.getenv("SIGNING_KEYRING_URL")}", dest: "./.gnupg/secring.gpg", verbose:false)
 		}
 		return signingPropertiesSet
 	}
