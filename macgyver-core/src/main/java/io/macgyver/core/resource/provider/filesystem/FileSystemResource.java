@@ -24,7 +24,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.hash.Hashing;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
@@ -38,12 +38,13 @@ public class FileSystemResource extends Resource {
 		this.fileObject = object;
 	}
 
+	@Override
 	public String toString() {
 		try {
-			return Objects.toStringHelper(this).add("path", getPath())
+			return MoreObjects.toStringHelper(this).add("path", getPath())
 					.toString();
 		} catch (Exception e) {
-			return Objects.toStringHelper(this).toString();
+			return MoreObjects.toStringHelper(this).toString();
 		}
 	}
 
@@ -53,6 +54,7 @@ public class FileSystemResource extends Resource {
 
 	}
 
+	@Override
 	public String getContentAsString() throws IOException {
 		String text;
 		try (InputStreamReader reader = new InputStreamReader(
@@ -62,6 +64,7 @@ public class FileSystemResource extends Resource {
 		return text;
 	}
 
+	@Override
 	public InputStream openInputStream() throws IOException {
 		return new BufferedInputStream(new FileInputStream(fileObject));
 	}

@@ -15,6 +15,7 @@ package io.macgyver.core.service;
 
 import java.util.Properties;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
@@ -61,6 +62,9 @@ public class ServiceDefinition {
 	public Properties getProperties() {
 		return properties;
 	}
+	public String getProperty(String name) {
+		return properties.getProperty(name);
+	}
 
 	@SuppressWarnings("rawtypes")
 	public ServiceFactory getServiceFactory() {
@@ -72,7 +76,7 @@ public class ServiceDefinition {
 	}
 
 	public String toString() {
-		return Objects.toStringHelper(this).add("name", name)
+		return MoreObjects.toStringHelper(this).add("name", name)
 				.add("primaryName", primaryName).toString();
 	}
 

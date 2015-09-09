@@ -37,7 +37,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import com.google.common.base.Strings;
 
 @SpringApplicationConfiguration(classes = TestConfig.class,initializers={SoftDependencyInitializer.class})
-//s@ContextConfiguration(loader = AnnotationConfigContextLoader.class, classes = { TestConfig.class }, initializers={SoftDependencyInitializer.class})
 @RunWith(SpringJUnit4ClassRunner.class)
 public abstract class MacGyverIntegrationTest extends
 		AbstractJUnit4SpringContextTests {
@@ -127,7 +126,6 @@ public abstract class MacGyverIntegrationTest extends
 			NeoRxClient neo4j = applicationContext.getBean(NeoRxClient.class);
 			try {
 				neo4j.execCypher("match (x)-[y]-() where x.name=~'(i?)junit.*' delete y");
-
 				neo4j.execCypher("match (x) where x.name=~'(i?)junit.*' delete x");
 
 			} catch (Exception e) {

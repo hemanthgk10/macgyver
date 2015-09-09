@@ -215,6 +215,11 @@ subprojects {
 		}
 		return signingPropertiesSet
 	}
+	
+	task downloadDependencies(type: Copy) {
+	  from sourceSets.main.runtimeClasspath
+	  into 'build/temp-deps'
+	}
 }
 
 

@@ -1,4 +1,6 @@
 include   'macgyver-core',
+    'macgyver-plugin-rabbitmq',
+    'macgyver-plugin-cloud-aws-kinesis',
     'macgyver-plugin-etcd',
     'macgyver-plugin-artifactory',
     'macgyver-plugin-atlassian',

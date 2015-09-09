@@ -38,7 +38,7 @@ import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.RecordedRequest;
-import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
 
 /**
  * This class is less of a test than a demonstration of MockWebServer.
@@ -49,7 +49,7 @@ public class MockWebServerTest {
 	Logger logger = LoggerFactory.getLogger(MockWebServerTest.class);
 
 	@Rule
-	public final MockWebServerRule mockServer = new MockWebServerRule();
+	public final MockWebServer mockServer = new MockWebServer();
 
 	List<Integer> portList = new ArrayList<Integer>();
 

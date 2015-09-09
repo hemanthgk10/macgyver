@@ -14,12 +14,9 @@
 package io.macgyver.core.web.neo4j;
 
 import io.macgyver.neorx.rest.NeoRxClient;
-import io.macgyver.okrest.BasicAuthInterceptor;
-import io.macgyver.okrest.OkRestClient;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.security.Principal;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
@@ -33,16 +30,13 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.crsh.console.jline.internal.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;

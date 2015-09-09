@@ -1,11 +1,22 @@
 machine:
+    pre:
+        - sudo ./macgyver/tools/circle_setup.sh
+    services:
+        - neo4j
     java:
         version: oraclejdk8
     environment:
         TERM: dumb
         JAVA_OPTS: "-Xms256m -Xmx512m"
         
-        
+dependencies:
+    override:
+        - ./gradlew downloadDependencies:
+            environment:
+                TERM: dumb
+            pwd:
+                .
+
 test:
     override:
         - ./gradlew clean check install

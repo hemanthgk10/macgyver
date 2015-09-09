@@ -21,14 +21,14 @@ import org.junit.Test;
 
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
-import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
 
 public class A10HAClientImplTest {
 
 	@Rule
-	public MockWebServerRule mock1 = new MockWebServerRule();
+	public MockWebServer mock1 = new MockWebServer();
 	@Rule
-	public MockWebServerRule mock2 = new MockWebServerRule();
+	public MockWebServer mock2 = new MockWebServer();
 	
 	@Test
 	public void testActiveCheckInterval() throws IOException {

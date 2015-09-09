@@ -16,20 +16,18 @@ package io.macgyver.plugin.cloud.vsphere;
 import io.macgyver.core.MacGyverException;
 import io.macgyver.core.service.BasicServiceFactory;
 import io.macgyver.core.service.ServiceDefinition;
-import it.sauronsoftware.cron4j.Scheduler;
-import it.sauronsoftware.cron4j.Task;
-import it.sauronsoftware.cron4j.TaskExecutionContext;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.util.Calendar;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.Lists;
@@ -41,15 +39,12 @@ import com.vmware.vim25.mo.ServiceInstance;
 @Component
 public class VSphereFactory extends BasicServiceFactory<ServiceInstance> {
 
-	public static final String REFRESH_SCHEDULE = "* * * * *";
-
 	public static final String CERTIFICATE_VERIFICATION_DEFAULT = "false";
 
 	CglibProxyFactory cglibProxyFactory = new CglibProxyFactory();
 
-
-	@Autowired
-	Scheduler scheduler;
+	static ScheduledExecutorService sharedExecutor = Executors
+			.newScheduledThreadPool(1);
 
 	List<WeakReference<RefreshingServiceInstance>> instances = Lists
 			.newCopyOnWriteArrayList();
@@ -62,7 +57,8 @@ public class VSphereFactory extends BasicServiceFactory<ServiceInstance> {
 	@PostConstruct
 	public void scheduleRefresh() {
 		logger.info("scheduling VSphere ServiceInstance session token refresh");
-		scheduler.schedule(REFRESH_SCHEDULE, new RefreshTask());
+		sharedExecutor.scheduleWithFixedDelay(new RefreshTask(), 1, 5,
+				TimeUnit.MINUTES);
 	}
 
 	public boolean isRefreshRequired(RefreshingServiceInstance si) {
@@ -72,51 +68,55 @@ public class VSphereFactory extends BasicServiceFactory<ServiceInstance> {
 					.getLoginTime();
 			long loginTime = cal.getTimeInMillis();
 			long age = System.currentTimeMillis() - loginTime;
-			
+
 			if (age > TimeUnit.MINUTES.toMillis(15)) {
 				return true;
 			}
 		} catch (Exception e) {
-			// if the currentTime() call is rejected our session token is likely expired
+			// if the currentTime() call is rejected our session token is likely
+			// expired
 			return true;
 		}
 
 		return false;
 	}
 
-	public class RefreshTask extends Task {
+	public class RefreshTask implements Runnable {
 
 		@Override
-		public void execute(TaskExecutionContext arg0) throws RuntimeException {
+		public void run() {
+			try {
+				List<WeakReference<RefreshingServiceInstance>> deleteList = Lists
+						.newArrayList();
 
-			List<WeakReference<RefreshingServiceInstance>> deleteList = Lists
-					.newArrayList();
+				for (WeakReference<RefreshingServiceInstance> ref : instances) {
+					RefreshingServiceInstance si = ref.get();
 
-			for (WeakReference<RefreshingServiceInstance> ref : instances) {
-				RefreshingServiceInstance si = ref.get();
-
-				if (si != null) {
-					try {
-						if (isRefreshRequired(si)) {
-							logger.info("refreshing session token: {}", si);
-							RefreshingServiceInstance.refreshToken(si);
+					if (si != null) {
+						try {
+							if (isRefreshRequired(si)) {
+								logger.info("refreshing session token: {}", si);
+								RefreshingServiceInstance.refreshToken(si);
+							}
+						} catch (Exception e) {
+							logger.warn("problem refreshing session token", e);
 						}
-					} catch (Exception e) {
-						logger.warn("problem refreshing session token", e);
+					} else {
+						deleteList.add(ref);
 					}
-				} else {
-					deleteList.add(ref);
 				}
-			}
 
-			instances.removeAll(deleteList);
+				instances.removeAll(deleteList);
+			} catch (Exception e) {
+				logger.warn("uncaught exception", e);
+			}
 		}
 	}
 
 	@Override
 	public void doConfigureDefinition(ServiceDefinition def) {
 		super.doConfigureDefinition(def);
-	
+
 	}
 
 	@Override

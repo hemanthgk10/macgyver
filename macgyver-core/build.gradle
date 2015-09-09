@@ -35,9 +35,12 @@ dependencies {
     compile 'org.ocpsoft.prettytime:prettytime:3.2.7.Final'
     compile 'joda-time:joda-time:2.7'
     
+
     compile 'com.lambdaworks:scrypt:1.4.0'
 	compile 'it.sauronsoftware.cron4j:cron4j:2.2.5'
-	compile "com.hazelcast:hazelcast:${HAZELCAST_VERSION}"
+
+	compile "org.apache.ignite:ignite-core:${IGNITE_VERSION}"
+	compile "org.apache.ignite:ignite-spring:${IGNITE_VERSION}"
 	
 	compile 'org.aspectj:aspectjweaver:1.8.5'
 	
@@ -79,6 +82,8 @@ dependencies {
     compile "org.kohsuke:akuma:1.9"
     
     compile 'org.jdom:jdom2:2.0.6'
+	
+	compile 'com.moandjiezana.toml:toml4j:0.4.0'
 	
    /* compile(group: 'javax.validation', name: 'validation-api', version: '1.1.0.Final') { 
           artifact { 
