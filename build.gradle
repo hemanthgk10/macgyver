@@ -199,18 +199,19 @@ subprojects {
 
 	signArchives.onlyIf { 
 
+		def gnupgDir = new File(System.getProperty("user.home"),".gnupg")
+		def secringFile = new File(gnupgDir,"secring.gpg")
+		gnupgDir.mkdirs()
 		project.ext['signing.keyId'] = System.getenv("SIGNING_KEY_ID")
 		project.ext['signing.password'] = System.getenv("SIGNING_PASSWORD")
-		project.ext['signing.secretKeyRingFile'] = new File("./.gnupg/secring.gpg")
+		project.ext['signing.secretKeyRingFile'] = secringFile
 
 		def signingPropertiesSet = project.ext.has('signing.keyId') && project.ext['signing.keyId']
 		if (!signingPropertiesSet) {
 			println "properties required to sign artifacts not set -- disabling code signing"
 		}
 		else {
-			println "xcc"
-			new File("${project.projectDir}/.gnupg").mkdirs()
-			ant.get(src: "https://robschoening.s3.amazonaws.com/macgyver/secring.gpg", dest: "./.gnupg/secring.gpg", verbose:true)
+			ant.get(src: "${System.getenv("SIGNING_KEYRING_URL")}", dest: "${secringFile.getAbsolutePath()}", verbose:false)
 		}
 		return signingPropertiesSet
 	}
