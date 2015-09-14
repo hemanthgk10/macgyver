@@ -16,7 +16,9 @@ package io.macgyver.plugin.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import io.macgyver.plugin.hipchat.HipChatBot;
 import io.macgyver.plugin.hipchat.HipChatServiceFactory;
+import io.macgyver.plugin.hipchat.HipChatWebhookController;
 
 @Configuration
 public class HipChatConfig {
@@ -24,6 +26,17 @@ public class HipChatConfig {
 	@Bean
 	public HipChatServiceFactory macHipChatServiceFactory() {
 		return new HipChatServiceFactory();
+	}
+	
+	
+	@Bean
+	public HipChatBot macHipChatBot() {
+		return new HipChatBot();
+	}
+	
+	@Bean
+	public HipChatWebhookController macHipChatWebhookController() {
+		return new HipChatWebhookController();
 	}
 	
 }
