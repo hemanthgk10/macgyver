@@ -38,7 +38,9 @@ public interface A10Client {
 	
 	public abstract ObjectNode invokeJson(String method, String... args);
 	
-	public Response invokeJsonWithRawResponse(Map<String, String> x, JsonNode optionalBody);
+	public Response invokeJsonWithRawResponse(String method, JsonNode body, String... args); 
+	
+	public Response invokeJsonWithRawResponse(String method, JsonNode body, Map<String, String> params); 
 	
 	public abstract Element invokeXml(String method, Element body, String... args);
 	
@@ -48,8 +50,10 @@ public interface A10Client {
 
 	public abstract Element invokeXml(String method, Map<String,String>  args);
 	
-	public Response invokeXmlWithRawResponse(Map<String, String> x, Element optionalBody);
-	
+	public Response invokeXmlWithRawResponse(String method, Element body, String... args); 
+
+	public Response invokeXmlWithRawResponse(String method, Element body, Map<String, String> params); 
+
 	public boolean isActive();
 	
 }

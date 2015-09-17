@@ -254,15 +254,30 @@ public class A10HAClientImpl implements A10HAClient, Runnable {
 	}
 
 	@Override
-	public Response invokeJsonWithRawResponse(Map<String, String> x,
-			JsonNode optionalBody) {
-		return getActiveClient().invokeJsonWithRawResponse(x, optionalBody);
+	public Response invokeJsonWithRawResponse(String method, JsonNode body,
+			String... args) {
+		return getActiveClient().invokeJsonWithRawResponse(method, body, args);
 	}
 
 	@Override
-	public Response invokeXmlWithRawResponse(Map<String, String> x,
-			Element optionalBody) {
-		return getActiveClient().invokeXmlWithRawResponse(x, optionalBody);
+	public Response invokeJsonWithRawResponse(String method, JsonNode body,
+			Map<String, String> params) {
+		return getActiveClient().invokeJsonWithRawResponse(method, body, params);
+
 	}
 
+	@Override
+	public Response invokeXmlWithRawResponse(String method, Element body,
+			String... args) {
+		return getActiveClient().invokeXmlWithRawResponse(method, body, args);
+	}
+
+	@Override
+	public Response invokeXmlWithRawResponse(String method, Element body,
+			Map<String, String> params) {
+		return getActiveClient().invokeXmlWithRawResponse(method, body, params);
+
+	}
+
+	
 }
