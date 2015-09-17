@@ -34,6 +34,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.UncheckedExecutionException;
+import com.squareup.okhttp.Response;
 
 public class A10HAClientImpl implements A10HAClient, Runnable {
 
@@ -252,4 +253,31 @@ public class A10HAClientImpl implements A10HAClient, Runnable {
 		return getActiveClient().invokeXml(method, body, params);
 	}
 
+	@Override
+	public Response invokeJsonWithRawResponse(String method, JsonNode body,
+			String... args) {
+		return getActiveClient().invokeJsonWithRawResponse(method, body, args);
+	}
+
+	@Override
+	public Response invokeJsonWithRawResponse(String method, JsonNode body,
+			Map<String, String> params) {
+		return getActiveClient().invokeJsonWithRawResponse(method, body, params);
+
+	}
+
+	@Override
+	public Response invokeXmlWithRawResponse(String method, Element body,
+			String... args) {
+		return getActiveClient().invokeXmlWithRawResponse(method, body, args);
+	}
+
+	@Override
+	public Response invokeXmlWithRawResponse(String method, Element body,
+			Map<String, String> params) {
+		return getActiveClient().invokeXmlWithRawResponse(method, body, params);
+
+	}
+
+	
 }
