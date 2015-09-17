@@ -39,12 +39,12 @@ public class HipChatBotContext extends ChatBotContext {
 				args = tmp;
 			}
 			else {
-				throw new IllegalArgumentException("not a comamnd: "+n);
+				throw new IllegalArgumentException("not a command: "+n);
 			}
 			
 		}
 		else {
-			throw new IllegalArgumentException("not a comamnd: "+n);
+			throw new IllegalArgumentException("not a command: "+n);
 		}
 		
 	}
@@ -73,5 +73,15 @@ public class HipChatBotContext extends ChatBotContext {
 	@Override
 	public String getRawMessage() {
 		return rawMessage.path("item").path("message").path("message").asText();
+	}
+
+	@Override
+	public String getSenderName() {
+		return rawMessage.path("item").path("message").path("from").path("name").asText();
+	}
+		
+	@Override
+	public String getSenderId() {
+		return rawMessage.path("item").path("message").path("from").path("id").asText();
 	}
 }

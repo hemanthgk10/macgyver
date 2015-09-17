@@ -18,8 +18,13 @@ public abstract class ChatBotCommand {
 	public final String getCommand() {
 		return command;
 	}
+	
 	public String getDescription() {
 		return Strings.nullToEmpty(description);
+	}
+	
+	public void setDescription(String description) { 
+		this.description = description;
 	}
 	
 	public String getUsage() {

@@ -37,6 +37,10 @@ public class HipChatBotContextTest {
 		
 		Assertions.assertThat(ctx.getCommand()).isEqualTo("test");
 		
+		Assertions.assertThat(ctx.getSenderId()).isEqualTo("112233");
+		
+		Assertions.assertThat(ctx.getSenderName()).isEqualTo("Rob Schoening");
+		
 	}
 
 }
