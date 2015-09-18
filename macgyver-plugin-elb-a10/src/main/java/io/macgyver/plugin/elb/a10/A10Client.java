@@ -19,6 +19,7 @@ import org.jdom2.Element;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.squareup.okhttp.Response;
 
 public interface A10Client {
 
@@ -37,6 +38,10 @@ public interface A10Client {
 	
 	public abstract ObjectNode invokeJson(String method, String... args);
 	
+	public Response invokeJsonWithRawResponse(String method, JsonNode body, String... args); 
+	
+	public Response invokeJsonWithRawResponse(String method, JsonNode body, Map<String, String> params); 
+	
 	public abstract Element invokeXml(String method, Element body, String... args);
 	
 	public abstract Element invokeXml(String method, String... args);
@@ -45,6 +50,10 @@ public interface A10Client {
 
 	public abstract Element invokeXml(String method, Map<String,String>  args);
 	
+	public Response invokeXmlWithRawResponse(String method, Element body, String... args); 
+
+	public Response invokeXmlWithRawResponse(String method, Element body, Map<String, String> params); 
+
 	public boolean isActive();
 	
 }

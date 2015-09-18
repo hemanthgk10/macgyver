@@ -44,6 +44,18 @@ public class ChatBotTest {
 					// TODO Auto-generated method stub
 					return null;
 				}
+
+				@Override
+				public String getSenderName() {
+					// TODO Auto-generated method stub
+					return null;
+				}
+
+				@Override
+				public String getSenderId() {
+					// TODO Auto-generated method stub
+					return null;
+				}
 			};
 			return c;
 		}

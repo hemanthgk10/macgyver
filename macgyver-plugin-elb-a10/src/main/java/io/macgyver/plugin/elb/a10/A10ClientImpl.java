@@ -274,7 +274,12 @@ public class A10ClientImpl implements A10Client {
 	public ObjectNode invokeJson(String method, JsonNode body, String... args) {
 		return invokeJson(method, body, toMap(args));
 	}
-
+	
+	@Override
+	public Response invokeJsonWithRawResponse(String method, JsonNode body, String... args) {
+		return invokeJsonWithRawResponse(method, body, toMap(args));
+	}
+	
 	@Override
 	public Element invokeXml(String method, Element body, String... args) {
 		return invokeXml(method, body, toMap(args));
@@ -284,6 +289,13 @@ public class A10ClientImpl implements A10Client {
 	public Element invokeXml(String method, String... args) {
 		return invokeXml(method, null, toMap(args));
 	}
+	
+	
+	@Override
+	public Response invokeXmlWithRawResponse(String method, Element body, String... args) { 
+		return invokeXmlWithRawResponse(method, body, toMap(args));
+	}
+	
 
 	@Override
 	@Deprecated
@@ -308,6 +320,18 @@ public class A10ClientImpl implements A10Client {
 		return invokeJson(copy, body);
 	}
 
+	
+	@Override
+	public Response invokeJsonWithRawResponse(String method, JsonNode body, Map<String,String> params) { 
+		if (params == null) {
+			params = Maps.newConcurrentMap();
+		}
+		Map<String, String> copy = Maps.newHashMap(params);
+		copy.put("method", method);
+
+		return invokeJsonWithRawResponse(copy, body);
+	}
+
 	@Override
 	public Element invokeXml(String method, Map<String, String> params) {
 
@@ -324,6 +348,17 @@ public class A10ClientImpl implements A10Client {
 		copy.put("method", method);
 
 		return invokeXml(copy, body);
+	}
+	
+	@Override
+	public Response invokeXmlWithRawResponse(String method, Element body, Map<String,String> params) { 
+		if (params == null) {
+			params = Maps.newConcurrentMap();
+		}
+		Map<String, String> copy = Maps.newHashMap(params);
+		copy.put("method", method);
+		
+		return invokeXmlWithRawResponse(copy, body);
 	}
 
 	protected Element parseXmlResponse(Response response, String method) {
@@ -366,8 +401,8 @@ public class A10ClientImpl implements A10Client {
 			throw new ElbException(e);
 		}
 	}
-
-	protected ObjectNode invokeJson(Map<String, String> x, JsonNode optionalBody) {
+	
+	public Response invokeJsonWithRawResponse(Map<String, String> x, JsonNode optionalBody) {
 
 		try {
 
@@ -402,16 +437,35 @@ public class A10ClientImpl implements A10Client {
 								.header("Content-Type", "application/json")
 								.build()).execute();
 			}
-
-			return parseJsonResponse(resp, method);
+			return resp;
+		
 
 		} catch (IOException e) {
 			throw new ElbException(e);
 		}
 
 	}
+	protected ObjectNode invokeJson(Map<String, String> x, JsonNode optionalBody) {
+		
+	
 
-	protected Element invokeXml(Map<String, String> x, Element optionalBody) {
+			String method = x.get("method");
+			
+			return parseJsonResponse(invokeJsonWithRawResponse(x, optionalBody), method);
+
+		
+
+	}
+	public Element invokeXml(Map<String,String> x, Element optionalBody) {
+		String method = x.get("method");
+		
+		Element element = parseXmlResponse(invokeXmlWithRawResponse(x,optionalBody), method);
+		throwExceptionIfNecessary(element);
+		return element;
+
+	}
+	
+	public Response invokeXmlWithRawResponse(Map<String, String> x, Element optionalBody) {
 
 		try {
 
@@ -444,11 +498,8 @@ public class A10ClientImpl implements A10Client {
 								.header("Content-Type", "text/xml").build())
 						.execute();
 			}
-
-			Element element = parseXmlResponse(resp, method);
-			throwExceptionIfNecessary(element);
-			return element;
-
+			return resp;
+			
 		} catch (IOException e) {
 			throw new ElbException(e);
 		}
