@@ -18,6 +18,7 @@ import io.macgyver.core.resource.Resource;
 import io.macgyver.core.script.ExtensionResourceProvider;
 import io.macgyver.core.script.ScriptExecutor;
 import io.macgyver.neorx.rest.NeoRxClient;
+import it.sauronsoftware.cron4j.Scheduler;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -37,7 +38,7 @@ import com.google.common.base.Optional;
 import com.google.common.io.CharStreams;
 import com.google.common.io.LineProcessor;
 
-public class IgniteSchedulerService implements Service, Runnable, Serializable {
+public class IgniteSchedulerService implements Service, Runnable, Serializable,DirectScriptExecutor {
 
 	static Logger logger = LoggerFactory
 			.getLogger(IgniteSchedulerService.class);
@@ -48,6 +49,8 @@ public class IgniteSchedulerService implements Service, Runnable, Serializable {
 
 	transient it.sauronsoftware.cron4j.Scheduler scheduler = new it.sauronsoftware.cron4j.Scheduler();
 
+	static Scheduler localSchedulerHack = null;
+	
 	public static class CrontabLineProcessor implements
 			LineProcessor<Optional<ObjectNode>> {
 		int i = 0;
@@ -100,7 +103,8 @@ public class IgniteSchedulerService implements Service, Runnable, Serializable {
 	@Override
 	public void execute(ServiceContext ctx) throws Exception {
 		logger.info("execute...");
-		NeoRxClient client = Kernel.getApplicationContext().getBean(NeoRxClient.class);
+		NeoRxClient client = Kernel.getApplicationContext().getBean(
+				NeoRxClient.class);
 
 		taskCollector = new MacGyverTaskCollector(client);
 
@@ -113,7 +117,8 @@ public class IgniteSchedulerService implements Service, Runnable, Serializable {
 		LoggerFactory.getLogger(IgniteSchedulerService.class).info(
 				"starting scheduler: {}", scheduler);
 		scheduler.start();
-
+		localSchedulerHack = scheduler;
+		
 		Runnable r = new Runnable() {
 
 			@Override
@@ -127,8 +132,6 @@ public class IgniteSchedulerService implements Service, Runnable, Serializable {
 		};
 		String key = scheduler.schedule("* * * * *", r);
 
-
-
 	}
 
 	@Override
@@ -139,8 +142,6 @@ public class IgniteSchedulerService implements Service, Runnable, Serializable {
 			logger.warn("", e);
 		}
 	}
-
-
 
 	public void scan() throws IOException {
 
@@ -204,5 +205,18 @@ public class IgniteSchedulerService implements Service, Runnable, Serializable {
 
 		return Optional.absent();
 
+	}
+
+	/**
+	 * execute a script directly.  This is a hack to allow remote execution until we have a better way to submit requests
+	 * through ignite.
+	 *  
+	 * @param scriptName
+	 */
+	public void executeScriptImmediately(String scriptName) {
+		ObjectNode n = new ObjectMapper().createObjectNode();
+		n.put("script", scriptName);
+		MacGyverTask task = new MacGyverTask(n);
+		localSchedulerHack.launch(task);
 	}
 }

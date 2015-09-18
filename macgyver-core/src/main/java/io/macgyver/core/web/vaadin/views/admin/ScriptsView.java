@@ -20,6 +20,8 @@ import io.macgyver.core.auth.MacGyverRole;
 import io.macgyver.core.resource.Resource;
 import io.macgyver.core.resource.ResourceProvider;
 import io.macgyver.core.resource.provider.filesystem.FileSystemResourceProvider;
+import io.macgyver.core.scheduler.DirectScriptExecutor;
+import io.macgyver.core.scheduler.IgniteSchedulerService;
 import io.macgyver.core.scheduler.MacGyverTask;
 import io.macgyver.core.script.ExtensionResourceProvider;
 import io.macgyver.core.web.vaadin.IndexedJsonContainer;
@@ -30,6 +32,7 @@ import it.sauronsoftware.cron4j.Scheduler;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.ignite.Ignite;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -192,12 +195,10 @@ public class ScriptsView extends VerticalLayout implements View {
 
 	public void scheduleImmediate(Resource r) {
 		try {
-			Scheduler scheduler = Kernel.getApplicationContext().getBean(
-					Scheduler.class);
-			ObjectNode n = new ObjectMapper().createObjectNode();
-			n.put("script", r.getPath());
-			MacGyverTask task = new MacGyverTask(n);
-			scheduler.launch(task);
+			DirectScriptExecutor service = Kernel.getApplicationContext().getBean(Ignite.class).services().serviceProxy(IgniteSchedulerService.class.getName(),DirectScriptExecutor.class,true);
+			
+			service.executeScriptImmediately(r.getPath());
+			
 		} catch (IOException e) {
 			throw new MacGyverException(e);
 		}
