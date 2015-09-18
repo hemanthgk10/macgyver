@@ -24,6 +24,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.web.context.support.ServletRequestHandledEvent;
 
 /**
  * Simple wrapper to start server.
@@ -56,13 +57,20 @@ public class ServerMain {
 
 			@Override
 			public void onApplicationEvent(ApplicationEvent event) {
-				logger.info("onApplicationEvent({})",event);
+				if (event instanceof ServletRequestHandledEvent) {
+					// this will generate crazy logging if we log all servlet requests
+					logger.debug("onApplicationEvent({})", event);
+				} else {
+					// but it is very nice to have this logging output, so log it at info
+					logger.info("onApplicationEvent({})", event);
+				}
 
 			}
 		};
 		ConfigurableApplicationContext ctx = new SpringApplicationBuilder()
 				.sources(ServerMain.class)
-				.initializers(new SpringContextInitializer()).listeners(x).run(args);
+				.initializers(new SpringContextInitializer()).listeners(x)
+				.run(args);
 
 		Environment env = ctx.getEnvironment();
 
