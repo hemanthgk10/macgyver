@@ -232,28 +232,33 @@ public class A10HAClientImpl implements A10HAClient, Runnable {
 	}
 
 	@Override
+	@Deprecated
 	public ObjectNode invokeJson(String method, JsonNode body,
 			Map<String, String> params) {
 		return getActiveClient().invokeJson(method, body, params);
 	}
 
 	@Override
+	@Deprecated
 	public ObjectNode invokeJson(String method, JsonNode body, String... args) {
 		return getActiveClient().invokeJson(method,body, args);
 	}
 
 	@Override
+	@Deprecated
 	public Element invokeXml(String method, Element body, String... args) {
 		return getActiveClient().invokeXml(method,body, args);
 	}
 
 	@Override
+	@Deprecated
 	public Element invokeXml(String method, Element body,
 			Map<String, String> params) {
 		return getActiveClient().invokeXml(method, body, params);
 	}
 
 	@Override
+	@Deprecated
 	public Response invokeJsonWithRawResponse(String method, JsonNode body,
 			String... args) {
 		return getActiveClient().invokeJsonWithRawResponse(method, body, args);
@@ -267,16 +272,23 @@ public class A10HAClientImpl implements A10HAClient, Runnable {
 	}
 
 	@Override
+	@Deprecated
 	public Response invokeXmlWithRawResponse(String method, Element body,
 			String... args) {
 		return getActiveClient().invokeXmlWithRawResponse(method, body, args);
 	}
 
 	@Override
+	@Deprecated
 	public Response invokeXmlWithRawResponse(String method, Element body,
 			Map<String, String> params) {
 		return getActiveClient().invokeXmlWithRawResponse(method, body, params);
 
+	}
+
+	@Override
+	public RequestBuilder newRequest(String method) {
+		return getActiveClient().newRequest(method);
 	}
 
 	

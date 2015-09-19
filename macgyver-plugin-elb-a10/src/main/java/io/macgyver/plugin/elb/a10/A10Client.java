@@ -23,6 +23,7 @@ import com.squareup.okhttp.Response;
 
 public interface A10Client {
 
+	public RequestBuilder newRequest(String method);
 
 	@Deprecated
 	public abstract ObjectNode invoke(String method, Map<String, String> params);
@@ -30,28 +31,40 @@ public interface A10Client {
 	@Deprecated
 	public abstract ObjectNode invoke(String method, String... args);
 	
+	@Deprecated
 	public abstract ObjectNode invokeJson(String method, JsonNode body, Map<String, String> params);
 
+	@Deprecated
 	public abstract ObjectNode invokeJson(String method, Map<String, String> params);
 	
+	@Deprecated
 	public abstract ObjectNode invokeJson(String method, JsonNode body, String... args);
 	
+	@Deprecated
 	public abstract ObjectNode invokeJson(String method, String... args);
 	
+	@Deprecated
 	public Response invokeJsonWithRawResponse(String method, JsonNode body, String... args); 
 	
+	@Deprecated
 	public Response invokeJsonWithRawResponse(String method, JsonNode body, Map<String, String> params); 
 	
+	@Deprecated
 	public abstract Element invokeXml(String method, Element body, String... args);
 	
+	@Deprecated
 	public abstract Element invokeXml(String method, String... args);
 	
+	@Deprecated
 	public abstract Element invokeXml(String method, Element body, Map<String,String>  args);
 
+	@Deprecated
 	public abstract Element invokeXml(String method, Map<String,String>  args);
 	
+	@Deprecated
 	public Response invokeXmlWithRawResponse(String method, Element body, String... args); 
 
+	@Deprecated
 	public Response invokeXmlWithRawResponse(String method, Element body, Map<String, String> params); 
 
 	public boolean isActive();
