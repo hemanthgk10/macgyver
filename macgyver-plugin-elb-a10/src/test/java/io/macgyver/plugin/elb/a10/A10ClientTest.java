@@ -34,12 +34,14 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.RecordedRequest;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
 
 public class A10ClientTest {
 
+	ObjectMapper mapper = new ObjectMapper();
 	@Rule
 	public MockWebServer mockServer = new MockWebServer();
 
@@ -49,6 +51,7 @@ public class A10ClientTest {
 	public static void bridgeLogging() {
 		LoggingConfig.ensureJavaUtilLoggingIsBridged();
 	}
+
 	@Before
 	public void setupTestClient() {
 
@@ -83,7 +86,6 @@ public class A10ClientTest {
 		}
 	}
 
-
 	@Test
 	public void testRemoteException() throws IOException {
 		String json = "{\n" + "  \"response\" : {\n"
@@ -110,6 +112,35 @@ public class A10ClientTest {
 		A10ClientImpl client = new A10ClientImpl("http://localhost", "xx", "");
 		Assert.assertTrue(client.toMap(null).isEmpty());
 		Assert.assertEquals("2", client.toMap("a", "1", "b", "2").get("b"));
+
+	}
+
+	@Test
+	public void testThrowExceptionIfNecessaryJson() throws IOException,
+			JDOMException {
+
+		try {
+
+			JsonNode x = mapper
+					.createObjectNode()
+					.set("response",
+							mapper.createObjectNode()
+									.set("err",
+											mapper.createObjectNode()
+													.put("code", "1008")
+													.put("msg",
+															"Invalid web service method name")));
+
+			mockServer.enqueue(new MockResponse().setBody(mapper
+					.writeValueAsString(x)));
+
+			testClient.invokeJson("foo");
+
+			Assert.fail();
+		} catch (A10RemoteException e) {
+			Assertions.assertThat(e).hasMessageContaining("1008")
+					.hasMessageContaining("Invalid web service method name");
+		}
 
 	}
 
@@ -167,86 +198,171 @@ public class A10ClientTest {
 	@Test
 	public void testInvokeJsonWithBody() throws InterruptedException {
 		mockServer.enqueue(new MockResponse()
-		.setBody("{\"response\": {\"status\":\"ok\"}}"));
-		
-		JsonNode json = new ObjectMapper().createObjectNode().put("def", "456").put("hello", "world");
-				
-		testClient.invokeJson("testmethod", json, "abc","123","foo","bar");
-		
+				.setBody("{\"response\": {\"status\":\"ok\"}}"));
+
+		JsonNode json = new ObjectMapper().createObjectNode().put("def", "456")
+				.put("hello", "world");
+
+		testClient.invokeJson("testmethod", json, "abc", "123", "foo", "bar");
+
 		RecordedRequest rr = mockServer.takeRequest();
-		
+
 		String path = rr.getPath();
-		Assertions.assertThat(path).contains("format=json").contains("abc=123").contains("foo=bar").contains("method=testmethod").contains("session_id");
-		
+		Assertions.assertThat(path).contains("format=json").contains("abc=123")
+				.contains("foo=bar").contains("method=testmethod")
+				.contains("session_id");
+
 		String requestBody = rr.getUtf8Body();
-		Assertions.assertThat(requestBody).isEqualTo(json.toString()); 
+		Assertions.assertThat(requestBody).isEqualTo(json.toString());
 	}
-	
+
 	@Test
 	public void testInvokeJsonNoBody() throws InterruptedException {
 		mockServer.enqueue(new MockResponse()
-		.setBody("{\"response\": {\"status\":\"ok\"}}"));
-		testClient.invokeJson("testmethod", "abc","123","foo","bar");
-		
+				.setBody("{\"response\": {\"status\":\"ok\"}}"));
+		testClient.invokeJson("testmethod", "abc", "123", "foo", "bar");
+
 		RecordedRequest rr = mockServer.takeRequest();
-		
-		Map<String,String> m = RequestUtil.parseFormBody(rr);
-		
-		Assertions.assertThat(m).containsEntry("abc", "123").containsEntry("foo", "bar").containsEntry("method", "testmethod").containsEntry("format", "json").containsKey("session_id");
+
+		Map<String, String> m = RequestUtil.parseFormBody(rr);
+
+		Assertions.assertThat(m).containsEntry("abc", "123")
+				.containsEntry("foo", "bar")
+				.containsEntry("method", "testmethod")
+				.containsEntry("format", "json").containsKey("session_id");
 	}
-	
-	
-	public Element createXml() throws IOException { 
+
+	public Element createXml() throws IOException {
 		Element xml = new Element("test");
-		xml = xml.setAttribute("def","456").setAttribute("hello","world").setText("testXml");
+		xml = xml.setAttribute("def", "456").setAttribute("hello", "world")
+				.setText("testXml");
 		Element firstNumber = new Element("number");
 		Element secondNumber = new Element("number");
 		firstNumber.setText("3");
 		secondNumber.setText("5");
 		xml.addContent(firstNumber);
 		xml.addContent(secondNumber);
-		
+
 		return xml;
-		
+
+	}
+
+	@Test
+	public void testInvalidWebService() {
+		String xml = "<?xml version=\"1.0\" encoding=\"utf-8\" ?><response status=\"fail\"><error code=\"1008\" msg=\"Invalid web service method name\" /></response>";
+
+		try {
+			mockServer.enqueue(new MockResponse().setBody(xml));
+			testClient.newRequest("foo").executeXml();
+			Assert.fail();
+		} catch (Exception e) {
+			Assertions.assertThat(e).isInstanceOf(A10RemoteException.class)
+					.hasMessageContaining("1008")
+					.hasMessageContaining("Invalid web service");
+		}
+
+	}
+
+	@Test
+	public void testInvalidWebServiceJson() {
+		String json = "{\"response\": {\"status\": \"fail\", \"err\": {\"code\": 1008, \"msg\": \"Invalid web service method name\"}}}";
+		mockServer.enqueue(new MockResponse().setBody(json));
+
+		try {
+			testClient.newRequest("foo").executeJson();
+			Assert.fail();
+		} catch (Exception e) {
+			Assertions.assertThat(e).isInstanceOf(A10RemoteException.class)
+					.hasMessageContaining("1008")
+					.hasMessageContaining("Invalid web service");
+		}
+
+	}
+
+	@Test
+	public void testInvokeXmlWithBody() throws InterruptedException,
+			IOException {
+		mockServer.enqueue(new MockResponse()
+				.setBody("<response status=\"ok\"><dummy/></response>"));
+
+		Element xml = createXml();
+
+		testClient.newRequest("testmethod").body( xml).params( "abc", "123", "foo", "bar").executeXml();
+
+		RecordedRequest rr = mockServer.takeRequest();
+
+		String path = rr.getPath();
+		Assertions.assertThat(path).contains("format=xml").contains("abc=123")
+				.contains("foo=bar").contains("method=testmethod")
+				.contains("session_id");
+
+		String requestBody = rr.getBody().readUtf8();
+		Assertions.assertThat(requestBody).isEqualTo(
+				new XMLOutputter(Format.getRawFormat()).outputString(xml));
+
 	}
 	
 	@Test
-	public void testInvokeXmlWithBody() throws InterruptedException, IOException { 
+	public void deprecatedTestInvokeXmlWithBody() throws InterruptedException,
+			IOException {
 		mockServer.enqueue(new MockResponse()
-		.setBody("<response status=\"ok\"><dummy/></response>"));	
-		
+				.setBody("<response status=\"ok\"><dummy/></response>"));
+
 		Element xml = createXml();
-		
-		testClient.invokeXml("testmethod", xml, "abc","123","foo","bar");
-		
+
+		testClient.invokeXml("testmethod", xml, "abc", "123", "foo", "bar");
+
 		RecordedRequest rr = mockServer.takeRequest();
-		
+
 		String path = rr.getPath();
-		Assertions.assertThat(path).contains("format=xml").contains("abc=123").contains("foo=bar").contains("method=testmethod").contains("session_id");
-		
+		Assertions.assertThat(path).contains("format=xml").contains("abc=123")
+				.contains("foo=bar").contains("method=testmethod")
+				.contains("session_id");
+
 		String requestBody = rr.getBody().readUtf8();
-		Assertions.assertThat(requestBody).isEqualTo(new XMLOutputter(Format.getRawFormat()).outputString(xml));
-		
+		Assertions.assertThat(requestBody).isEqualTo(
+				new XMLOutputter(Format.getRawFormat()).outputString(xml));
+
 	}
-	
+
 	@Test
 	public void testInvokeXmlNoBody() throws InterruptedException {
 		mockServer.enqueue(new MockResponse()
-		.setBody("<response status=\"ok\"><dummy/></response>"));
-		testClient.invokeXml("testmethod", "abc","123","foo","bar");
-		
+				.setBody("<response status=\"ok\"><dummy/></response>"));
+		testClient.newRequest("testmethod").params( "abc", "123", "foo", "bar").executeXml();
+
 		RecordedRequest rr = mockServer.takeRequest();
-		
-		Map<String,String> m = RequestUtil.parseFormBody(rr);
-		
-		Assertions.assertThat(m).containsEntry("abc", "123").containsEntry("foo", "bar").containsEntry("method", "testmethod").containsEntry("format", "xml").containsKey("session_id");
+
+		Map<String, String> m = RequestUtil.parseFormBody(rr);
+
+		Assertions.assertThat(m).containsEntry("abc", "123")
+				.containsEntry("foo", "bar")
+				.containsEntry("method", "testmethod")
+				.containsEntry("format", "xml").containsKey("session_id");
 	}
+	@Test
+	public void deprecatedTestInvokeXmlNoBody() throws InterruptedException {
+		mockServer.enqueue(new MockResponse()
+				.setBody("<response status=\"ok\"><dummy/></response>"));
+		testClient.invokeXml("testmethod", "abc", "123", "foo", "bar");
+
+		RecordedRequest rr = mockServer.takeRequest();
+
+		Map<String, String> m = RequestUtil.parseFormBody(rr);
+
+		Assertions.assertThat(m).containsEntry("abc", "123")
+				.containsEntry("foo", "bar")
+				.containsEntry("method", "testmethod")
+				.containsEntry("format", "xml").containsKey("session_id");
+	}
+
 	@Test
 	public void serverNotConfiguredForHAShouldBeActive()
 			throws InterruptedException {
 
-		mockServer.enqueue(new MockResponse()
-				.setBody("<response status=\"ok\"><ha_group_status_list/></response>"));
+		mockServer
+				.enqueue(new MockResponse()
+						.setBody("<response status=\"ok\"><ha_group_status_list/></response>"));
 
 		Assertions.assertThat(testClient.isActive()).isTrue();
 
@@ -255,36 +371,30 @@ public class A10ClientTest {
 	@Test
 	public void testActiveStatus() throws InterruptedException {
 
-		mockServer
-				.enqueue(new MockResponse()
-						.setBody("<response status=\"ok\">\n" + 
-								"  <ha_group_status_list>\n" + 
-								"    <ha_group_status>\n" + 
-								"      <id>1</id>\n" + 
-								"      <local_status>0</local_status>\n" + 
-								"      <local_priority>100</local_priority>\n" + 
-								"      <peer_status>0</peer_status>\n" + 
-								"      <peer_priority>50</peer_priority>\n" + 
-								"      <force_self_standby>0</force_self_standby>\n" + 
-								"    </ha_group_status>\n" + 
-								"  </ha_group_status_list>\n" + 
-								"</response>"));
+		mockServer.enqueue(new MockResponse()
+				.setBody("<response status=\"ok\">\n"
+						+ "  <ha_group_status_list>\n"
+						+ "    <ha_group_status>\n" + "      <id>1</id>\n"
+						+ "      <local_status>0</local_status>\n"
+						+ "      <local_priority>100</local_priority>\n"
+						+ "      <peer_status>0</peer_status>\n"
+						+ "      <peer_priority>50</peer_priority>\n"
+						+ "      <force_self_standby>0</force_self_standby>\n"
+						+ "    </ha_group_status>\n"
+						+ "  </ha_group_status_list>\n" + "</response>"));
 		Assertions.assertThat(testClient.isActive()).isFalse();
 
-		mockServer
-				.enqueue(new MockResponse()
-						.setBody("<response status=\"ok\">\n" + 
-								"  <ha_group_status_list>\n" + 
-								"    <ha_group_status>\n" + 
-								"      <id>1</id>\n" + 
-								"      <local_status>1</local_status>\n" + 
-								"      <local_priority>100</local_priority>\n" + 
-								"      <peer_status>0</peer_status>\n" + 
-								"      <peer_priority>50</peer_priority>\n" + 
-								"      <force_self_standby>0</force_self_standby>\n" + 
-								"    </ha_group_status>\n" + 
-								"  </ha_group_status_list>\n" + 
-								"</response>"));
+		mockServer.enqueue(new MockResponse()
+				.setBody("<response status=\"ok\">\n"
+						+ "  <ha_group_status_list>\n"
+						+ "    <ha_group_status>\n" + "      <id>1</id>\n"
+						+ "      <local_status>1</local_status>\n"
+						+ "      <local_priority>100</local_priority>\n"
+						+ "      <peer_status>0</peer_status>\n"
+						+ "      <peer_priority>50</peer_priority>\n"
+						+ "      <force_self_standby>0</force_self_standby>\n"
+						+ "    </ha_group_status>\n"
+						+ "  </ha_group_status_list>\n" + "</response>"));
 		Assertions.assertThat(testClient.isActive()).isTrue();
 	}
 
@@ -299,134 +409,115 @@ public class A10ClientTest {
 		} catch (A10RemoteException e) {
 			assertThat(e.getErrorCode()).isEqualTo("520486915");
 			assertThat(e.getErrorMessage()).isEqualTo("Admin password error");
-			assertThat(e.getMessage()).contains("520486915: Admin password error");
+			assertThat(e.getMessage()).contains(
+					"520486915: Admin password error");
 		}
 	}
+
 	@Test
 	public void testSystemInformationGet() {
 		// system.information.get
-		String response ="<?xml version=\"1.0\"?>\n" + 
-				"<response status=\"ok\">\n" + 
-				"	<system_information>\n" + 
-				"		<serial_number>AX25000000000000</serial_number>\n" + 
-				"		<current_time>02:26:00 PDT Tue Mar 05 2014</current_time>\n" + 
-				"		<startup_mode>hard disk secondary</startup_mode>\n" + 
-				"		<software_version>2.7</software_version>\n" + 
-				"		<advanced_core_os_on_harddisk1>2.7</advanced_core_os_on_harddisk1>\n" + 
-				"		<advanced_core_os_on_harddisk2>2.7</advanced_core_os_on_harddisk2>\n" + 
-				"		<advanced_core_os_on_compact_flash1>2.6</advanced_core_os_on_compact_flash1>\n" + 
-				"		<advanced_core_os_on_compact_flash2>2.6</advanced_core_os_on_compact_flash2>\n" + 
-				"		<firmware_version>N/A</firmware_version>\n" + 
-				"		<aflex_engine_version>2.0.0</aflex_engine_version>\n" + 
-				"		<axapi_version>2.1</axapi_version>\n" + 
-				"		<last_config_saved>22:04:13 PDT Fri Mar 03 2014</last_config_saved>\n" + 
-				"		<technical_support>www.a10networks.com/support</technical_support>\n" + 
-				"	</system_information>\n" + 
-				"</response>";
-		mockServer
-		.enqueue(new MockResponse()
-				.setBody(response));
+		String response = "<?xml version=\"1.0\"?>\n"
+				+ "<response status=\"ok\">\n"
+				+ "	<system_information>\n"
+				+ "		<serial_number>AX25000000000000</serial_number>\n"
+				+ "		<current_time>02:26:00 PDT Tue Mar 05 2014</current_time>\n"
+				+ "		<startup_mode>hard disk secondary</startup_mode>\n"
+				+ "		<software_version>2.7</software_version>\n"
+				+ "		<advanced_core_os_on_harddisk1>2.7</advanced_core_os_on_harddisk1>\n"
+				+ "		<advanced_core_os_on_harddisk2>2.7</advanced_core_os_on_harddisk2>\n"
+				+ "		<advanced_core_os_on_compact_flash1>2.6</advanced_core_os_on_compact_flash1>\n"
+				+ "		<advanced_core_os_on_compact_flash2>2.6</advanced_core_os_on_compact_flash2>\n"
+				+ "		<firmware_version>N/A</firmware_version>\n"
+				+ "		<aflex_engine_version>2.0.0</aflex_engine_version>\n"
+				+ "		<axapi_version>2.1</axapi_version>\n"
+				+ "		<last_config_saved>22:04:13 PDT Fri Mar 03 2014</last_config_saved>\n"
+				+ "		<technical_support>www.a10networks.com/support</technical_support>\n"
+				+ "	</system_information>\n" + "</response>";
+		mockServer.enqueue(new MockResponse().setBody(response));
 	}
+
 	@Test
 	public void testGetDeviceInfo() {
-		//"system.device_info.get"
-		String response = "<?xml version=\"1.0\"?>\n" + 
-				"<response status=\"ok\">\n" + 
-				"	<device_information>\n" + 
-				"		<cpu_count>6</cpu_count>\n" + 
-				"		<cpu_status>ALL_OK</cpu_status>\n" + 
-				"		<cpu_temperature>29C/84F</cpu_temperature>\n" + 
-				"		<disk_status>\n" + 
-				"			<disk1>active</disk1>\n" + 
-				"			<disk2>unknow</disk2>\n" + 
-				"		</disk_status>\n" + 
-				"		<disk_usage>37194972KB/78148192KB</disk_usage>\n" + 
-				"		<fan_status>\n" + 
-				"			<Fan1>10593</Fan1>\n" + 
-				"			<Fan2>7704</Fan2>\n" + 
-				"			<Fan3>10593</Fan3>\n" + 
-				"			<Fan4>7704</Fan4>\n" + 
-				"			<Fan5>10593</Fan5>\n" + 
-				"			<Fan6>7704</Fan6>\n" + 
-				"			<Fan7>9416</Fan7>\n" + 
-				"			<Fan8>7704</Fan8>\n" + 
-				"		</fan_status>\n" + 
-				"		<power_supply>\n" + 
-				"			<supply1>on</supply1>\n" + 
-				"			<supply2>on</supply2>\n" + 
-				"		</power_supply>\n" + 
-				"		<memory_usage>4852304KB/6122580KB</memory_usage>\n" + 
-				"	</device_information>\n" + 
-				"</response>";
-		mockServer
-		.enqueue(new MockResponse()
-				.setBody(response));
+		// "system.device_info.get"
+		String response = "<?xml version=\"1.0\"?>\n"
+				+ "<response status=\"ok\">\n" + "	<device_information>\n"
+				+ "		<cpu_count>6</cpu_count>\n"
+				+ "		<cpu_status>ALL_OK</cpu_status>\n"
+				+ "		<cpu_temperature>29C/84F</cpu_temperature>\n"
+				+ "		<disk_status>\n" + "			<disk1>active</disk1>\n"
+				+ "			<disk2>unknow</disk2>\n" + "		</disk_status>\n"
+				+ "		<disk_usage>37194972KB/78148192KB</disk_usage>\n"
+				+ "		<fan_status>\n" + "			<Fan1>10593</Fan1>\n"
+				+ "			<Fan2>7704</Fan2>\n" + "			<Fan3>10593</Fan3>\n"
+				+ "			<Fan4>7704</Fan4>\n" + "			<Fan5>10593</Fan5>\n"
+				+ "			<Fan6>7704</Fan6>\n" + "			<Fan7>9416</Fan7>\n"
+				+ "			<Fan8>7704</Fan8>\n" + "		</fan_status>\n"
+				+ "		<power_supply>\n" + "			<supply1>on</supply1>\n"
+				+ "			<supply2>on</supply2>\n" + "		</power_supply>\n"
+				+ "		<memory_usage>4852304KB/6122580KB</memory_usage>\n"
+				+ "	</device_information>\n" + "</response>";
+		mockServer.enqueue(new MockResponse().setBody(response));
 	}
-	
+
 	@Test
 	public void testSystemPerformance() throws InterruptedException {
 		// "system.performance.get"
-		
-		String response = "<?xml version=\"1.0\"?>\n" + 
-				"<response status=\"ok\">\n" + 
-				"	<performance>\n" + 
-				"		<total_throughput_bits_per_sec>158482952</total_throughput_bits_per_sec>\n" + 
-				"		<l4_conns_per_sec>0</l4_conns_per_sec>\n" + 
-				"		<l7_conns_per_sec>229</l7_conns_per_sec>\n" + 
-				"		<l7_trans_per_sec>273</l7_trans_per_sec>\n" + 
-				"		<ssl_conns_per_sec>22</ssl_conns_per_sec>\n" + 
-				"		<ip_nat_conns_per_sec>0</ip_nat_conns_per_sec>\n" + 
-				"		<total_new_conns_per_sec>251</total_new_conns_per_sec>\n" + 
-				"		<total_current_conns>3882</total_current_conns>\n" + 
-				"	</performance>\n" + 
-				"	<attack_prevention>\n" + 
-				"		<total_tcp_syn_received>189629575</total_tcp_syn_received>\n" + 
-				"		<Total_syn_cookie_failures>19222</Total_syn_cookie_failures>\n" + 
-				"	</attack_prevention>\n" + 
-				"	<health_check_summary>\n" + 
-				"		<servers>\n" + 
-				"			<server_up_num>324</server_up_num>\n" + 
-				"			<server_down_num>9</server_down_num>\n" + 
-				"		</servers>\n" + 
-				"		<ports>\n" + 
-				"			<port_up_num>324</port_up_num>\n" + 
-				"			<port_down_num>37</port_down_num>\n" + 
-				"		</ports>\n" + 
-				"	</health_check_summary>\n" + 
-				"	<http_proxy>\n" + 
-				"		<total_conns>188944799</total_conns>\n" + 
-				"		<crrent_conns>3882</crrent_conns>\n" + 
-				"		<server_conns_made>239331598</server_conns_made>\n" + 
-				"	</http_proxy>\n" + 
-				"	<conn_reuse>\n" + 
-				"		<open_persistent_conns>0</open_persistent_conns>\n" + 
-				"		<active_persisten_conns>0</active_persisten_conns>\n" + 
-				"	</conn_reuse>\n" + 
-				"	<compression>\n" + 
-				"		<in_data_rate_bytes_per_sec>0</in_data_rate_bytes_per_sec>\n" + 
-				"		<out_dat_rate_bytes_per_sec>0</out_dat_rate_bytes_per_sec>\n" + 
-				"		<bandwidth_savings>0</bandwidth_savings>\n" + 
-				"	</compression>\n" + 
-				"	<caching>\n" + 
-				"		<hit_ratio>0</hit_ratio>\n" + 
-				"		<total_requests>0</total_requests>\n" + 
-				"		<cached_objects>0</cached_objects>\n" + 
-				"	</caching>\n" + 
-				"</response>";
-		mockServer
-		.enqueue(new MockResponse()
-				.setBody(response));
-		
-		
-		
-		
-		Element n = testClient.invokeXml("system.performance.get");
-		
+
+		String response = "<?xml version=\"1.0\"?>\n"
+				+ "<response status=\"ok\">\n"
+				+ "	<performance>\n"
+				+ "		<total_throughput_bits_per_sec>158482952</total_throughput_bits_per_sec>\n"
+				+ "		<l4_conns_per_sec>0</l4_conns_per_sec>\n"
+				+ "		<l7_conns_per_sec>229</l7_conns_per_sec>\n"
+				+ "		<l7_trans_per_sec>273</l7_trans_per_sec>\n"
+				+ "		<ssl_conns_per_sec>22</ssl_conns_per_sec>\n"
+				+ "		<ip_nat_conns_per_sec>0</ip_nat_conns_per_sec>\n"
+				+ "		<total_new_conns_per_sec>251</total_new_conns_per_sec>\n"
+				+ "		<total_current_conns>3882</total_current_conns>\n"
+				+ "	</performance>\n"
+				+ "	<attack_prevention>\n"
+				+ "		<total_tcp_syn_received>189629575</total_tcp_syn_received>\n"
+				+ "		<Total_syn_cookie_failures>19222</Total_syn_cookie_failures>\n"
+				+ "	</attack_prevention>\n"
+				+ "	<health_check_summary>\n"
+				+ "		<servers>\n"
+				+ "			<server_up_num>324</server_up_num>\n"
+				+ "			<server_down_num>9</server_down_num>\n"
+				+ "		</servers>\n"
+				+ "		<ports>\n"
+				+ "			<port_up_num>324</port_up_num>\n"
+				+ "			<port_down_num>37</port_down_num>\n"
+				+ "		</ports>\n"
+				+ "	</health_check_summary>\n"
+				+ "	<http_proxy>\n"
+				+ "		<total_conns>188944799</total_conns>\n"
+				+ "		<crrent_conns>3882</crrent_conns>\n"
+				+ "		<server_conns_made>239331598</server_conns_made>\n"
+				+ "	</http_proxy>\n"
+				+ "	<conn_reuse>\n"
+				+ "		<open_persistent_conns>0</open_persistent_conns>\n"
+				+ "		<active_persisten_conns>0</active_persisten_conns>\n"
+				+ "	</conn_reuse>\n"
+				+ "	<compression>\n"
+				+ "		<in_data_rate_bytes_per_sec>0</in_data_rate_bytes_per_sec>\n"
+				+ "		<out_dat_rate_bytes_per_sec>0</out_dat_rate_bytes_per_sec>\n"
+				+ "		<bandwidth_savings>0</bandwidth_savings>\n"
+				+ "	</compression>\n" + "	<caching>\n"
+				+ "		<hit_ratio>0</hit_ratio>\n"
+				+ "		<total_requests>0</total_requests>\n"
+				+ "		<cached_objects>0</cached_objects>\n" + "	</caching>\n"
+				+ "</response>";
+		mockServer.enqueue(new MockResponse().setBody(response));
+
+		Element n = testClient.newRequest("system.performance.get").executeXml();
+
 		RecordedRequest rr = mockServer.takeRequest();
-		
+
 		Map<String, String> m = RequestUtil.parseFormBody(rr);
-		
 
 	}
+
+
 
 }

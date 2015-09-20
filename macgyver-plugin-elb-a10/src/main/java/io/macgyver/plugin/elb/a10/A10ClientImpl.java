@@ -82,7 +82,7 @@ public class A10ClientImpl implements A10Client {
 	public static final int DEFAULT_TOKEN_CACHE_DURATION = 5;
 	private static final TimeUnit DEFAULT_TOKEN_CACHE_DURATION_TIME_UNIT = TimeUnit.MINUTES;
 
-	public static final String INVALID_SESSION_ID_CODE="1009";
+	public static final String INVALID_SESSION_ID_CODE = "1009";
 	ObjectMapper mapper = new ObjectMapper();
 	public boolean validateCertificates = true;
 
@@ -147,7 +147,9 @@ public class A10ClientImpl implements A10Client {
 					code = error.getAttributeValue("code");
 					msg = error.getAttributeValue("msg");
 				}
-
+				if (code !=null && INVALID_SESSION_ID_CODE.equals(code)) {
+					tokenCache.invalidateAll();
+				}
 				throw new A10RemoteException(code, msg);
 			} else {
 				logger.warn("unexpected status: {}", status);
@@ -161,6 +163,7 @@ public class A10ClientImpl implements A10Client {
 
 	void throwExceptionIfNecessary(ObjectNode response) {
 
+	
 		if (response.has("response") && response.get("response").has("err")) {
 
 			String code = response.path("response").path("err").path("code")
@@ -169,7 +172,7 @@ public class A10ClientImpl implements A10Client {
 					.asText();
 
 			logger.warn("error response: {}", response);
-			if (code!=null && INVALID_SESSION_ID_CODE.equals(code)) {
+			if (code != null && INVALID_SESSION_ID_CODE.equals(code)) {
 				tokenCache.invalidateAll();
 			}
 			A10RemoteException x = new A10RemoteException(code, msg);
@@ -242,7 +245,7 @@ public class A10ClientImpl implements A10Client {
 
 	}
 
-	protected Map<String, String> toMap(String... args) {
+	protected static Map<String, String> toMap(String... args) {
 		Map<String, String> m = Maps.newHashMap();
 		if (args == null || args.length == 0) {
 			return m;
@@ -266,99 +269,97 @@ public class A10ClientImpl implements A10Client {
 	}
 
 	@Override
+	@Deprecated
 	public ObjectNode invokeJson(String method, String... args) {
 		return invokeJson(method, null, toMap(args));
 	}
 
 	@Override
+	@Deprecated
 	public ObjectNode invokeJson(String method, JsonNode body, String... args) {
 		return invokeJson(method, body, toMap(args));
 	}
-	
+
 	@Override
-	public Response invokeJsonWithRawResponse(String method, JsonNode body, String... args) {
-		return invokeJsonWithRawResponse(method, body, toMap(args));
+	@Deprecated
+	public Response invokeJsonWithRawResponse(String method, JsonNode body,
+			String... args) {
+		return newRequest(method).body(body).params(args).execute();
 	}
-	
+
 	@Override
+	@Deprecated
 	public Element invokeXml(String method, Element body, String... args) {
 		return invokeXml(method, body, toMap(args));
 	}
 
 	@Override
+	@Deprecated
 	public Element invokeXml(String method, String... args) {
-		return invokeXml(method, null, toMap(args));
+		return newRequest(method).params(args).executeXml();
+
 	}
-	
-	
+
 	@Override
-	public Response invokeXmlWithRawResponse(String method, Element body, String... args) { 
-		return invokeXmlWithRawResponse(method, body, toMap(args));
+	@Deprecated
+	public Response invokeXmlWithRawResponse(String method, Element body,
+			String... args) {
+
+		return newRequest(method).body(body).params(args).execute();
+
 	}
-	
 
 	@Override
 	@Deprecated
 	public ObjectNode invoke(String method, Map<String, String> params) {
-		return invokeJson(method, params);
+		return newRequest(method).params(params).executeJson();
+
 	}
 
 	@Override
+	@Deprecated
 	public ObjectNode invokeJson(String method, Map<String, String> params) {
-		return invokeJson(method, null, params);
+
+		return newRequest(method).params(params).executeJson();
+
 	}
 
 	@Override
+	@Deprecated
 	public ObjectNode invokeJson(String method, JsonNode body,
 			Map<String, String> params) {
-		if (params == null) {
-			params = Maps.newConcurrentMap();
-		}
-		Map<String, String> copy = Maps.newHashMap(params);
-		copy.put("method", method);
 
-		return invokeJson(copy, body);
-	}
+		return newRequest(method).body(body).params(params).executeJson();
 
-	
-	@Override
-	public Response invokeJsonWithRawResponse(String method, JsonNode body, Map<String,String> params) { 
-		if (params == null) {
-			params = Maps.newConcurrentMap();
-		}
-		Map<String, String> copy = Maps.newHashMap(params);
-		copy.put("method", method);
-
-		return invokeJsonWithRawResponse(copy, body);
 	}
 
 	@Override
+	@Deprecated
+	public Response invokeJsonWithRawResponse(String method, JsonNode body,
+			Map<String, String> params) {
+		return newRequest(method).body(body).params(params).execute();
+	}
+
+	@Override
+	@Deprecated
 	public Element invokeXml(String method, Map<String, String> params) {
 
-		return invokeXml(method, null, params);
+		return newRequest(method).params(params).executeXml();
+
 	}
 
 	@Override
+	@Deprecated
 	public Element invokeXml(String method, Element body,
 			Map<String, String> params) {
-		if (params == null) {
-			params = Maps.newConcurrentMap();
-		}
-		Map<String, String> copy = Maps.newHashMap(params);
-		copy.put("method", method);
-
-		return invokeXml(copy, body);
+		return newRequest(method).body(body).params(params).executeXml();
 	}
-	
+
 	@Override
-	public Response invokeXmlWithRawResponse(String method, Element body, Map<String,String> params) { 
-		if (params == null) {
-			params = Maps.newConcurrentMap();
-		}
-		Map<String, String> copy = Maps.newHashMap(params);
-		copy.put("method", method);
-		
-		return invokeXmlWithRawResponse(copy, body);
+	@Deprecated
+	public Response invokeXmlWithRawResponse(String method, Element body,
+			Map<String, String> params) {
+		return newRequest(method).body(body).params(params).execute();
 	}
 
 	protected Element parseXmlResponse(Response response, String method) {
@@ -401,110 +402,13 @@ public class A10ClientImpl implements A10Client {
 			throw new ElbException(e);
 		}
 	}
-	
-	public Response invokeJsonWithRawResponse(Map<String, String> x, JsonNode optionalBody) {
 
-		try {
-
-			String method = x.get("method");
-			Preconditions.checkArgument(!Strings.isNullOrEmpty(method),
-					"method argument must be passed");
-
-			Response resp;
-
-			if (optionalBody == null) {
-				FormEncodingBuilder fb = new FormEncodingBuilder().add(
-						"session_id", getAuthToken()).add("format", "json");
-
-				for (Map.Entry<String, String> entry : x.entrySet()) {
-					fb = fb.add(entry.getKey(), entry.getValue());
-				}
-
-				resp = getClient().newCall(
-						new Request.Builder().url(getUrl()).post(fb.build())
-								.build()).execute();
-			} else {
-
-				String url = formatUrl(x, "json");
-				String bodyAsString = optionalBody.toString();
-
-				final MediaType JSON = MediaType
-						.parse("application/json; charset=utf-8");
-				resp = getClient().newCall(
-						new Request.Builder().url(url).post(
-
-						RequestBody.create(JSON, bodyAsString))
-								.header("Content-Type", "application/json")
-								.build()).execute();
-			}
-			return resp;
-		
-
-		} catch (IOException e) {
-			throw new ElbException(e);
-		}
-
-	}
-	protected ObjectNode invokeJson(Map<String, String> x, JsonNode optionalBody) {
-		
 	
 
-			String method = x.get("method");
-			
-			return parseJsonResponse(invokeJsonWithRawResponse(x, optionalBody), method);
 
-		
 
-	}
-	public Element invokeXml(Map<String,String> x, Element optionalBody) {
-		String method = x.get("method");
-		
-		Element element = parseXmlResponse(invokeXmlWithRawResponse(x,optionalBody), method);
-		throwExceptionIfNecessary(element);
-		return element;
-
-	}
 	
-	public Response invokeXmlWithRawResponse(Map<String, String> x, Element optionalBody) {
 
-		try {
-
-			String method = x.get("method");
-			Preconditions.checkArgument(!Strings.isNullOrEmpty(method),
-					"method argument must be passed");
-
-			String url = formatUrl(x, "xml");
-
-			Response resp;
-
-			if (optionalBody == null) {
-				FormEncodingBuilder fb = new FormEncodingBuilder().add(
-						"session_id", getAuthToken()).add("format", "xml");
-				for (Map.Entry<String, String> entry : x.entrySet()) {
-					fb = fb.add(entry.getKey(), entry.getValue());
-				}
-				resp = getClient().newCall(
-						new Request.Builder().url(getUrl()).post(fb.build())
-								.build()).execute();
-			} else {
-
-				String bodyAsString = new XMLOutputter(Format.getRawFormat())
-						.outputString(optionalBody);
-				final MediaType XML = MediaType.parse("text/xml");
-
-				resp = getClient().newCall(
-						new Request.Builder().url(url)
-								.post(RequestBody.create(XML, bodyAsString))
-								.header("Content-Type", "text/xml").build())
-						.execute();
-			}
-			return resp;
-			
-		} catch (IOException e) {
-			throw new ElbException(e);
-		}
-
-	}
 
 	AtomicReference<OkHttpClient> clientReference = new AtomicReference<OkHttpClient>();
 
@@ -618,8 +522,7 @@ public class A10ClientImpl implements A10Client {
 
 		} catch (ElbException e) {
 			throw e;
-		}
-		catch (RuntimeException e) {
+		} catch (RuntimeException e) {
 			throw new ElbException(e);
 		}
 	}
@@ -641,6 +544,12 @@ public class A10ClientImpl implements A10Client {
 		return url;
 	}
 
+	public RequestBuilder newRequest(String method) {
+		RequestBuilder b = new RequestBuilder(this,method);
+	
+		return b;
+	}
+
 	protected String normalizeUrl(String url) {
 
 		Preconditions.checkNotNull(url);
@@ -658,6 +567,84 @@ public class A10ClientImpl implements A10Client {
 			return normalized;
 		} catch (IOException e) {
 			throw new IllegalArgumentException("invalid url: " + url);
+		}
+	}
+
+	public ObjectNode executeJson(RequestBuilder b) {
+		ObjectNode n = parseJsonResponse(execute(b), b.getMethod());
+		throwExceptionIfNecessary(n);
+		return n;
+		
+	}
+
+	public Element executeXml(RequestBuilder b) {
+		Element element = parseXmlResponse(execute(b), b.getMethod());
+		throwExceptionIfNecessary(element);
+		return element;
+
+	}
+
+	public Response execute(RequestBuilder b) {
+		try {
+
+			String method = b.getMethod();
+			Preconditions.checkArgument(!Strings.isNullOrEmpty(method),
+					"method argument must be passed");
+
+			String url = null;
+			
+
+			Response resp;
+			String format = b.getParams().getOrDefault("format", "xml");
+			b = b.param("format", format);
+			if (!b.hasBody()) {
+				
+				url = formatUrl(b.getParams(), format);
+				FormEncodingBuilder fb = new FormEncodingBuilder().add(
+						"session_id", getAuthToken());
+				for (Map.Entry<String, String> entry : b.getParams().entrySet()) {
+					fb = fb.add(entry.getKey(), entry.getValue());
+				}
+				resp = getClient().newCall(
+						new Request.Builder().url(getUrl()).post(fb.build())
+								.build()).execute();
+			} else if (b.getXmlBody().isPresent()) {
+				b = b.param("format", "xml");
+				url = formatUrl(b.getParams(), "xml");
+				String bodyAsString = new XMLOutputter(Format.getRawFormat())
+						.outputString(b.getXmlBody().get());
+				final MediaType XML = MediaType.parse("text/xml");
+
+				resp = getClient().newCall(
+						new Request.Builder().url(url)
+								.post(RequestBody.create(XML, bodyAsString))
+								.header("Content-Type", "text/xml").build())
+						.execute();
+			} else if (b.getJsonBody().isPresent()) {
+				b = b.param("format", "json");
+				url = formatUrl(b.getParams(), "json");
+				String bodyAsString = mapper.writeValueAsString(b.getJsonBody().get());
+
+				final MediaType JSON = MediaType
+						.parse("application/json; charset=utf-8");
+				resp = getClient().newCall(
+						new Request.Builder().url(url).post(
+
+						RequestBody.create(JSON, bodyAsString))
+								.header("Content-Type", "application/json")
+								.build()).execute();
+			} else {
+				throw new UnsupportedOperationException("json not supported");
+			}
+			// the A10 API rather stupidly uses 200 responses even when there is an error
+			if (!resp.isSuccessful()) {
+				logger.warn("response code={}",resp.code());
+			}
+		
+			return resp;
+
+		} catch (IOException e) {
+			throw new ElbException(e);
 		}
 	}
 
