@@ -35,6 +35,7 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableMap;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.RecordedRequest;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
@@ -520,4 +521,18 @@ public class A10ClientTest {
 
 
 
+	@Test
+	public void testFormatUrl() {
+		Map<String,String> m = ImmutableMap.of("format","json","foo","bar");
+		String url = testClient.formatUrl(m, "json");
+		
+		
+		// we want to see that we have exactly 1 "format=json" key value pair in the URL
+		
+		String kv = "format=json";
+		int idx = url.indexOf(kv);
+		Assertions.assertThat(idx).isGreaterThan(0);
+		
+		Assertions.assertThat(url.substring(idx+kv.length())).doesNotContain(kv);
+	}
 }
