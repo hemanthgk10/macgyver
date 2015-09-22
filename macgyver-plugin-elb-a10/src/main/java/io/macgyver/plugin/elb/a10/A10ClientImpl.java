@@ -147,7 +147,7 @@ public class A10ClientImpl implements A10Client {
 					code = error.getAttributeValue("code");
 					msg = error.getAttributeValue("msg");
 				}
-				if (code !=null && INVALID_SESSION_ID_CODE.equals(code)) {
+				if (code != null && INVALID_SESSION_ID_CODE.equals(code)) {
 					tokenCache.invalidateAll();
 				}
 				throw new A10RemoteException(code, msg);
@@ -163,7 +163,6 @@ public class A10ClientImpl implements A10Client {
 
 	void throwExceptionIfNecessary(ObjectNode response) {
 
-	
 		if (response.has("response") && response.get("response").has("err")) {
 
 			String code = response.path("response").path("err").path("code")
@@ -403,13 +402,6 @@ public class A10ClientImpl implements A10Client {
 		}
 	}
 
-	
-
-
-
-	
-
-
 	AtomicReference<OkHttpClient> clientReference = new AtomicReference<OkHttpClient>();
 
 	protected OkHttpClient getClient() {
@@ -537,16 +529,18 @@ public class A10ClientImpl implements A10Client {
 				+ format;
 
 		for (String key : x.keySet()) {
-			String val = x.get(key);
-			url += "&" + key + "=" + val;
+			if (!key.equals("format")) {
+				String val = x.get(key);
+				url += "&" + key + "=" + val;
+			}
 		}
 
 		return url;
 	}
 
 	public RequestBuilder newRequest(String method) {
-		RequestBuilder b = new RequestBuilder(this,method);
-	
+		RequestBuilder b = new RequestBuilder(this, method);
+
 		return b;
 	}
 
@@ -574,7 +568,7 @@ public class A10ClientImpl implements A10Client {
 		ObjectNode n = parseJsonResponse(execute(b), b.getMethod());
 		throwExceptionIfNecessary(n);
 		return n;
-		
+
 	}
 
 	public Element executeXml(RequestBuilder b) {
@@ -592,18 +586,19 @@ public class A10ClientImpl implements A10Client {
 					"method argument must be passed");
 
 			String url = null;
-			
 
 			Response resp;
 			String format = b.getParams().getOrDefault("format", "xml");
 			b = b.param("format", format);
 			if (!b.hasBody()) {
-				
+
 				url = formatUrl(b.getParams(), format);
 				FormEncodingBuilder fb = new FormEncodingBuilder().add(
 						"session_id", getAuthToken());
 				for (Map.Entry<String, String> entry : b.getParams().entrySet()) {
-					fb = fb.add(entry.getKey(), entry.getValue());
+					if (!entry.getValue().equals("format")) {
+						fb = fb.add(entry.getKey(), entry.getValue());
+					}
 				}
 				resp = getClient().newCall(
 						new Request.Builder().url(getUrl()).post(fb.build())
@@ -623,7 +618,8 @@ public class A10ClientImpl implements A10Client {
 			} else if (b.getJsonBody().isPresent()) {
 				b = b.param("format", "json");
 				url = formatUrl(b.getParams(), "json");
-				String bodyAsString = mapper.writeValueAsString(b.getJsonBody().get());
+				String bodyAsString = mapper.writeValueAsString(b.getJsonBody()
+						.get());
 
 				final MediaType JSON = MediaType
 						.parse("application/json; charset=utf-8");
@@ -634,13 +630,15 @@ public class A10ClientImpl implements A10Client {
 								.header("Content-Type", "application/json")
 								.build()).execute();
 			} else {
-				throw new UnsupportedOperationException("json not supported");
+				throw new UnsupportedOperationException(
+						"body type not supported");
 			}
-			// the A10 API rather stupidly uses 200 responses even when there is an error
+			// the A10 API rather stupidly uses 200 responses even when there is
+			// an error
 			if (!resp.isSuccessful()) {
-				logger.warn("response code={}",resp.code());
+				logger.warn("response code={}", resp.code());
 			}
-		
+
 			return resp;
 
 		} catch (IOException e) {
