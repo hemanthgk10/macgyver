@@ -11,25 +11,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.macgyver.plugin.config;
+package io.macgyver.plugin.atlassian.confluence;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import io.macgyver.core.service.ServiceDefinition;
+import io.macgyver.core.service.ServiceFactory;
 
-import io.macgyver.plugin.atlassian.confluence.ConfluenceServiceFactory;
-import io.macgyver.plugin.atlassian.jira.JiraServiceFactory;
 
-@Configuration
-public class AtlassianConfig {
+public class ConfluenceServiceFactory extends ServiceFactory<ConfluenceClient>{
+
+	public ConfluenceServiceFactory() {
+		super("confluence");
+	
+	}
 
 	
-	@Bean
-	JiraServiceFactory jiraServiceFactory() {
-		return new JiraServiceFactory();
+	@Override
+	protected Object doCreateInstance(ServiceDefinition def) {
+		BasicConfluenceClient c = new BasicConfluenceClient(def.getProperties().getProperty("url"), def.getProperties().getProperty("username"), def.getProperties().getProperty("password"));
+		
+		return c;
 	}
-	
-	@Bean
-	ConfluenceServiceFactory confluenceServiceFactory() {
-		return new ConfluenceServiceFactory();
-	}
+
+
+
 }
