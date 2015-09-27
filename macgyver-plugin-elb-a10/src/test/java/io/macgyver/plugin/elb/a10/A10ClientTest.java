@@ -19,6 +19,8 @@ import io.macgyver.test.RequestUtil;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.Map;
 
 import org.assertj.core.api.Assertions;
@@ -522,8 +524,8 @@ public class A10ClientTest {
 
 
 	@Test
-	public void testFormatUrl() {
-		Map<String,String> m = ImmutableMap.of("format","json","foo","bar");
+	public void testFormatUrl() throws UnsupportedEncodingException {
+		Map<String,String> m = ImmutableMap.of("format","json","foo","bar baz","nl","a\n1\tb\r\2");
 		String url = testClient.formatUrl(m, "json");
 		
 		
@@ -534,5 +536,11 @@ public class A10ClientTest {
 		Assertions.assertThat(idx).isGreaterThan(0);
 		
 		Assertions.assertThat(url.substring(idx+kv.length())).doesNotContain(kv);
+		
+		
+		Assertions.assertThat(url).doesNotContain("bar baz").contains("foo=bar+baz").contains("nl=a%0A1%09b%0D%02");
+		
+		
+	
 	}
 }
