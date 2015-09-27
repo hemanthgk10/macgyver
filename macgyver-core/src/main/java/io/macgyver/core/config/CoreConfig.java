@@ -13,6 +13,33 @@
  */
 package io.macgyver.core.config;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.net.MalformedURLException;
+import java.util.Properties;
+import java.util.concurrent.Executors;
+
+import org.apache.ignite.Ignite;
+import org.apache.ignite.Ignition;
+import org.apache.ignite.configuration.IgniteConfiguration;
+import org.apache.ignite.spi.deployment.DeploymentSpi;
+import org.apache.ignite.spi.deployment.local.LocalDeploymentSpi;
+import org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.EnvironmentAware;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.jmx.export.MBeanExporter;
+
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+import com.ning.http.client.AsyncHttpClient;
+
 import io.macgyver.core.Bootstrap;
 import io.macgyver.core.ContextRefreshApplicationListener;
 import io.macgyver.core.CoreBindingSupplier;
@@ -35,35 +62,6 @@ import io.macgyver.core.script.BindingSupplierManager;
 import io.macgyver.core.script.ExtensionResourceProvider;
 import io.macgyver.core.service.ServiceRegistry;
 import io.macgyver.neorx.rest.NeoRxClient;
-
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.net.MalformedURLException;
-import java.util.Properties;
-import java.util.concurrent.Executors;
-
-import org.apache.ignite.Ignite;
-import org.apache.ignite.IgniteScheduler;
-import org.apache.ignite.Ignition;
-import org.apache.ignite.configuration.IgniteConfiguration;
-import org.apache.ignite.spi.deployment.DeploymentSpi;
-import org.apache.ignite.spi.deployment.local.LocalDeploymentSpi;
-import org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.EnvironmentAware;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
-import org.springframework.jmx.export.MBeanExporter;
-
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.ning.http.client.AsyncHttpClient;
 
 @Configuration
 public class CoreConfig implements EnvironmentAware {
@@ -278,6 +276,7 @@ public class CoreConfig implements EnvironmentAware {
 
 		cfg.setDiscoverySpi(macIgniteTcpDiscoverySpi());
 
+	
 		DeploymentSpi x = new LocalDeploymentSpi();
 
 		cfg.setDeploymentSpi(x);
@@ -287,4 +286,6 @@ public class CoreConfig implements EnvironmentAware {
 
 		return ignite;
 	}
+	
+
 }

@@ -15,7 +15,12 @@ package io.macgyver.core.cluster;
 
 import io.macgyver.test.MacGyverIntegrationTest;
 
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.apache.ignite.Ignite;
+import org.apache.ignite.IgniteMessaging;
+import org.apache.ignite.lang.IgniteBiPredicate;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +31,36 @@ public class IgniteTest extends MacGyverIntegrationTest {
 	Ignite ignite;
 
 	@Test
-	public void testIt() throws Exception {
+	public void testName() throws Exception {
+
 		Assertions.assertThat(ignite.name()).contains("macgyver");
+
+	}
+
+	@Test
+	public void testMessage() {
+		IgniteMessaging m = ignite.message().withAsync();
+
+		String message = UUID.randomUUID().toString();
+		
+		AtomicReference x = new AtomicReference<>();
+
+		m.localListen("junit.message", (nodeId, msg) -> {
+			logger.info("recv: {}" , msg);
+			x.set(msg);
+			return true;
+		});
+
+		Assertions.assertThat(x.get()).isNull();
+		m.send("junit.message", message);
+		long startTime = System.currentTimeMillis();
+		while (x.get() != null && System.currentTimeMillis()-startTime<3000) {
+			
+			try {
+				Thread.sleep(50);
+			} catch (Exception e) {
+			}
+		}
+		Assertions.assertThat(x.get()).isNotNull().isEqualTo(message);
 	}
 }
