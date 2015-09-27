@@ -1,5 +1,5 @@
 
-// #@Schedule {"cron":"* * * * *"}
+//#@Schedule {"cron":"* * * * *","enabled":true}
 
 println "hello"
 
