@@ -29,8 +29,15 @@ public class HomeController {
 	@ResponseBody
 	public ModelAndView home() {
 
-		return new ModelAndView("redirect:/ui/");
+		return new ModelAndView("redirect:/home");
+		
+	}
 	
+	@RequestMapping("/home")
+	@ResponseBody
+	public ModelAndView lteHome() {
+
+		return new ModelAndView("/home");
 		
 	}
 	

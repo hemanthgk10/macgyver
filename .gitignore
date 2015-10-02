@@ -37,3 +37,4 @@ macgyver-plugin-cloud-vsphere/config
 mockserver.log
 mockserver.*.log
 mockserver_request.log
+macgyver-core/lte

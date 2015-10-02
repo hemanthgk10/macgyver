@@ -20,6 +20,7 @@ import io.macgyver.core.auth.InternalAuthenticationProvider;
 import io.macgyver.core.auth.InternalGroupRoleTranslator;
 import io.macgyver.core.auth.LogOnlyAccessDecisionVoter;
 import io.macgyver.core.auth.MacGyverAccessDecisionManager;
+import io.macgyver.core.crypto.KeyStoreManager;
 
 import java.util.List;
 import java.util.Map;
@@ -74,7 +75,7 @@ public class CoreSecurityConfig extends WebSecurityConfigurerAdapter {
 				.permitAll().and().
 
 				formLogin().loginPage("/login").failureUrl("/login")
-				.defaultSuccessUrl("/ui").and().logout().permitAll();
+				.defaultSuccessUrl("/home").and().logout().permitAll();
 	}
 
 	@Override
@@ -165,5 +166,9 @@ public class CoreSecurityConfig extends WebSecurityConfigurerAdapter {
 	}
 
 
+	@Bean
+	public KeyStoreManager macKeyStoreManager() {
+		return new KeyStoreManager();
+	}
 
 }

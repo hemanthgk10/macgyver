@@ -146,6 +146,7 @@ public class MacGyverUI extends UI {
 		String f = Page.getCurrent().getUriFragment();
 		if (f == null || f.equals("")) {
 			navigator.navigateTo("home");
+           // UI.getCurrent().getPage().setLocation(path.get());
 		}
 
 		navigator.addViewChangeListener(new ViewChangeListener() {
@@ -296,7 +297,16 @@ public class MacGyverUI extends UI {
 				Button b = new Button(display, new Button.ClickListener() {
 					@Override
 					public void buttonClick(ClickEvent event) {
-						navigator.navigateTo(viewName);
+						
+						UIMigrator m = Kernel.getApplicationContext().getBean(UIMigrator.class);
+						java.util.Optional<String> path = m.getMigratedPath(viewName);
+						if (path.isPresent()) {
+                      
+                            UI.getCurrent().getPage().setLocation(path.get());
+                        }
+                        else {
+						    navigator.navigateTo(viewName);
+                        }
 					}
 				});
 				b.setHtmlContentAllowed(true);

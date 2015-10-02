@@ -24,6 +24,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.security.access.event.PublicInvocationEvent;
 import org.springframework.web.context.support.ServletRequestHandledEvent;
 
 /**
@@ -57,7 +58,7 @@ public class ServerMain {
 
 			@Override
 			public void onApplicationEvent(ApplicationEvent event) {
-				if (event instanceof ServletRequestHandledEvent) {
+				if (event instanceof ServletRequestHandledEvent || event instanceof PublicInvocationEvent) {
 					// this will generate crazy logging if we log all servlet requests
 					logger.debug("onApplicationEvent({})", event);
 				} else {
