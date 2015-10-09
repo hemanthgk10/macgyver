@@ -45,7 +45,9 @@ public class MacGyverWebContext {
 	public HttpServletResponse getServletResponse() {
 		return response;
 	}
-	
+	public static MacGyverWebContext get() {
+		return contextLocal.get();
+	}
 	public String toString() {
 		return MoreObjects.toStringHelper(this).add("request", request).add("response", response).add("applicationContext", applicationContext).toString();
 	}

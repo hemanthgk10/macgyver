@@ -41,7 +41,7 @@ public class PropertyEncryptionView extends MacGyverView {
 
 	Logger logger = LoggerFactory.getLogger(PropertyEncryptionView.class);
 
-	public static final String VIEW_NAME = "admin/propertyEncrption";
+	public static final String VIEW_NAME = "admin/propertyEncryption";
 
 	FormLayout form = new FormLayout();
 	ComboBox keyComboBox;

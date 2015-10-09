@@ -145,40 +145,55 @@ scratch. This page gets rid of all links and provides the needed markup only.
           <ul class="sidebar-menu">
 		  
 <%
-def menuManager = Kernel.getApplicationContext().getBean("macMenuManager")
 
-menuManager.forCurrentUser().getItems().each { 
-
+def ui = io.macgyver.core.web.UIContext.forCurrentUser()
 
 
-if (it.isCollapsible()) {
+ui.getRootMenu().getItems().each { 
+
+def styleMap = ["dashboard":"fa-dashboard","admin":"fa-laptop"]
+if (!it.getItems().isEmpty()) {
+
 %>
-            <li class="treeview">
-              <a href="#"><i class="fa fa-link"></i> <span><%=it.getText()%></span> <i class="fa fa-angle-left pull-right"></i></a>
+            <li class="treeview <%=it.isActive() ? "" : "" %>">
+              <a href="#"><i class="fa <%=styleMap[it.getId()]%>"></i> <span><%=it.getLabel()%></span> <i class="fa fa-angle-left pull-right"></i></a>
 			  <ul class="treeview-menu">
 <%
-}
 
-it.getItems().each { it2 ->
+
+it.getItems().each { sub ->
 
 %>
-<li><a href="<%=it2.getUrl()? it2.getUrl() : "#" %>"><%=it2.getText()%></a></li>
+<li><a href="<%=sub.getUrl()? sub.getUrl() : "#" %>"><i class="fa fa-circle-o"></i><%=sub.getLabel()%></a></li>
 <%
 
-}
+}  
 
-if (it.isCollapsible()) {
 %>
 			  </ul>
 			</li> <!-- treeview -->
 
-
 <%
 
+
+}  // is collapsible
+
+else {
+%>
+<li><a href="<%=it.getUrl()? it.getUrl() : "#" %>"><%=it.getLabel()%></a></li>
+<%
 }
 
 
+
+
+
+
 }
+
+
+
+
 
 
 %>

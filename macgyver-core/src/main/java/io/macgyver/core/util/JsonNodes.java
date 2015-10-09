@@ -17,13 +17,19 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
+import io.macgyver.core.MacGyverException;
+
 public class JsonNodes {
 
+	public static final ObjectMapper mapper = new ObjectMapper();
+	
 	public static void sort(List<JsonNode> n, Comparator<JsonNode> comparator) {
 		Preconditions.checkNotNull(n);
 		Preconditions.checkNotNull(comparator);
@@ -186,5 +192,14 @@ public class JsonNodes {
 
 		return new TextComparator(prop, caseSenstitive);
 
+	}
+	
+	public static String pretty(JsonNode n) {
+		try {
+		return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(n);
+		}
+		catch (JsonProcessingException e) {
+			throw new MacGyverException(e);
+		}
 	}
 }

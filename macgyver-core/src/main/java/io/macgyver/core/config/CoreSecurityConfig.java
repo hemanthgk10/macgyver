@@ -166,9 +166,6 @@ public class CoreSecurityConfig extends WebSecurityConfigurerAdapter {
 	}
 
 
-	@Bean
-	public KeyStoreManager macKeyStoreManager() {
-		return new KeyStoreManager();
-	}
+
 
 }

@@ -16,24 +16,8 @@ package io.macgyver.core.config;
 import java.io.File;
 import java.util.Map;
 
-import io.macgyver.core.Bootstrap;
-import io.macgyver.core.Kernel;
-import io.macgyver.core.web.MacGyverContextFilter;
-import io.macgyver.core.web.MacGyverMenuManager;
-import io.macgyver.core.web.mvc.CoreApiController;
-import io.macgyver.core.web.mvc.HomeController;
-import io.macgyver.core.web.mvc.MacgyverWeb;
-import io.macgyver.core.web.neo4j.Neo4jProxyServlet;
-import io.macgyver.core.web.vaadin.MacGyverUI;
-import io.macgyver.core.web.vaadin.MacGyverVaadinServlet;
-import io.macgyver.core.web.vaadin.UIMigrator;
-import io.macgyver.core.web.vaadin.ViewDecorators;
-import io.macgyver.core.web.vaadin.views.admin.AdminPlugin;
-
 import org.apache.catalina.valves.AccessLogValve;
-import org.apache.catalina.valves.ExtendedAccessLogValve;
 import org.apache.catalina.valves.RemoteIpValve;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -42,9 +26,7 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.mustache.MustacheAutoConfiguration;
-import org.springframework.boot.autoconfigure.mustache.MustacheEnvironmentCollector;
 import org.springframework.boot.autoconfigure.mustache.MustacheProperties;
-import org.springframework.boot.autoconfigure.mustache.MustacheResourceTemplateLoader;
 import org.springframework.boot.autoconfigure.web.WebMvcAutoConfiguration;
 import org.springframework.boot.context.embedded.ConfigurableEmbeddedServletContainer;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerCustomizer;
@@ -56,7 +38,6 @@ import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.Ordered;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -64,6 +45,19 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
+import io.macgyver.core.Bootstrap;
+import io.macgyver.core.web.MacGyverContextFilter;
+import io.macgyver.core.web.UIContextManager;
+import io.macgyver.core.web.mvc.CoreApiController;
+import io.macgyver.core.web.mvc.HomeController;
+import io.macgyver.core.web.mvc.MacgyverWeb;
+import io.macgyver.core.web.neo4j.Neo4jProxyServlet;
+import io.macgyver.core.web.vaadin.MacGyverUI;
+import io.macgyver.core.web.vaadin.MacGyverVaadinServlet;
+import io.macgyver.core.web.vaadin.UIMigrator;
+import io.macgyver.core.web.vaadin.ViewDecorators;
+import io.macgyver.core.web.vaadin.views.admin.AdminPlugin;
 
 
 @Configuration
@@ -262,9 +256,9 @@ public class WebConfig implements EnvironmentAware {
 		return b;
 	}
 
-	@Bean MacGyverMenuManager macMenuManager() {
+	@Bean UIContextManager macUIContextManager() {
 
-		return new MacGyverMenuManager();
+		return new UIContextManager();
 	}
 	
 	@Bean UIMigrator macUIMigrator() {
