@@ -111,7 +111,8 @@ dependencies {
     compile "org.webjars:jquery:2.1.1"
     compile "org.webjars:ace:1.1.3"
     
-    compile 'com.samskivert:jmustache:1.10'
+    //compile 'com.samskivert:jmustache:1.10'
+    compile 'org.grails:grails-gsp-spring-boot:1.0.0'
     
     testCompile("org.springframework.boot:spring-boot-starter-test:${SPRING_BOOT_VERSION}")
     testCompile "org.springframework:spring-test:${SPRING_VERSION}"

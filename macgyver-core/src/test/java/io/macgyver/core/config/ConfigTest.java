@@ -64,10 +64,7 @@ public class ConfigTest extends MacGyverIntegrationTest {
 		applicationContext.getBean("macVaadinServlet");
 		applicationContext.getBean("macViewDecorators");
 		applicationContext.getBean("macAdminUIDecorator");
-		applicationContext.getBean("macMustacheTemplateLoader");
-		applicationContext.getBean("macMustacheCompiler");
-		applicationContext.getBean("macMustacheViewResolver");
-		applicationContext.getBean("macDummyHandlebarsController");
+
 		applicationContext.getBean("macAccessLogCustomizer");
 		applicationContext.getBean("macNeo4jProxyServlet");
 		applicationContext.getBean("macNeo4jProxyServletRegistrationBean");

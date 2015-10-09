@@ -17,8 +17,12 @@ import io.macgyver.core.Kernel;
 import io.macgyver.core.web.vaadin.ViewConfig;
 import io.macgyver.core.web.vaadin.ViewDecorators;
 
+import java.util.List;
+
 import org.springframework.context.ApplicationContext;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
 import com.vaadin.data.Item;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener.ViewChangeEvent;
@@ -69,7 +73,8 @@ public class BeansView extends VerticalLayout implements View {
 
 	public void refresh() {
 		table.removeAllItems();
-
+		String [] x = {};
+	
 		ApplicationContext ctx = Kernel.getInstance().getApplicationContext();
 		for (String name : ctx.getBeanDefinitionNames()) {
 
