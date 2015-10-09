@@ -155,7 +155,7 @@ def styleMap = ["dashboard":"fa-dashboard","admin":"fa-laptop"]
 if (!it.getItems().isEmpty()) {
 
 %>
-            <li class="treeview <%=it.isActive() ? "" : "" %>">
+            <li class="treeview <%=it.isSelected() ? "active" : "" %>">
               <a href="#"><i class="fa <%=styleMap[it.getId()]%>"></i> <span><%=it.getLabel()%></span> <i class="fa fa-angle-left pull-right"></i></a>
 			  <ul class="treeview-menu">
 <%
@@ -164,7 +164,7 @@ if (!it.getItems().isEmpty()) {
 it.getItems().each { sub ->
 
 %>
-<li><a href="<%=sub.getUrl()? sub.getUrl() : "#" %>"><i class="fa fa-circle-o"></i><%=sub.getLabel()%></a></li>
+<li><a href="<%=sub.getUrl()? sub.getUrl() : "#" %>" class="treeview <%=it.isSelected() ? "active" : "" %>"><i class="fa fa-circle-o"></i><%=sub.getLabel()%></a></li>
 <%
 
 }  

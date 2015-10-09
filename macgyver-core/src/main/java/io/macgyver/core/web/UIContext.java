@@ -69,8 +69,13 @@ public class UIContext {
 			return itemNode.path("label").asText();
 		}
 
-		public boolean isActive() {
-			return true;
+		public boolean isSelected() {
+			for (MenuItem item: getItems()) {
+				if (item.getUrl().length()>0 && MacGyverWebContext.get().getServletRequest().getRequestURI().startsWith(item.getUrl()))  {
+					return true;
+				}
+			}
+			return false;
 		}
 		public List<MenuItem> getItems() {
 
