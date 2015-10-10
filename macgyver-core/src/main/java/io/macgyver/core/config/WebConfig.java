@@ -25,8 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.mustache.MustacheAutoConfiguration;
-import org.springframework.boot.autoconfigure.mustache.MustacheProperties;
 import org.springframework.boot.autoconfigure.web.WebMvcAutoConfiguration;
 import org.springframework.boot.context.embedded.ConfigurableEmbeddedServletContainer;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerCustomizer;
@@ -64,8 +62,6 @@ import io.macgyver.core.web.vaadin.views.admin.AdminPlugin;
 @ComponentScan(basePackageClasses = { HomeController.class })
 @AutoConfigureAfter(WebMvcAutoConfiguration.class)
 @EnableGlobalMethodSecurity(securedEnabled = true, proxyTargetClass = true, prePostEnabled = true)
-@EnableConfigurationProperties(MustacheProperties.class)
-@EnableAutoConfiguration(exclude = { MustacheAutoConfiguration.class })
 public class WebConfig implements EnvironmentAware {
 
 	Logger logger = LoggerFactory.getLogger(WebConfig.class);
@@ -133,48 +129,7 @@ public class WebConfig implements EnvironmentAware {
 	public AdminPlugin macAdminUIDecorator() {
 		return new AdminPlugin();
 	}
-/*
-	@Bean
-	public MustacheResourceTemplateLoader macMustacheTemplateLoader() {
 
-		return new MacGyverMustacheTemplateLoader();
-
-	}
-
-	@Bean
-	public Mustache.Compiler macMustacheCompiler() {
-		return Mustache.compiler().withLoader(macMustacheTemplateLoader())
-				.withCollector(collector());
-	}
-
-	private Collector collector() {
-		MustacheEnvironmentCollector collector = new MustacheEnvironmentCollector();
-		collector.setEnvironment(this.environment);
-		return collector;
-	}
-
-	@Autowired
-	MustacheProperties mustacheProperties;
-
-	@Bean
-	public MacGyverMustacheViewResolver macMustacheViewResolver() {
-		MacGyverMustacheViewResolver resolver = new MacGyverMustacheViewResolver();
-		resolver.setPrefix(mustacheProperties.getPrefix());
-		resolver.setSuffix(mustacheProperties.getSuffix());
-		resolver.setCache(mustacheProperties.isCache());
-		resolver.setViewNames(mustacheProperties.getViewNames());
-		resolver.setContentType(mustacheProperties.getContentType());
-		resolver.setCharset(mustacheProperties.getCharset());
-		resolver.setCompiler(macMustacheCompiler());
-		resolver.setOrder(Ordered.LOWEST_PRECEDENCE - 10);
-		return resolver;
-	}
-
-	@Bean
-	public DummyHandlebarsController macDummyHandlebarsController() {
-		return new DummyHandlebarsController();
-	}
-*/
 	@Bean
 	public EmbeddedServletContainerCustomizer macAccessLogCustomizer() {
 

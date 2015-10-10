@@ -90,7 +90,7 @@ public class SpringContextInitializer implements
 
 			}
 		}
-
+		overrides.setProperty("spring.mustache.check-template-location","false");
 		overrides.setProperty("spring.gsp.reloadingEnabled", "true");
 		overrides.setProperty("spring.gsp.templateRoots","file:./web/templates,file:./src/main/resources/web/templates,classpath:/web/templates");
 		
