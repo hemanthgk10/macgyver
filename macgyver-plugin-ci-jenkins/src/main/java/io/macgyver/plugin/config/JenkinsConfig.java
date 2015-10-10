@@ -17,6 +17,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import io.macgyver.plugin.ci.jenkins.JenkinsServiceFactory;
+import io.macgyver.plugin.ci.jenkins.PostCompletedBuildResultWebhook;
+import io.macgyver.plugin.ci.jenkins.StatisticsNotificationWebhook;
 
 @Configuration
 public class JenkinsConfig {
@@ -25,5 +27,15 @@ public class JenkinsConfig {
 	@Bean
 	JenkinsServiceFactory jenkinsServiceFactory() {
 		return new JenkinsServiceFactory();
+	}
+	
+	@Bean
+	public PostCompletedBuildResultWebhook macJenkinsPostCompletedWebhook() {
+		return new PostCompletedBuildResultWebhook();
+	}
+	
+	@Bean
+	public StatisticsNotificationWebhook macStatisticsNotificationWebhook() {
+		return new StatisticsNotificationWebhook();
 	}
 }
