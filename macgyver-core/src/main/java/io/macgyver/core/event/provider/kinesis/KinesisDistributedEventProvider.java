@@ -17,4 +17,10 @@ public class KinesisDistributedEventProvider implements DistributedEventProvider
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
+	public void shutdown() {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

@@ -289,10 +289,12 @@ public class CoreConfig implements EnvironmentAware {
 		return ignite;
 	}
 	
+	@Bean
 	public DistributedEventProviderProxy macDistributedEventProviderProxy() {
 		
 		DistributedEventProviderProxy proxy = new DistributedEventProviderProxy();
 		LocalEventProvider p = new LocalEventProvider(proxy);
+		p.start();
 		return proxy;
 	}
 

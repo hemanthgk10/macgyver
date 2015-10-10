@@ -7,4 +7,6 @@ public interface DistributedEventProvider {
 
 	public boolean publish(DistributedEvent event);
 	 Observable<DistributedEvent> getObservableDistributedEvent();
+	 
+	 public void shutdown();
 }

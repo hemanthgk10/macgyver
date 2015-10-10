@@ -11,7 +11,7 @@ import rx.observers.Subscribers;
 public class DistributedEventProviderProxy implements DistributedEventProvider {
 
 	AtomicReference<DistributedEventProvider> proxy = new AtomicReference<DistributedEventProvider>();
-	
+
 	public DistributedEventProviderProxy() {
 
 		setupReactive();
@@ -26,7 +26,7 @@ public class DistributedEventProviderProxy implements DistributedEventProvider {
 	@Override
 	public boolean publish(DistributedEvent event) {
 		return proxy.get().publish(event);
-		
+
 	}
 
 	ConnectableObservable<DistributedEvent> observable;
@@ -54,13 +54,11 @@ public class DistributedEventProviderProxy implements DistributedEventProvider {
 				};
 
 				subscriber = Subscribers.create(onNextAction, onThrowable);
-		
+
 			}
 		};
 
 		this.observable = Observable.create(xx).publish();
-
-	
 
 		observable.connect();
 	}
@@ -68,8 +66,20 @@ public class DistributedEventProviderProxy implements DistributedEventProvider {
 	public void dispatch(DistributedEvent event) {
 		subscriber.onNext(event);
 	}
-	
+
 	public void setDelegate(DistributedEventProvider p) {
-		proxy.set(p);
+		DistributedEventProvider oldProvider = proxy.getAndSet(p);
+		if (oldProvider != null) {
+			oldProvider.shutdown();
+		}
+	}
+
+	@Override
+	public void shutdown() {
+		DistributedEventProvider p = proxy.get();
+		if (p != null) {
+			p.shutdown();
+		}
+
 	}
 }

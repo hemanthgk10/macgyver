@@ -44,4 +44,8 @@ public class LocalEventProvider extends AbstractEventProvider {
 		}
 		return result;
 	}
+	
+	public void shutdown() {
+		stop();
+	}
 }

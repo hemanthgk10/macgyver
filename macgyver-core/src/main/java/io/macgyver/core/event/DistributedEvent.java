@@ -16,6 +16,9 @@ public class DistributedEvent {
 		json.put("source", getDefaultSource());
 	}
 
+	public static DistributedEvent create() {
+		return new DistributedEvent();
+	}
 	private static String getDefaultSource() {
 
 	
@@ -54,8 +57,15 @@ public class DistributedEvent {
 		return this;
 	}
 
-	public JsonNode toJsonNode() {
+	public ObjectNode getJson() {
 		// maybe we want an immutable/deep-copy
 		return json;
+	}
+	
+	public long getTimestamp() {
+		return json.path("ts").asLong();
+	}
+	public String getTopic() {
+		return json.path("topic").asText();
 	}
 }
