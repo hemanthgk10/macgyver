@@ -260,11 +260,11 @@ public class AdminController implements UIContextDecorator {
 	@Override
 	public void call(UIContext ctx) {
 		logger.info("DECORATING: " + ctx);
-		ctx.getOrCreateMenuItem("dashboard").label("Dashboard");
+		ctx.getOrCreateMenuItem("dashboard").label("Dashboard").style("fa fa-dashboard").order(10);
 		ctx.getOrCreateMenuItem("dashboard", "home").label("Home").url("/home");
 
 		if (AuthUtil.currentUserHasRole(MacGyverRole.ROLE_MACGYVER_ADMIN)) {
-			ctx.getOrCreateMenuItem("admin").label("Admin");
+			ctx.getOrCreateMenuItem("admin").label("Admin").style("fa fa-laptop").order(30);
 			ctx.getOrCreateMenuItem("admin", "scripts").label("Scripts").url("/core/admin/scripts");
 			ctx.getOrCreateMenuItem("admin", "cluster-info").label("Cluster").url("/core/admin/cluster-info");
 			ctx.getOrCreateMenuItem("admin", "encrypt-string").label("Encrypt String")

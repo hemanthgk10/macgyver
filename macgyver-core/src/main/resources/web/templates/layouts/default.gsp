@@ -151,12 +151,14 @@ def ui = io.macgyver.core.web.UIContext.forCurrentUser()
 
 ui.getRootMenu().getItems().each { 
 
-def styleMap = ["dashboard":"fa-dashboard","admin":"fa-laptop"]
+
+def styleVal = it.getStyle()
+
 if (!it.getItems().isEmpty()) {
 
 %>
             <li class="treeview <%=it.isSelected() ? "active" : "" %>">
-              <a href="#"><i class="fa <%=styleMap[it.getId()]%>"></i> <span><%=it.getLabel()%></span> <i class="fa fa-angle-left pull-right"></i></a>
+              <a href="#"><i class="<%=styleVal%>"></i> <span><%=it.getLabel()%></span> <i class="fa fa-angle-left pull-right"></i></a>
 			  <ul class="treeview-menu">
 <%
 

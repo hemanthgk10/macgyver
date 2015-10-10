@@ -13,8 +13,8 @@ public class MenuItemComparator implements Comparator<MenuItem> {
 	@Override
 	public int compare(MenuItem o1, MenuItem o2) {
 		
-		int n1 = o1.getModel().path("order").asInt(100);
-		int n2 = o2.getModel().path("order").asInt(100);
+		int n1 = o1.getModel().path("order").asInt(UIContext.MenuItem.DEFAULT_ORDER);
+		int n2 = o2.getModel().path("order").asInt(UIContext.MenuItem.DEFAULT_ORDER);
 		
 
 		if (n1>n2) {

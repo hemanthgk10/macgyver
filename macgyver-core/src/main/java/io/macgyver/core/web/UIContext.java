@@ -24,6 +24,7 @@ public class UIContext {
 
 	Comparator<MenuItem> comparator = new MenuItemComparator();
 
+	
 	public UIContext() {
 		descriptor = mapper.createObjectNode();
 		ObjectNode menu = mapper.createObjectNode();
@@ -37,6 +38,7 @@ public class UIContext {
 	}
 	public class MenuItem {
 
+		public static final int DEFAULT_ORDER=10;
 		ObjectNode itemNode;
 
 		public MenuItem(ObjectNode n) {
@@ -52,6 +54,22 @@ public class UIContext {
 			return this;
 		}
 
+		public MenuItem style(String className) {
+			itemNode.put("style", className);
+			return this;
+		}
+		
+		public String getStyle() {
+			return itemNode.path("style").asText();
+		}
+		
+		public MenuItem order(int order) {
+			itemNode.put("order", order);
+			return this;
+		}
+		public int getOrder() {
+			return itemNode.path("order").asInt(DEFAULT_ORDER);
+		}
 		public MenuItem url(String url) {
 			itemNode.put("url", url);
 			return this;

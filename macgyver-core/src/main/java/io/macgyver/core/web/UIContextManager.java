@@ -33,6 +33,7 @@ public class UIContextManager {
 				
 				kv.getValue().call(ncf);
 			});
+			ncf.sort();
 			ctx.getServletRequest().getSession(true).setAttribute(UIContext.class.getName(), ncf);
 			nc = ncf;
 		}
