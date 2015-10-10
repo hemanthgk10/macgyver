@@ -8,16 +8,20 @@
 <body>
 
 <section id="introduction">
-  <h2 class="page-header"><a href="#introduction">Introduction</a></h2>
-  <p class="lead">
-    <b>AdminLTE</b> is a popular open source WebApp template for admin dashboards and control panels.
-    It is a responsive HTML template that is based on the CSS framework Bootstrap 3.
-    It utilizes all of the Bootstrap components in its design and re-styles many
-    commonly used plugins to create a consistent design that can be used as a user
-    interface for backend applications. AdminLTE is based on a modular design, which
-    allows it to be easily customized and built upon. This documentation will guide you through
-    installing the template and exploring the various components that are bundled with the template.
-  </p>
+
+<div class="box">
+            <div class="box-header with-border">
+              <h3 class="box-title">Welcome</h3>
+              <div class="box-tools pull-right">
+                <button class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse"><i class="fa fa-minus"></i></button>
+                
+              </div>
+            </div>
+            <div class="box-body">
+              MacGyver is a highly customizable DevOps integration platform.  
+            </div><!-- /.box-body -->
+           
+          </div><!-- /.box -->
 </section><!-- /#introduction -->
 
    </body>

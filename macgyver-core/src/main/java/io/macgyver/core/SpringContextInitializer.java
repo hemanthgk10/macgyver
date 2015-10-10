@@ -92,7 +92,7 @@ public class SpringContextInitializer implements
 		}
 
 		overrides.setProperty("spring.gsp.reloadingEnabled", "true");
-		overrides.setProperty("spring.gsp.templateRoots","file:./web/templates,file:./src/main/web/templates,classpath:/web/templates");
+		overrides.setProperty("spring.gsp.templateRoots","file:./web/templates,file:./src/main/resources/web/templates,classpath:/web/templates");
 		
 		// Now that we have accumulated some overrides, we mutate the environment
 		if (!overrides.isEmpty()) {
