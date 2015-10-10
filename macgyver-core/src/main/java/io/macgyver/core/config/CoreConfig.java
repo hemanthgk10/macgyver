@@ -54,6 +54,8 @@ import io.macgyver.core.auth.UserManager;
 import io.macgyver.core.cluster.ClusterManager;
 import io.macgyver.core.cluster.NeoRxTcpDiscoveryIpFinder;
 import io.macgyver.core.crypto.Crypto;
+import io.macgyver.core.event.DistributedEventProviderProxy;
+import io.macgyver.core.event.provider.local.LocalEventProvider;
 import io.macgyver.core.eventbus.EventBusPostProcessor;
 import io.macgyver.core.eventbus.MacGyverAsyncEventBus;
 import io.macgyver.core.eventbus.MacGyverEventBus;
@@ -287,5 +289,13 @@ public class CoreConfig implements EnvironmentAware {
 		return ignite;
 	}
 	
+	@Bean
+	public DistributedEventProviderProxy macDistributedEventProviderProxy() {
+		
+		DistributedEventProviderProxy proxy = new DistributedEventProviderProxy();
+		LocalEventProvider p = new LocalEventProvider(proxy);
+		p.start();
+		return proxy;
+	}
 
 }
