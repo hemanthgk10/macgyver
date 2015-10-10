@@ -180,7 +180,7 @@ public class MacGyverUI extends UI {
 				menu.removeStyleName("valo-menu-visible");
 			}
 		});
-
+	
 	}
 
 	private ObjectNode createAppDescriptorSkeleton() {

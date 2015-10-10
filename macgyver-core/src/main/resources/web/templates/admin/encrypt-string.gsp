@@ -15,7 +15,7 @@
                 <div class="box-header with-border">
                   <h3 class="box-title">Encrypt String</h3>
                 </div><!-- /.box-header -->
-  <form role="form" method="post" action="/admin/encrypt-string">
+  <form role="form" method="post" action="/core/admin/encrypt-string">
                     <div class="box-body">
                       <div class="form-group">
                         <label for="plaintext1">Plain Text</label>

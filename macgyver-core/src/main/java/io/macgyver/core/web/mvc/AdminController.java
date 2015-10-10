@@ -25,6 +25,7 @@ import org.springframework.web.servlet.ModelAndView;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
@@ -50,25 +51,27 @@ import io.macgyver.core.script.ExtensionResourceProvider;
 import io.macgyver.core.service.ServiceDefinition;
 import io.macgyver.core.service.ServiceFactory;
 import io.macgyver.core.service.ServiceRegistry;
+import io.macgyver.core.web.UIContext;
+import io.macgyver.core.web.UIContextDecorator;
 
 @Component("macAdminController")
 @Controller
-@RequestMapping("/admin")
+@RequestMapping("/core/admin")
 @PreAuthorize("hasAnyRole('ROLE_MACGYVER_ADMIN')")
-public class AdminController {
+public class AdminController implements UIContextDecorator {
 
 	@Autowired
 	Crypto crypto;
 
 	@Autowired
 	ServiceRegistry serviceRegistry;
-	
+
 	Logger logger = LoggerFactory.getLogger(AdminController.class);
 	@Autowired
 	ApplicationContext applicationContext;
 
 	ObjectMapper mapper = new ObjectMapper();
-	
+
 	@RequestMapping("/spring-beans")
 	@ResponseBody
 	public ModelAndView springBeans() {
@@ -115,16 +118,16 @@ public class AdminController {
 		String alias = request.getParameter("alias");
 		String plaintext = request.getParameter("plaintext");
 
-		Map<String,Object> data = com.google.common.collect.Maps.newHashMap();
+		Map<String, Object> data = com.google.common.collect.Maps.newHashMap();
 		if (request.getMethod().equals("POST") && !Strings.isNullOrEmpty(alias) && !Strings.isNullOrEmpty(plaintext)) {
-		
+
 			String ciphertext = encrypt(plaintext.trim(), alias);
 			data.put("ciphertext", ciphertext);
 		}
 		try {
-			
+
 			List tmp = Collections.list(crypto.getKeyStoreManager().getKeyStore().aliases());
-			data.put("aliases",tmp);
+			data.put("aliases", tmp);
 			return new ModelAndView("/admin/encrypt-string", data);
 		} catch (GeneralSecurityException e) {
 			throw new MacGyverException();
@@ -135,8 +138,7 @@ public class AdminController {
 	@RequestMapping("/services")
 	@ResponseBody
 	public ModelAndView services() {
-		Map<String, ServiceDefinition> defMap = serviceRegistry
-				.getServiceDefinitions();
+		Map<String, ServiceDefinition> defMap = serviceRegistry.getServiceDefinitions();
 
 		List<JsonNode> serviceList = Lists.newArrayList();
 		for (ServiceDefinition def : defMap.values()) {
@@ -146,8 +148,8 @@ public class AdminController {
 			serviceList.add(n);
 		}
 
-		Map<String,Object> model = ImmutableMap.of("services",serviceList);
-		return new ModelAndView("/admin/services",model);
+		Map<String, Object> model = ImmutableMap.of("services", serviceList);
+		return new ModelAndView("/admin/services", model);
 
 	}
 
@@ -232,30 +234,45 @@ public class AdminController {
 		}
 		return Optional.absent();
 	}
-	
+
 	public String encrypt(String plaintext, String alias) {
-		
 
-			try {
+		try {
 
-				
-				Crypto crypto = Kernel.getApplicationContext().getBean(Crypto.class);
+			Crypto crypto = Kernel.getApplicationContext().getBean(Crypto.class);
 
-				String val = crypto.encryptString(plaintext,
-						alias);
+			String val = crypto.encryptString(plaintext, alias);
 
-				return val;
+			return val;
 
-			} catch (RuntimeException | GeneralSecurityException e) {
-				throw new RuntimeException();
-			}
+		} catch (RuntimeException | GeneralSecurityException e) {
+			throw new RuntimeException();
+		}
 	}
-	
+
 	List<ServiceFactory> getServiceFactories() {
-		Map<String, ServiceFactory> map = Kernel.getApplicationContext()
-				.getBeansOfType(ServiceFactory.class);
+		Map<String, ServiceFactory> map = Kernel.getApplicationContext().getBeansOfType(ServiceFactory.class);
 		List<ServiceFactory> list = Lists.newArrayList(map.values());
 
 		return list;
+	}
+
+	@Override
+	public void call(UIContext ctx) {
+		logger.info("DECORATING: " + ctx);
+		ctx.getOrCreateMenuItem("dashboard").label("Dashboard");
+		ctx.getOrCreateMenuItem("dashboard", "home").label("Home").url("/home");
+
+		if (AuthUtil.currentUserHasRole(MacGyverRole.ROLE_MACGYVER_ADMIN)) {
+			ctx.getOrCreateMenuItem("admin").label("Admin");
+			ctx.getOrCreateMenuItem("admin", "scripts").label("Scripts").url("/core/admin/scripts");
+			ctx.getOrCreateMenuItem("admin", "cluster-info").label("Cluster").url("/core/admin/cluster-info");
+			ctx.getOrCreateMenuItem("admin", "encrypt-string").label("Encrypt String")
+					.url("/core/admin/encrypt-string");
+			ctx.getOrCreateMenuItem("admin", "services").label("Services").url("/core/admin/services");
+			ctx.getOrCreateMenuItem("admin", "spring").label("Spring").url("/core/admin/spring-beans");
+			ctx.getOrCreateMenuItem("admin", "neo4j-browser").label("Neo4j").url("/browser");
+		}
+
 	}
 }
