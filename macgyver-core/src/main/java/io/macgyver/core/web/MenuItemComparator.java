@@ -20,7 +20,7 @@ public class MenuItemComparator implements Comparator<MenuItem> {
 		if (n1>n2) {
 			return 1;
 		}
-		if (n2<n2) {
+		if (n1<n2) {
 			return -1;
 		}
 

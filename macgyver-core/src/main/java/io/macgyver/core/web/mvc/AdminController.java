@@ -264,7 +264,7 @@ public class AdminController implements UIContextDecorator {
 		ctx.getOrCreateMenuItem("dashboard", "home").label("Home").url("/home");
 
 		if (AuthUtil.currentUserHasRole(MacGyverRole.ROLE_MACGYVER_ADMIN)) {
-			ctx.getOrCreateMenuItem("admin").label("Admin").style("fa fa-laptop").order(30);
+			ctx.getOrCreateMenuItem("admin").label("Admin").style("fa fa-laptop").order(50);
 			ctx.getOrCreateMenuItem("admin", "scripts").label("Scripts").url("/core/admin/scripts");
 			ctx.getOrCreateMenuItem("admin", "cluster-info").label("Cluster").url("/core/admin/cluster-info");
 			ctx.getOrCreateMenuItem("admin", "encrypt-string").label("Encrypt String")
