@@ -13,7 +13,7 @@
  */
 package io.macgyver.plugin.cloud.cloudstack;
 
-import io.macgyver.core.test.StandaloneServiceBuilder;
+import io.macgyver.core.util.StandaloneServiceBuilder;
 import io.macgyver.okrest.OkRestLoggingInterceptor;
 import io.macgyver.okrest.compat.OkUriBuilder;
 

@@ -22,9 +22,12 @@ import javax.servlet.http.HttpServletRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.macgyver.core.util.JsonNodes;
+import io.macgyver.core.util.Neo4jPropertyFlattener;
+
 public class BasicCheckInProcessor implements CheckInProcessor {
 
-	ObjectMapper mapper = new ObjectMapper();
+
 
 	@Override
 	public void decorate(ObjectNode request) {
@@ -39,7 +42,7 @@ public class BasicCheckInProcessor implements CheckInProcessor {
 	@Override
 	public ObjectNode process(HttpServletRequest request) throws IOException{
 
-		ObjectNode data = mapper.createObjectNode();
+		ObjectNode data = JsonNodes.mapper.createObjectNode();
 		if (request.getMethod().equalsIgnoreCase("GET")) {
 			
 			Enumeration<String> t = request.getParameterNames();
@@ -52,11 +55,12 @@ public class BasicCheckInProcessor implements CheckInProcessor {
 		else if (request.getMethod().equalsIgnoreCase("PUT") || request.getMethod().equalsIgnoreCase("POST")) {
 			if (request.getContentType().contains("json")) {
 				try (InputStream is = request.getInputStream()) {
-					data = (ObjectNode) mapper.readTree(is);
+					data = (ObjectNode) JsonNodes.mapper.readTree(is);
 				}
 				
 			}
 		}
+		
 		return data;
 	}
 

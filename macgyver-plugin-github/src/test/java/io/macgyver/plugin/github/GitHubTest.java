@@ -14,11 +14,6 @@
 package io.macgyver.plugin.github;
 
 
-import io.macgyver.core.service.ServiceRegistry;
-import io.macgyver.core.test.StandaloneServiceBuilder;
-import io.macgyver.okrest.OkRestTarget;
-import io.macgyver.test.MacGyverIntegrationTest;
-
 import java.io.IOException;
 
 import org.assertj.core.api.Assertions;
@@ -26,6 +21,11 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.kohsuke.github.GitHub;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import io.macgyver.core.service.ServiceRegistry;
+import io.macgyver.core.util.StandaloneServiceBuilder;
+import io.macgyver.okrest.OkRestTarget;
+import io.macgyver.test.MacGyverIntegrationTest;
 
 public class GitHubTest extends MacGyverIntegrationTest {
 
