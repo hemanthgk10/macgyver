@@ -13,6 +13,7 @@
  */
 package io.macgyver.core.util;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -29,7 +30,7 @@ import io.macgyver.core.MacGyverException;
 public class JsonNodes {
 
 	public static final ObjectMapper mapper = new ObjectMapper();
-	
+
 	public static void sort(List<JsonNode> n, Comparator<JsonNode> comparator) {
 		Preconditions.checkNotNull(n);
 		Preconditions.checkNotNull(comparator);
@@ -169,10 +170,8 @@ public class JsonNodes {
 				return 1;
 			}
 
-			Double s1 = o1.path(propertyName).asDouble(
-					defaultValue.doubleValue());
-			Double s2 = o2.path(propertyName).asDouble(
-					defaultValue.doubleValue());
+			Double s1 = o1.path(propertyName).asDouble(defaultValue.doubleValue());
+			Double s2 = o2.path(propertyName).asDouble(defaultValue.doubleValue());
 
 			return s1.compareTo(s2);
 		}
@@ -187,19 +186,29 @@ public class JsonNodes {
 		return new TextComparator(prop, false);
 	}
 
-	public static Comparator<JsonNode> textComparator(String prop,
-			boolean caseSenstitive) {
+	public static Comparator<JsonNode> textComparator(String prop, boolean caseSenstitive) {
 
 		return new TextComparator(prop, caseSenstitive);
 
 	}
-	
+
 	public static String pretty(JsonNode n) {
 		try {
-		return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(n);
-		}
-		catch (JsonProcessingException e) {
+			return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(n);
+		} catch (JsonProcessingException e) {
 			throw new MacGyverException(e);
 		}
+	}
+
+	public static List<JsonNode> arrayToList(JsonNode n, String property) {
+		return arrayToList(n.path(property));
+	}
+	public static List<JsonNode> arrayToList(JsonNode n) {
+		if (n.isArray()) {
+			return Lists.newArrayList(n.iterator());
+		} else {
+			return Lists.newArrayList();
+		}
+
 	}
 }

@@ -52,7 +52,7 @@ public class AppInstanceManager {
 		String host = data.path("host").asText();
 		String group = data.path("groupId").asText();
 		String app = data.path("appId").asText();
-		String qualifier = data.path("qualifier").asText("");
+		String index = data.path("index").asText("default");
 		
 		if (host.toLowerCase().equals("unknown") || host.toLowerCase().equals("localhost")) {
 			return new ObjectMapper().createObjectNode();
@@ -71,16 +71,16 @@ public class AppInstanceManager {
 				p.put("h", host);
 				p.put("gi", group);
 				p.put("ai", app);
-				p.put("q", qualifier);
-				set.put("qualifier", qualifier);
+				p.put("q", index);
+				set.put("index", index);
 				p.set("props", set);
 				
-				String query = "match (x:AppInstance {host:{h}, appId:{ai}, qualifier:{q}}) return x";
+				String query = "match (x:AppInstance {host:{h}, appId:{ai}, index:{q}}) return x";
 				
 				JsonNode current = neo4j.execCypher(query,p).toBlocking().firstOrDefault(null);
 				
 				
-				String cypher = "merge (x:AppInstance {host:{h}, appId:{ai}, qualifier:{q}}) set x={props} return x";
+				String cypher = "merge (x:AppInstance {host:{h}, appId:{ai}, index:{q}}) set x={props} return x";
 	
 				JsonNode r = neo4j.execCypher(cypher, p).toBlocking().firstOrDefault(null);
 				processChanges(current, set);
