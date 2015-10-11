@@ -13,6 +13,10 @@
  */
 package io.macgyver.plugin.cmdb;
 
+import io.macgyver.core.event.DistributedEvent;
+import io.macgyver.core.event.DistributedEventProviderProxy;
+import io.macgyver.core.util.JsonNodes;
+import io.macgyver.core.util.Neo4jPropertyFlattener;
 import io.macgyver.neorx.rest.NeoRxClient;
 
 import org.slf4j.Logger;
@@ -30,18 +34,21 @@ public class AppInstanceManager {
 	@Autowired
 	NeoRxClient neo4j;
 
+	@Autowired
+	DistributedEventProviderProxy devent;
 	
-
+	Neo4jPropertyFlattener flattener = new Neo4jPropertyFlattener();
 	
 	CheckInProcessor processor = new BasicCheckInProcessor();
 
 
 	public ObjectNode processCheckIn(ObjectNode data) {
 
+		data = flattener.flatten(data);
 		String host = data.path("host").asText();
 		String group = data.path("groupId").asText();
 		String app = data.path("appId").asText();
-
+		String qualifier = data.path("qualifier").asText("");
 		
 		if (host.toLowerCase().equals("unknown") || host.toLowerCase().equals("localhost")) {
 			return new ObjectMapper().createObjectNode();
@@ -60,11 +67,19 @@ public class AppInstanceManager {
 				p.put("h", host);
 				p.put("gi", group);
 				p.put("ai", app);
+				p.put("q", qualifier);
+				set.put("qualifier", qualifier);
 				p.set("props", set);
-							
-				String cypher = "merge (x:AppInstance {host:{h}, groupId:{gi}, appId:{ai}}) set x={props} return x";
+				
+				String query = "match (x:AppInstance {host:{h}, appId:{ai}, qualifier:{q}}) return x";
+				
+				JsonNode current = neo4j.execCypher(query,p).toBlocking().firstOrDefault(null);
+				
+				
+				String cypher = "merge (x:AppInstance {host:{h}, appId:{ai}, qualifier:{q}}) set x={props} return x";
 	
 				JsonNode r = neo4j.execCypher(cypher, p).toBlocking().firstOrDefault(null);
+				processChanges(current, set);
 				if (r!=null) {
 					return (ObjectNode) r;
 				}
@@ -78,5 +93,41 @@ public class AppInstanceManager {
 	public void setCheckInProcessor(CheckInProcessor p) {
 		this.processor = p;
 	}
+	
+	boolean hasAttributeChanged(JsonNode a, JsonNode b, String attribute) {
+		return a!=null && b!=null && (!a.path(attribute).asText().equals(b.path(attribute).asText()));
+	}
+	
+	public void processChanges(JsonNode currentProperties, JsonNode newProperties) {
+		if (currentProperties==null && newProperties!=null) {
+			publishChange("app.instance.discover",currentProperties,newProperties);
+			publishChange("app.instance.start",currentProperties,newProperties);
+		}
+	
+		if (currentProperties!=null && newProperties!=null) {
+			if (hasAttributeChanged(currentProperties, newProperties, "version")) {
+				// version change
+				publishChange("app.instance.version.update",currentProperties, newProperties);
+			}		
+			if (hasAttributeChanged(currentProperties,newProperties,"revision")) {
+				publishChange("app.instance.revision.update",currentProperties,newProperties);
+			}
+			if (hasAttributeChanged(currentProperties,newProperties,"processId")) {
+				publishChange("app.instance.start",currentProperties,newProperties);
+			}
+			
+		}
 
+	}
+
+	protected void publishChange(String topic, JsonNode currentProperties, JsonNode newProperties) {
+		ObjectNode payload = JsonNodes.mapper.createObjectNode();
+		payload.set("previous", currentProperties);
+		payload.set("current",newProperties);
+		DistributedEvent evt = DistributedEvent.create().topic(topic).payload(payload);
+		
+		logger.info("change: "+JsonNodes.pretty(evt.getJson()));
+		devent.publish(evt);
+		
+	}
 }

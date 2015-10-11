@@ -22,10 +22,14 @@ import javax.servlet.http.HttpServletRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.macgyver.core.util.Neo4jPropertyFlattener;
+
 public class BasicCheckInProcessor implements CheckInProcessor {
 
 	ObjectMapper mapper = new ObjectMapper();
 
+	Neo4jPropertyFlattener flattener = new Neo4jPropertyFlattener();
+	
 	@Override
 	public void decorate(ObjectNode request) {
 
@@ -57,6 +61,7 @@ public class BasicCheckInProcessor implements CheckInProcessor {
 				
 			}
 		}
+		
 		return data;
 	}
 

@@ -25,6 +25,7 @@ public class DistributedEventProviderProxy implements DistributedEventProvider {
 
 	@Override
 	public boolean publish(DistributedEvent event) {
+	
 		return proxy.get().publish(event);
 
 	}
