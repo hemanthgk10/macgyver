@@ -28,8 +28,7 @@ public class BasicCheckInProcessor implements CheckInProcessor {
 
 	ObjectMapper mapper = new ObjectMapper();
 
-	Neo4jPropertyFlattener flattener = new Neo4jPropertyFlattener();
-	
+
 	@Override
 	public void decorate(ObjectNode request) {
 

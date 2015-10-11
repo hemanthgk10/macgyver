@@ -13,7 +13,7 @@
  */
 package io.macgyver.plugin.etcd;
 
-import io.macgyver.core.test.StandaloneServiceBuilder;
+import io.macgyver.core.util.StandaloneServiceBuilder;
 import mousio.etcd4j.EtcdClient;
 
 import org.assertj.core.api.Assertions;

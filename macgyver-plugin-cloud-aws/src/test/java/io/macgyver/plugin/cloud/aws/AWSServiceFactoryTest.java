@@ -13,14 +13,14 @@
  */
 package io.macgyver.plugin.cloud.aws;
 
-import io.macgyver.core.test.StandaloneServiceBuilder;
-
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.codedeploy.AmazonCodeDeployClient;
+
+import io.macgyver.core.util.StandaloneServiceBuilder;
 
 public class AWSServiceFactoryTest {
 

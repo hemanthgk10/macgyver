@@ -15,19 +15,12 @@ package io.macgyver.plugin.cloud.aws.ec2;
 
 import java.io.IOException;
 
-import io.macgyver.core.test.StandaloneServiceBuilder;
-import io.macgyver.neorx.rest.NeoRxClient;
-import io.macgyver.plugin.cloud.aws.AWSServiceClient;
-import io.macgyver.plugin.cloud.aws.AWSServiceFactory;
-import io.macgyver.test.MacGyverIntegrationTest;
-
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fasterxml.jackson.databind.JsonNode;
+
+import io.macgyver.test.MacGyverIntegrationTest;
 
 public class EC2InstanceScannerTest extends MacGyverIntegrationTest {
 

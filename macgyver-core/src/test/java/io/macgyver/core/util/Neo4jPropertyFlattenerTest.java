@@ -4,12 +4,16 @@ import java.io.IOException;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class Neo4jPropertyFlattenerTest {
 
+	Logger logger = LoggerFactory.getLogger(Neo4jPropertyFlattenerTest.class);
+	
 	String example = "\n" + 
 			"{\n" + 
 			"  \"host\" : \"myhost01\",\n" + 
@@ -46,7 +50,7 @@ public class Neo4jPropertyFlattenerTest {
 	public void testCheckIn() throws IOException {
 		JsonNode n = JsonNodes.mapper.readTree(example);
 		
-		System.out.println(JsonNodes.pretty(new Neo4jPropertyFlattener().flatten(n)));
+		System.out.println(JsonNodes.pretty(new Neo4jPropertyFlattener().call(n)));
 	}
 	@Test
 	public void testIt() {
@@ -62,7 +66,7 @@ public class Neo4jPropertyFlattenerTest {
 		n.set("n1", JsonNodes.mapper.createObjectNode().set("n2", JsonNodes.mapper.createObjectNode().put("abc", 123)));
 		n.set("mixedType", JsonNodes.mapper.createArrayNode().add("10").add(10));
 		n.set("singleType", JsonNodes.mapper.createArrayNode().add(20).add(10));
-		ObjectNode out = pf.flatten(n);
+		ObjectNode out = pf.call(n);
 		
 		Assertions.assertThat(out.path("a").asInt()).isEqualTo(1);
 		Assertions.assertThat(out.path("b").asInt()).isEqualTo(2);
@@ -79,7 +83,7 @@ public class Neo4jPropertyFlattenerTest {
 		Assertions.assertThat(out.path("foo_bar").asText()).isEqualTo("baz");
 		Assertions.assertThat(out.path("fu_bar").asText()).isEqualTo("foobar");
 		Assertions.assertThat(out.path("player_name").asText()).isEqualTo("Jerry Garcia");
-		System.out.println(JsonNodes.pretty(out));
+		logger.info(JsonNodes.pretty(out));
 		
 	}
 

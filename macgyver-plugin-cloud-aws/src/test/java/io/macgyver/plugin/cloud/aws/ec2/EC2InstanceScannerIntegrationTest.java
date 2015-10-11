@@ -13,12 +13,6 @@
  */
 package io.macgyver.plugin.cloud.aws.ec2;
 
-import io.macgyver.core.test.StandaloneServiceBuilder;
-import io.macgyver.neorx.rest.NeoRxClient;
-import io.macgyver.plugin.cloud.aws.AWSServiceClient;
-import io.macgyver.plugin.cloud.aws.AWSServiceFactory;
-import io.macgyver.test.MacGyverIntegrationTest;
-
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,6 +21,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.base.Strings;
+
+import io.macgyver.core.util.StandaloneServiceBuilder;
+import io.macgyver.neorx.rest.NeoRxClient;
+import io.macgyver.plugin.cloud.aws.AWSServiceClient;
+import io.macgyver.plugin.cloud.aws.AWSServiceFactory;
+import io.macgyver.test.MacGyverIntegrationTest;
 
 public class EC2InstanceScannerIntegrationTest extends MacGyverIntegrationTest {
 	@Autowired

@@ -13,8 +13,7 @@
  */
 package io.macgyver.plugin.atlassian.jira;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import io.macgyver.core.test.StandaloneServiceBuilder;
+import static org.assertj.core.api.StrictAssertions.assertThat;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Rule;
@@ -25,8 +24,10 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.RecordedRequest;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
+import com.squareup.okhttp.mockwebserver.RecordedRequest;
+
+import io.macgyver.core.util.StandaloneServiceBuilder;
 
 public class JiraClientTest   {
 
@@ -50,7 +51,7 @@ public class JiraClientTest   {
 	
 
 		// create a jira client that points to our mock server
-		JiraClient client = StandaloneServiceBuilder
+		JiraClient client = io.macgyver.core.util.StandaloneServiceBuilder
 				.forServiceFactory(JiraServiceFactory.class)
 				.property("url", mockServer.getUrl("/rest").toString())
 				.property("username", "JerryGarcia")

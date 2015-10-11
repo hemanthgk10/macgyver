@@ -18,6 +18,9 @@ import io.macgyver.core.event.DistributedEventProviderProxy;
 import io.macgyver.core.util.JsonNodes;
 import io.macgyver.core.util.Neo4jPropertyFlattener;
 import io.macgyver.neorx.rest.NeoRxClient;
+import javafx.beans.value.ObservableValueBase;
+
+import java.util.Observable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +47,8 @@ public class AppInstanceManager {
 
 	public ObjectNode processCheckIn(ObjectNode data) {
 
-		data = flattener.flatten(data);
+		data = rx.Observable.just(data).map(new Neo4jPropertyFlattener()).toBlocking().first();
+	
 		String host = data.path("host").asText();
 		String group = data.path("groupId").asText();
 		String app = data.path("appId").asText();

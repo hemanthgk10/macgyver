@@ -11,16 +11,16 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
-public class Neo4jPropertyFlattener {
+import rx.functions.Func1;
 
-	ObjectMapper mapper = new ObjectMapper();
+public class Neo4jPropertyFlattener implements Func1<JsonNode, ObjectNode>{
 
-	public ObjectNode flatten(ObjectNode input) {
-		return flatten(input, mapper.createObjectNode(), null);
-	}
+	static ObjectMapper mapper = new ObjectMapper();
 
-	ObjectNode flatten(JsonNode jsonNode) {
-		return flatten((ObjectNode) jsonNode);
+
+
+	ObjectNode flattenx(JsonNode jsonNode) {
+		return flatten((ObjectNode) jsonNode, mapper.createObjectNode(), null);
 	}
 
 	ObjectNode flatten(JsonNode input, ObjectNode output, String context) {
@@ -96,5 +96,10 @@ public class Neo4jPropertyFlattener {
 			}
 		}
 		return sb.toString();
+	}
+
+	@Override
+	public ObjectNode call(JsonNode t) {
+		return flatten(t, mapper.createObjectNode(), null);
 	}
 }
