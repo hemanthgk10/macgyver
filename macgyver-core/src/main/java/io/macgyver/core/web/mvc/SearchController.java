@@ -13,6 +13,10 @@
  */
 package io.macgyver.core.web.mvc;
 
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
@@ -20,40 +24,51 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.google.gwt.thirdparty.guava.common.base.Strings;
+import com.google.gwt.thirdparty.guava.common.collect.Lists;
+
 import io.macgyver.core.web.UIContext;
+import io.macgyver.core.web.UIContext.MenuItem;
 import io.macgyver.core.web.UIContextDecorator;
 
-@Component("macHomeController")
+@Component("macSearchController")
 @Controller
 @PreAuthorize("hasAnyRole('ROLE_MACGYVER_USER','ROLE_MACGYVER_ADMIN')")
-public class HomeController implements UIContextDecorator {
+public class SearchController {
 
-	@RequestMapping("/")
+	@RequestMapping("/core/search")
 	@ResponseBody
-	public ModelAndView home() {
+	public ModelAndView search(HttpServletRequest request) {
 
-		return new ModelAndView("redirect:/home");
+		String query = Strings.nullToEmpty(request.getParameter("q")).toLowerCase();
+
+		UIContext uic = UIContext.forCurrentUser();
+
+		List<MenuItem> results = Lists.newArrayList();
 		
+		search(query,uic.getRootMenu(),results);
+		
+
+		return new ModelAndView("/core/search", "results", results);
+
 	}
+
+	public void search(String q, MenuItem current, List<MenuItem> results) {
+		current.getItems().iterator().forEachRemaining(it -> {
+
+			search(q,it,results);
+			
+
+		});
+		
 	
-	@RequestMapping("/home")
-	@ResponseBody
-	public ModelAndView lteHome() {
+		String label = Strings.nullToEmpty(current.getLabel()).toLowerCase();
 
-		return new ModelAndView("/home");
+
+		if (label.contains(q)) {
+			results.add(current);
 		
-	}
-	
-	@RequestMapping("/test/throwException")
-	@ResponseBody
-	public ModelAndView throwException() {
-		throw new RuntimeException("test exception");
+		}
 	}
 
-	@Override
-	public void call(UIContext ctx) {
-		ctx.getOrCreateMenuItem("dashboard").label("Dashboard").style("fa fa-dashboard").order(10);
-		ctx.getOrCreateMenuItem("dashboard", "home").label("Home").url("/home");
-		
-	}
 }

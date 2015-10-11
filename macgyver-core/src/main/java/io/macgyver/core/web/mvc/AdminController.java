@@ -273,8 +273,7 @@ public class AdminController implements UIContextDecorator {
 	@Override
 	public void call(UIContext ctx) {
 		logger.info("DECORATING: " + ctx);
-		ctx.getOrCreateMenuItem("dashboard").label("Dashboard").style("fa fa-dashboard").order(10);
-		ctx.getOrCreateMenuItem("dashboard", "home").label("Home").url("/home");
+		
 
 		if (AuthUtil.currentUserHasRole(MacGyverRole.ROLE_MACGYVER_ADMIN)) {
 			ctx.getOrCreateMenuItem("admin").label("Manage MacGyver").style("fa fa-gear").order(50);
