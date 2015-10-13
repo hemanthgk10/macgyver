@@ -145,8 +145,7 @@ public class MacGyverUI extends UI {
 
 		String f = Page.getCurrent().getUriFragment();
 		if (f == null || f.equals("")) {
-			navigator.navigateTo("home");
-           // UI.getCurrent().getPage().setLocation(path.get());
+			UI.getCurrent().getPage().setLocation("/home");
 		}
 
 		navigator.addViewChangeListener(new ViewChangeListener() {
@@ -244,7 +243,7 @@ public class MacGyverUI extends UI {
 
 				if (event != null && event.getClickedComponent() != null
 						&& event.getClickedComponent() == title) {
-					navigator.navigateTo("home");
+						    UI.getCurrent().getPage().setLocation("/home");
 				}
 
 			}
