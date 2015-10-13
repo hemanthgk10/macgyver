@@ -30,7 +30,7 @@ public class UIContextManager {
 	public UIContext forCurrentUser() {
 
 		
-		
+		try {
 		MacGyverWebContext ctx = MacGyverWebContext.get();
 		
 		UIContext nc = (UIContext) ctx.getServletRequest().getSession(true).getAttribute(UIContext.class.getName());
@@ -52,6 +52,10 @@ public class UIContextManager {
 		}
 		nc.sort();
 		return nc;
+		}
+		catch (RuntimeException e) {
+			return new UIContext();
+		}
 	}
 
 }
