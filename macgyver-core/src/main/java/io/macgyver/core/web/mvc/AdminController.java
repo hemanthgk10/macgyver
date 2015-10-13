@@ -71,7 +71,7 @@ import io.macgyver.core.web.UIContextDecorator;
 @Controller
 @RequestMapping("/core/admin")
 @PreAuthorize("hasAnyRole('ROLE_MACGYVER_ADMIN')")
-public class AdminController implements UIContextDecorator {
+public class AdminController  {
 
 	@Autowired
 	Crypto crypto;
@@ -270,21 +270,6 @@ public class AdminController implements UIContextDecorator {
 		return list;
 	}
 
-	@Override
-	public void call(UIContext ctx) {
-		logger.info("DECORATING: " + ctx);
-		
 
-		if (AuthUtil.currentUserHasRole(MacGyverRole.ROLE_MACGYVER_ADMIN)) {
-			ctx.getOrCreateMenuItem("admin").label("Manage MacGyver").style("fa fa-gear").order(50);
-			ctx.getOrCreateMenuItem("admin", "scripts").label("Scripts").url("/core/admin/scripts");
-			ctx.getOrCreateMenuItem("admin", "cluster-info").label("Cluster").url("/core/admin/cluster-info");
-			ctx.getOrCreateMenuItem("admin", "encrypt-string").label("Encrypt String")
-					.url("/core/admin/encrypt-string");
-			ctx.getOrCreateMenuItem("admin", "services").label("Services").url("/core/admin/services");
-			ctx.getOrCreateMenuItem("admin", "spring").label("Spring").url("/core/admin/spring-beans");
-			ctx.getOrCreateMenuItem("admin", "neo4j-browser").label("Neo4j").url("/browser");
-		}
 
-	}
 }

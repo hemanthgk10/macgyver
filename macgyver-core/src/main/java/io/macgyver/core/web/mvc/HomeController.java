@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
+import io.macgyver.core.auth.AuthUtil;
+import io.macgyver.core.auth.MacGyverRole;
 import io.macgyver.core.web.UIContext;
 import io.macgyver.core.web.UIContextDecorator;
 
@@ -55,5 +57,16 @@ public class HomeController implements UIContextDecorator {
 		ctx.getOrCreateMenuItem("dashboard").label("Dashboard").style("fa fa-dashboard").order(10);
 		ctx.getOrCreateMenuItem("dashboard", "home").label("Home").url("/home");
 		
+		
+		if (AuthUtil.currentUserHasRole(MacGyverRole.ROLE_MACGYVER_ADMIN)) {
+			ctx.getOrCreateMenuItem("admin").label("Manage MacGyver").style("fa fa-gear").order(50);
+			ctx.getOrCreateMenuItem("admin", "scripts").label("Scripts").url("/core/admin/scripts");
+			ctx.getOrCreateMenuItem("admin", "cluster-info").label("Cluster").url("/core/admin/cluster-info");
+			ctx.getOrCreateMenuItem("admin", "encrypt-string").label("Encrypt String")
+					.url("/core/admin/encrypt-string");
+			ctx.getOrCreateMenuItem("admin", "services").label("Services").url("/core/admin/services");
+			ctx.getOrCreateMenuItem("admin", "spring").label("Spring").url("/core/admin/spring-beans");
+			ctx.getOrCreateMenuItem("admin", "neo4j-browser").label("Neo4j").url("/browser");
+		}
 	}
 }
