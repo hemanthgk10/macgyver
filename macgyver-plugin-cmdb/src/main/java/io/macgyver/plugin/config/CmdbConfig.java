@@ -13,8 +13,10 @@
  */
 package io.macgyver.plugin.config;
 
+import io.macgyver.plugin.cmdb.AppInstanceController;
 import io.macgyver.plugin.cmdb.AppInstanceManager;
 import io.macgyver.plugin.cmdb.CmdbApiController;
+import io.macgyver.plugin.cmdb.CmdbMenuDecorator;
 import io.macgyver.plugin.cmdb.CmdbPlugin;
 
 import org.springframework.context.annotation.Bean;
@@ -39,5 +41,14 @@ public class CmdbConfig {
 	@Bean
 	public CmdbPlugin macCmdbUIManager() {
 		return new CmdbPlugin();
+	}
+	
+	@Bean
+	public AppInstanceController macAppInstanceController() {
+		return new AppInstanceController();
+	}
+	@Bean
+	public CmdbMenuDecorator macCmdbMenuDecorator() {
+		return new CmdbMenuDecorator();
 	}
 }
