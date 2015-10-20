@@ -33,6 +33,13 @@ public class AWSServiceClientImpl implements AWSServiceClient {
 	AWSCredentialsProvider credentialsProvider;
 	Region defaultRegion=null;
 	
+	public  AWSServiceClientImpl() {
+		super();
+	}
+	
+	public AWSServiceClientImpl(AWSCredentialsProvider p) {
+		credentialsProvider = p;
+	}
 	@Override
 	public AWSCredentialsProvider getCredentialsProvider() {
 		return credentialsProvider;

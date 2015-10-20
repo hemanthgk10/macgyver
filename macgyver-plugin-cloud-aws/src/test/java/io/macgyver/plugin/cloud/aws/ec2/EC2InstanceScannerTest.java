@@ -18,8 +18,10 @@ import java.io.IOException;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.fasterxml.jackson.databind.JsonNode;
 
+import io.macgyver.plugin.cloud.aws.AWSServiceClientImpl;
 import io.macgyver.test.MacGyverIntegrationTest;
 
 public class EC2InstanceScannerTest extends MacGyverIntegrationTest {
@@ -132,4 +134,6 @@ public class EC2InstanceScannerTest extends MacGyverIntegrationTest {
 		Assertions.assertThat(out.get("ec2_privateIpAddress").asText()).isEqualTo("10.101.1.101");
 		Assertions.assertThat(out.get("ec2_stateReason").isNull()).isTrue();
 	}
+	
+	
 }
