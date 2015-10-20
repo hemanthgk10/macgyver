@@ -17,33 +17,44 @@ import java.io.IOException;
 import java.net.URL;
 
 import org.assertj.core.api.Assertions;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.fasterxml.jackson.databind.JsonNode;
 
+import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.plugin.cloud.aws.AWSServiceClientImpl;
 import io.macgyver.test.MacGyverIntegrationTest;
 
-public class VPCScannerTest extends MacGyverIntegrationTest {
+public class ScannerIntegrationTest extends MacGyverIntegrationTest {
 
 	
+	@Autowired
+	NeoRxClient neo4j;
 	
+
 	@Test
-	public void testIt3() {
+	public void testIt() {
 		
 		
-		// versioning this class is turning out to be hard
+		/*
+		 * // versioning this class is turning out to be hard
+		 
 		ClassLoader classLoader = getClass().getClassLoader();
 		URL resource = classLoader.getResource("org/apache/http/impl/client/DefaultConnectionKeepAliveStrategy.class");
-	
+		*/
 		
 		AWSServiceClientImpl c = new AWSServiceClientImpl(new DefaultAWSCredentialsProviderChain());
 		
 		
-		VPCServiceScanner scanner = new VPCServiceScanner(c, null);
+	//	VPCScanner scanner = new VPCScanner(c, neo4j,"000000");
 		
-		scanner.scan("us-west-2");
+		//scanner.scan("us-west-2");
+		
+		SubnetScanner scanner = new SubnetScanner(c, neo4j, "000000");
+		scanner.scanAllRegions();
 		
 	}
 }
