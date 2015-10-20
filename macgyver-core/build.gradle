@@ -21,6 +21,10 @@ mainClassName = 'io.macgyver.core.ServerMain'
 
 dependencies {
     
+    compile 'org.apache.httpcomponents:httpcore:4.3.3' // dependency FU
+    compile 'org.apache.httpcomponents:httpclient:4.3.6'
+    
+
     compile "org.codehaus.groovy:groovy-all:${GROOVY_VERSION}"
     compile "org.slf4j:jcl-over-slf4j:${SLF4J_VERSION}"
     compile "io.macgyver.neorx:neorx:${NEORX_VERSION}"
