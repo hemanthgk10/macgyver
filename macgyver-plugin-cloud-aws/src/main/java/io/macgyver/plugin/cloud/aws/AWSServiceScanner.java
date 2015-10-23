@@ -20,15 +20,15 @@ public  abstract class AWSServiceScanner {
 	Logger logger = LoggerFactory.getLogger(AWSServiceScanner.class);
 	static ObjectMapper mapper = new ObjectMapper();
 	NeoRxClient neo4j;
-	String accountId;
+
 	
-	public AWSServiceScanner(AWSServiceClient client, NeoRxClient neo4j, String accountId) {
+	public AWSServiceScanner(AWSServiceClient client, NeoRxClient neo4j) {
 		Preconditions.checkNotNull(client);
 		Preconditions.checkNotNull(neo4j);
-		Preconditions.checkNotNull(accountId);
+	
 		this.client = client;
 		this.neo4j = neo4j;
-		this.accountId = accountId;
+		
 	}
 	
 	public AWSServiceClient getAWSServiceClient() {
@@ -83,7 +83,7 @@ public  abstract class AWSServiceScanner {
 		return r;
 	}
 	public String getAccountId() {
-		return accountId;
+		return client.getAccountId();
 	}
 	
 	public ObjectNode convertAwsObject(Object x, Region region) {

@@ -56,5 +56,8 @@ public interface AWSServiceClient {
 	AmazonEC2Client createEC2Client(Regions region);
 	AmazonEC2Client createEC2Client(Region region);
 	
+	String getAccountId();
+	
+	
 
 }

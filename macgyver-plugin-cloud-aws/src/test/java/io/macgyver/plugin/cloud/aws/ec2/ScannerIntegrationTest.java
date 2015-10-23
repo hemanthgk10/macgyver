@@ -53,7 +53,7 @@ public class ScannerIntegrationTest extends MacGyverIntegrationTest {
 		
 		//scanner.scan("us-west-2");
 		
-		SubnetScanner scanner = new SubnetScanner(c, neo4j, "000000");
+		SubnetScanner scanner = new SubnetScanner(c, neo4j);
 		scanner.scanAllRegions();
 		
 	}

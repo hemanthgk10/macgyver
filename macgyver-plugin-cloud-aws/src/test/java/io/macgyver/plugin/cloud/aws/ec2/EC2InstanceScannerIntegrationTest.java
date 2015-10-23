@@ -54,6 +54,6 @@ public class EC2InstanceScannerIntegrationTest extends MacGyverIntegrationTest {
 
 		EC2InstanceScanner s = new EC2InstanceScanner(sf, neo4j);
 
-		s.scan();
+		s.scanAllRegions();
 	}
 }

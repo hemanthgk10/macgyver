@@ -40,6 +40,7 @@ public class AWSServiceFactory extends ServiceFactory<AWSServiceClient> {
 	protected AWSServiceClient doCreateInstance(ServiceDefinition def) {
 
 		AWSServiceClientImpl ci = new AWSServiceClientImpl();
+		ci.setAccountId(def.getProperty("accountId"));
 		ci.credentialsProvider = newProviderChain(def);
 		String regionName = Strings.emptyToNull(Strings.nullToEmpty(
 				def.getProperties().getProperty("region")).trim());
@@ -55,7 +56,7 @@ public class AWSServiceFactory extends ServiceFactory<AWSServiceClient> {
 
 		final String accessKey = def.getProperties().getProperty("accessKey");
 		final String secretKey = def.getProperties().getProperty("secretKey");
-
+	
 		AWSCredentialsProvider cp = new AWSCredentialsProvider() {
 
 			@Override
