@@ -3,7 +3,6 @@ package io.macgyver.plugin.cloud.aws;
 import java.util.Optional;
 
 
-import org.assertj.core.util.Preconditions;
 
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
@@ -11,7 +10,7 @@ import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.DescribeRegionsResult;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
+import com.google.common.base.Preconditions;
 
 import io.macgyver.neorx.rest.NeoRxClient;
 

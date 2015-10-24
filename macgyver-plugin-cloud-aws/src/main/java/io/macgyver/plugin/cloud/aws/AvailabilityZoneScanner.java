@@ -4,13 +4,13 @@ import io.macgyver.neorx.rest.NeoRxClient;
 
 import java.util.Optional;
 
-import org.assertj.core.util.Preconditions;
 
 import com.amazonaws.regions.Region;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.DescribeAvailabilityZonesResult;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Preconditions;
 
 public class AvailabilityZoneScanner extends AWSServiceScanner {
 
