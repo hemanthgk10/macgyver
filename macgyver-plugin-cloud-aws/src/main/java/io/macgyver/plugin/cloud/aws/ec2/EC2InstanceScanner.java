@@ -20,6 +20,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.macgyver.core.util.JsonNodes;
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.plugin.cloud.aws.AWSServiceClient;
 import io.macgyver.plugin.cloud.aws.AWSServiceScanner;
@@ -41,44 +42,55 @@ import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 
-public class EC2InstanceScanner extends AWSServiceScanner  {
-
+public class EC2InstanceScanner extends AWSServiceScanner {
 
 	Logger logger = LoggerFactory.getLogger(EC2InstanceScanner.class);
 
-
 	public EC2InstanceScanner(AWSServiceClient client, NeoRxClient neo4j) {
-		super(client,neo4j);
+		super(client, neo4j);
 	}
-	
-	
-	
-/*
-	public void writeInstance(JsonNode instanceNode) throws IOException {
 
-	
-		String cypher = "MERGE (ci:ComputeInstance {provider: 'ec2', ec2_regionName: {regionName}, ec2_instanceId: {instanceId}}) ON MATCH set ci += {props}, ci.updateTs={now} ON CREATE set ci += {props}, ci.createTs={now},ci.updateTs={now} return ci";
-		getNeoRxClient().execCypher(cypher, "instanceId",instanceNode.get("ec2_instanceId").asText(),"regionName",instanceNode.get("ec2_regionName").asText(),"props",instanceNode, "now", System.currentTimeMillis());
-	
-	}
-*/
-
-
+	/*
+	 * public void writeInstance(JsonNode instanceNode) throws IOException {
+	 * 
+	 * 
+	 * String cypher =
+	 * "MERGE (ci:ComputeInstance {provider: 'ec2', ec2_regionName: {regionName}, ec2_instanceId: {instanceId}}) ON MATCH set ci += {props}, ci.updateTs={now} ON CREATE set ci += {props}, ci.createTs={now},ci.updateTs={now} return ci"
+	 * ; getNeoRxClient().execCypher(cypher,
+	 * "instanceId",instanceNode.get("ec2_instanceId").asText(),"regionName",
+	 * instanceNode.get("ec2_regionName").asText(),"props",instanceNode, "now",
+	 * System.currentTimeMillis());
+	 * 
+	 * }
+	 */
 
 	@Override
 	public Optional<String> computeArn(JsonNode n) {
-		return Optional.empty(); // TODO replace with real ARN
+		
+		return Optional.of(String.format("arn:aws:ec2:%s:%s:instance/%s", n.path("aws_region").asText(),n.path("aws_account").asText(),n.path("aws_instanceId").asText()));
+
 	}
-
-
-
 
 	@Override
 	public void scan(Region region) {
-		// TODO Auto-generated method stub
-		
+		AmazonEC2Client client = getAWSServiceClient().createEC2Client(region);
+
+		DescribeInstancesResult result = client.describeInstances();
+
+		result.getReservations().forEach(reservation -> {
+			
+			reservation.getInstances().forEach(instance -> {
+				
+				JsonNode n = convertAwsObject(instance, region);
+
+				String cypher = "MERGE (x:AwsEc2Instance {aws_arn:{arn}}) set x+={props}, x.updateTs=timestamp()";
+				
+				getNeoRxClient().execCypher(cypher, "arn",n.path("aws_arn").asText(),"props",n);
+
+			});
+			
+		});
+
 	}
-	
-	
-	
+
 }

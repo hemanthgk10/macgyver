@@ -40,7 +40,7 @@ public class AWSScannerGroup extends AWSServiceScanner {
 				it.scan(region);
 			}
 			catch (RuntimeException e) {
-				logger.error("problem scanning region "+region);
+				logger.error("problem scanning region "+region,e);
 			}
 		});
 		
