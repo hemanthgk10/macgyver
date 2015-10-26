@@ -32,14 +32,14 @@ public class AvailabilityZoneScanner extends AWSServiceScanner {
 			try {
 				ObjectNode n = convertAwsObject(it, region);
 				
-				String cypher = "merge (x:AwsAvailabilityZone {aws_zoneName:{aws_zoneName}, aws_region:{aws_region}}) set x+={props} set x.updateTs=timestamp()";
-				String mapCypher = "match (x:AwsAvailabilityZone {aws_zoneName:{aws_zoneName}, aws_region:{aws_region}}), "
-						+ "(y:AwsSubnet {aws_availabilityZone:{aws_zoneName}, aws_region:{aws_region}}) merge (y)<-[:CONTAINS]-(x)";
-				NeoRxClient neoRx = getNeoRxClient();
+				String cypher = "match (x:AwsSubnet {aws_availabilityZone:{aws_zoneName}, aws_region:{aws_region}}) "
+						+ "merge (y:AwsAvailabilityZone {aws_zoneName:{aws_zoneName}, aws_region:{aws_region}}) set y+={props} set y.updateTs=timestamp() "
+						+ "merge (y)-[:CONTAINS]->(x)";
 				
+				NeoRxClient neoRx = getNeoRxClient();	
 				Preconditions.checkNotNull(neoRx);
+				
 				neoRx.execCypher(cypher, "aws_zoneName",n.path("aws_zoneName").asText(), "aws_region",n.path("aws_region").asText(), "props",n);
-				neoRx.execCypher(mapCypher, "aws_zoneName",n.path("aws_zoneName").asText(), "aws_region",n.path("aws_region").asText(), "props",n);
 			} catch (RuntimeException e) { 
 				logger.warn("problem scanning availability zones",e);
 			}		
