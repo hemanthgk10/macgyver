@@ -9,11 +9,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.DescribeVpcsResult;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Preconditions;
 
@@ -29,11 +27,6 @@ public class VPCScanner extends AWSServiceScanner {
 
 	}
 
-
-
-	
-	
-
 	
 	@Override
 	public void scan(Region region) {
@@ -46,30 +39,36 @@ public class VPCScanner extends AWSServiceScanner {
 			NeoRxClient neoRx = getNeoRxClient();
 			Preconditions.checkNotNull(neoRx);
 			
-			result.getVpcs().forEach(it -> {
-				try {
+			try {
+				result.getVpcs().forEach(it -> {
+					
 					ObjectNode n = convertAwsObject(it, region);
 					
 					
 					String cypher = "MERGE (v:AwsVpc {aws_arn:{aws_arn}}) set v+={props}, v.updateTs=timestamp()";
-					String mapRegionCypher = "match (v:AwsVpc {aws_arn:{aws_arn}}), (r:AwsRegion {aws_regionName:{aws_region}}) "
-							+ "merge (r)-[:CONTAINS]->(v)";
+					
 					String mapSubnetCypher = "match (x:AwsVpc {aws_arn:{aws_arn}}), (y:AwsSubnet {aws_vpcId:{aws_vpcId}}) "
 							+ "merge (x)-[:CONTAINS]->(y)";
 					
 					
 					neoRx.execCypher(cypher, "aws_arn",n.get("aws_arn").asText(),"props",n);
-					neoRx.execCypher(mapRegionCypher, "aws_arn",n.get("aws_arn").asText(), "aws_region",n.path("aws_region").asText());
 					neoRx.execCypher(mapSubnetCypher, "aws_arn",n.get("aws_arn").asText(), "aws_vpcId",n.get("aws_vpcId").asText());
 					
-				} catch (RuntimeException e) {
-					logger.warn("problem scanning vpc",e);
-				}
-			});
-
-			String mapAccountCypher = "match (x:AwsAccount {aws_account:{aws_account}}), (y:AwsVpc {aws_account:{aws_account}}) "
-					+ "merge (x)-[:OWNS]->(y);"; 
-			neoRx.execCypher(mapAccountCypher, "aws_account",getAWSServiceClient().getAccountId());
+				
+					
+				});
+	
+				String mapAccountCypher = "match (x:AwsAccount {aws_account:{aws_account}}), (y:AwsVpc {aws_account:{aws_account}}) "
+						+ "merge (x)-[:OWNS]->(y)";
+				String mapRegionCypher = "match (v:AwsVpc {aws_region:{aws_region}}), (r:AwsRegion {aws_regionName:{aws_region}}) "
+						+ "merge (r)-[:CONTAINS]->(v)";
+				
+				neoRx.execCypher(mapAccountCypher, "aws_account",getAWSServiceClient().getAccountId());
+				neoRx.execCypher(mapRegionCypher, "aws_region", region.getName());
+			
+			} catch (RuntimeException e) {
+				logger.warn("problem scanning VPCs",e);
+			}
 	
 
 	}

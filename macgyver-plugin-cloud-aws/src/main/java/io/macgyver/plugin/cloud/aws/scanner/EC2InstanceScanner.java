@@ -72,23 +72,31 @@ public class EC2InstanceScanner extends AWSServiceScanner {
 
 	@Override
 	public void scan(Region region) {
-		AmazonEC2Client client = getAWSServiceClient().createEC2Client(region);
-
-		DescribeInstancesResult result = client.describeInstances();
-
-		result.getReservations().forEach(reservation -> {
-			
-			reservation.getInstances().forEach(instance -> {
+		try { 
+			AmazonEC2Client client = getAWSServiceClient().createEC2Client(region);
+	
+			DescribeInstancesResult result = client.describeInstances();
+	
+			result.getReservations().forEach(reservation -> {
 				
-				JsonNode n = convertAwsObject(instance, region);
-
-				String cypher = "MERGE (x:AwsEc2Instance {aws_arn:{arn}}) set x+={props}, x.updateTs=timestamp()";
+				reservation.getInstances().forEach(instance -> {
+					
+					JsonNode n = convertAwsObject(instance, region);
+	
+					String cypher = "match (x:AwsSubnet {aws_subnetId:{aws_subnetId}}) "
+							+ "merge (y:AwsEc2Instance {aws_arn:{arn}}) set y+={props}, y.updateTs=timestamp() "
+							+ "merge (y)-[:RESIDES_IN]->(x)";
+					
+					NeoRxClient neoRx = getNeoRxClient();
+					neoRx.execCypher(cypher, "aws_subnetId",n.path("aws_subnetId").asText(), "arn",n.path("aws_arn").asText(),"props",n);
+					
+	
+				});
 				
-				getNeoRxClient().execCypher(cypher, "arn",n.path("aws_arn").asText(),"props",n);
-
 			});
-			
-		});
+		} catch (RuntimeException e) {
+			logger.warn("problem scanning EC2 instances",e);
+		}
 
 	}
 

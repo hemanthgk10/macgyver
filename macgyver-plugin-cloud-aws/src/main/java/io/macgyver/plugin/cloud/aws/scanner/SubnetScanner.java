@@ -55,7 +55,7 @@ public class SubnetScanner extends AWSServiceScanner {
 				client.execCypher(cypher, "aws_arn",n.get("aws_arn").asText(),"props",n);
 
 			} catch (RuntimeException e) {
-				logger.warn("problem scanning subnet",e);
+				logger.warn("problem scanning subnets",e);
 			}
 		});
 		

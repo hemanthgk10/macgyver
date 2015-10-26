@@ -22,12 +22,16 @@ public class AccountScanner extends AWSServiceScanner {
 
 	@Override
 	public void scan(Region region) {
-		String cypher = "merge (x:AwsAccount {aws_account:{aws_account}}) set x.updateTs=timestamp()";
-	
-		NeoRxClient neoRx = getNeoRxClient();
-		Preconditions.checkNotNull(neoRx);
+		try { 
+			String cypher = "merge (x:AwsAccount {aws_account:{aws_account}}) set x.updateTs=timestamp()";
 		
-		neoRx.execCypher(cypher, "aws_account", getAccountId());
+			NeoRxClient neoRx = getNeoRxClient();
+			Preconditions.checkNotNull(neoRx);
+			
+			neoRx.execCypher(cypher, "aws_account", getAccountId());
+		} catch (RuntimeException e) { 
+			logger.warn("problem scanning accounts", e);
+		}
 	}
 
 }
