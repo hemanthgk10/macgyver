@@ -14,10 +14,9 @@ public class DefaultAWSScannerGroup extends AWSScannerGroup {
 		// will create a better way to compose this later
 
 		scannerList.add(new RegionScanner(client, neo4j));
-		scannerList.add(new VPCScanner(client, neo4j));
-		scannerList.add(new SubnetScanner(client, neo4j));
-		scannerList.add(new EC2InstanceScanner(client, neo4j));
 		scannerList.add(new AvailabilityZoneScanner(client, neo4j));
+		scannerList.add(new SubnetScanner(client, neo4j));
+		scannerList.add(new VPCScanner(client, neo4j));
 		scannerList.add(new EC2InstanceScanner(client, neo4j));
 	}
 

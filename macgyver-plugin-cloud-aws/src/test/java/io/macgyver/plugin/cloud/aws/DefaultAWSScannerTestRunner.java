@@ -18,6 +18,7 @@ public class DefaultAWSScannerTestRunner {
 		DefaultAWSScannerGroup sg = new DefaultAWSScannerGroup(aws,neo4j);
 		
 		sg.scan("us-west-2");
+//		sg.scanAllRegions();
 		
 	}
 

@@ -34,7 +34,7 @@ public class AvailabilityZoneScanner extends AWSServiceScanner {
 				
 				String cypher = "merge (x:AwsAvailabilityZone {aws_zoneName:{aws_zoneName}, aws_region:{aws_region}}) set x+={props} set x.updateTs=timestamp()";
 				String mapCypher = "match (x:AwsAvailabilityZone {aws_zoneName:{aws_zoneName}, aws_region:{aws_region}}), "
-						+ "(y:AwsSubnet {aws_availabilityZone:{aws_zoneName}, aws_region:{aws_region}}) merge (y)-[:RESIDES_IN]->(x)";
+						+ "(y:AwsSubnet {aws_availabilityZone:{aws_zoneName}, aws_region:{aws_region}}) merge (y)<-[:CONTAINS]-(x)";
 				NeoRxClient neoRx = getNeoRxClient();
 				
 				Preconditions.checkNotNull(neoRx);

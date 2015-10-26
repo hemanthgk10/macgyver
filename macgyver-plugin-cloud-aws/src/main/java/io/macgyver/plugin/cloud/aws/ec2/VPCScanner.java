@@ -47,15 +47,22 @@ public class VPCScanner extends AWSServiceScanner {
 			
 			result.getVpcs().forEach(it -> {
 				try {
+					System.out.println(it);
 					ObjectNode n = convertAwsObject(it, region);
 					
 					
 					String cypher = "MERGE (v:AwsVpc {aws_arn:{aws_arn}}) set v+={props}, v.updateTs=timestamp()";
+					String mapRegionCypher = "match (v:AwsVpc {aws_arn:{aws_arn}}), (r:AwsRegion {aws_regionName:{aws_region}}) "
+							+ "merge (r)-[:CONTAINS]->(v)";
+					String mapSubnetCypher = "match (x:AwsVpc {aws_arn:{aws_arn}}), (y:AwsSubnet {aws_vpcId:{aws_vpcId}}) "
+							+ "merge (x)-[:CONTAINS]->(y)";
 					
 					NeoRxClient client = getNeoRxClient();
 					Preconditions.checkNotNull(client);
 					client.execCypher(cypher, "aws_arn",n.get("aws_arn").asText(),"props",n);
-
+					client.execCypher(mapRegionCypher, "aws_arn",n.get("aws_arn").asText(), "aws_region",n.path("aws_region").asText());
+					client.execCypher(mapSubnetCypher, "aws_arn",n.get("aws_arn").asText(), "aws_vpcId",n.get("aws_vpcId").asText());
+					
 				} catch (RuntimeException e) {
 					logger.warn("problem scanning vpc",e);
 				}
