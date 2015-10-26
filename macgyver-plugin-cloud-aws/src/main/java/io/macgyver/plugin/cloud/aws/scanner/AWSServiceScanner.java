@@ -1,7 +1,6 @@
-package io.macgyver.plugin.cloud.aws;
+package io.macgyver.plugin.cloud.aws.scanner;
 
 import java.util.Optional;
-
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +13,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Preconditions;
 
 import io.macgyver.neorx.rest.NeoRxClient;
+import io.macgyver.plugin.cloud.aws.AWSServiceClient;
 
 public  abstract class AWSServiceScanner {
 

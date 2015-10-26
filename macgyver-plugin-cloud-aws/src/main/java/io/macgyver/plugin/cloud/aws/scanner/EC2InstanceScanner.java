@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.macgyver.plugin.cloud.aws.ec2;
+package io.macgyver.plugin.cloud.aws.scanner;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import io.macgyver.core.util.JsonNodes;
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.plugin.cloud.aws.AWSServiceClient;
-import io.macgyver.plugin.cloud.aws.AWSServiceScanner;
 
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;

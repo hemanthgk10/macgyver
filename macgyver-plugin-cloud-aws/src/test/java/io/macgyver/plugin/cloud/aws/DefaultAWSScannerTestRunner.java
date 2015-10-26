@@ -3,6 +3,7 @@ package io.macgyver.plugin.cloud.aws;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 
 import io.macgyver.neorx.rest.NeoRxClient;
+import io.macgyver.plugin.cloud.aws.scanner.DefaultAWSScannerGroup;
 
 public class DefaultAWSScannerTestRunner {
 
@@ -16,7 +17,7 @@ public class DefaultAWSScannerTestRunner {
 		aws.setAccountId("000000000000"); // 12-digit
 		
 		DefaultAWSScannerGroup sg = new DefaultAWSScannerGroup(aws,neo4j);
-		
+	
 		sg.scan("us-west-2");
 //		sg.scanAllRegions();
 		

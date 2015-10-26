@@ -26,6 +26,7 @@ import io.macgyver.core.util.StandaloneServiceBuilder;
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.plugin.cloud.aws.AWSServiceClient;
 import io.macgyver.plugin.cloud.aws.AWSServiceFactory;
+import io.macgyver.plugin.cloud.aws.scanner.EC2InstanceScanner;
 import io.macgyver.test.MacGyverIntegrationTest;
 
 public class EC2InstanceScannerIntegrationTest extends MacGyverIntegrationTest {

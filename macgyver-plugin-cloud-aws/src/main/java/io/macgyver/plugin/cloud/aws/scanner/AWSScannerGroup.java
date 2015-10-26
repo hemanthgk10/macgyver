@@ -1,4 +1,4 @@
-package io.macgyver.plugin.cloud.aws;
+package io.macgyver.plugin.cloud.aws.scanner;
 
 import java.util.List;
 import java.util.Optional;
@@ -11,8 +11,7 @@ import com.amazonaws.regions.Region;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import io.macgyver.neorx.rest.NeoRxClient;
-import io.macgyver.plugin.cloud.aws.ec2.SubnetScanner;
-import io.macgyver.plugin.cloud.aws.ec2.VPCScanner;
+import io.macgyver.plugin.cloud.aws.AWSServiceClient;
 
 public class AWSScannerGroup extends AWSServiceScanner {
 

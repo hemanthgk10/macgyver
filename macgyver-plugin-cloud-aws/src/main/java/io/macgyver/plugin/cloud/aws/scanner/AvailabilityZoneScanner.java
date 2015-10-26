@@ -1,9 +1,9 @@
-package io.macgyver.plugin.cloud.aws;
+package io.macgyver.plugin.cloud.aws.scanner;
 
 import io.macgyver.neorx.rest.NeoRxClient;
+import io.macgyver.plugin.cloud.aws.AWSServiceClient;
 
 import java.util.Optional;
-
 
 import com.amazonaws.regions.Region;
 import com.amazonaws.services.ec2.AmazonEC2Client;

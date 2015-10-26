@@ -1,4 +1,4 @@
-package io.macgyver.plugin.cloud.aws.ec2;
+package io.macgyver.plugin.cloud.aws.scanner;
 
 import java.util.Optional;
 
@@ -15,7 +15,6 @@ import com.google.common.base.Preconditions;
 
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.plugin.cloud.aws.AWSServiceClient;
-import io.macgyver.plugin.cloud.aws.AWSServiceScanner;
 
 public class SubnetScanner extends AWSServiceScanner {
 

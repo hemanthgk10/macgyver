@@ -1,6 +1,7 @@
-package io.macgyver.plugin.cloud.aws.ec2;
+package io.macgyver.plugin.cloud.aws.scanner;
 
 import java.util.Optional;
+
 
 
 
@@ -18,12 +19,10 @@ import com.google.common.base.Preconditions;
 
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.plugin.cloud.aws.AWSServiceClient;
-import io.macgyver.plugin.cloud.aws.AWSServiceScanner;
 
 public class VPCScanner extends AWSServiceScanner {
 
 	Logger logger = LoggerFactory.getLogger(VPCScanner.class);
-	ObjectMapper mapper = new ObjectMapper();
 
 	public VPCScanner(AWSServiceClient client, NeoRxClient neo4j) {
 		super(client, neo4j);
@@ -43,11 +42,12 @@ public class VPCScanner extends AWSServiceScanner {
 			AmazonEC2Client c = getAWSServiceClient().createEC2Client(region);
 
 			DescribeVpcsResult result = c.describeVpcs();
-
+			
+			NeoRxClient neoRx = getNeoRxClient();
+			Preconditions.checkNotNull(neoRx);
 			
 			result.getVpcs().forEach(it -> {
 				try {
-					System.out.println(it);
 					ObjectNode n = convertAwsObject(it, region);
 					
 					
@@ -57,18 +57,19 @@ public class VPCScanner extends AWSServiceScanner {
 					String mapSubnetCypher = "match (x:AwsVpc {aws_arn:{aws_arn}}), (y:AwsSubnet {aws_vpcId:{aws_vpcId}}) "
 							+ "merge (x)-[:CONTAINS]->(y)";
 					
-					NeoRxClient client = getNeoRxClient();
-					Preconditions.checkNotNull(client);
-					client.execCypher(cypher, "aws_arn",n.get("aws_arn").asText(),"props",n);
-					client.execCypher(mapRegionCypher, "aws_arn",n.get("aws_arn").asText(), "aws_region",n.path("aws_region").asText());
-					client.execCypher(mapSubnetCypher, "aws_arn",n.get("aws_arn").asText(), "aws_vpcId",n.get("aws_vpcId").asText());
+					
+					neoRx.execCypher(cypher, "aws_arn",n.get("aws_arn").asText(),"props",n);
+					neoRx.execCypher(mapRegionCypher, "aws_arn",n.get("aws_arn").asText(), "aws_region",n.path("aws_region").asText());
+					neoRx.execCypher(mapSubnetCypher, "aws_arn",n.get("aws_arn").asText(), "aws_vpcId",n.get("aws_vpcId").asText());
 					
 				} catch (RuntimeException e) {
 					logger.warn("problem scanning vpc",e);
 				}
 			});
 
-			
+			String mapAccountCypher = "match (x:AwsAccount {aws_account:{aws_account}}), (y:AwsVpc {aws_account:{aws_account}}) "
+					+ "merge (x)-[:OWNS]->(y);"; 
+			neoRx.execCypher(mapAccountCypher, "aws_account",getAWSServiceClient().getAccountId());
 	
 
 	}

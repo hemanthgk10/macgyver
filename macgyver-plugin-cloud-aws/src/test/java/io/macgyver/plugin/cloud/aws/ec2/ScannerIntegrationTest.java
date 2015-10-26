@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.plugin.cloud.aws.AWSServiceClientImpl;
+import io.macgyver.plugin.cloud.aws.scanner.SubnetScanner;
 import io.macgyver.test.MacGyverIntegrationTest;
 
 public class ScannerIntegrationTest extends MacGyverIntegrationTest {
