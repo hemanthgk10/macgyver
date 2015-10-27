@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.macgyver.plugin.cloud.aws.ec2;
+package io.macgyver.plugin.cloud.aws.scanner;
 
 import org.junit.Assume;
 import org.junit.Before;

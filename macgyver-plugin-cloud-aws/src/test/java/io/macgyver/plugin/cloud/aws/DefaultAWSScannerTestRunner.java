@@ -3,6 +3,7 @@ package io.macgyver.plugin.cloud.aws;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 
 import io.macgyver.neorx.rest.NeoRxClient;
+import io.macgyver.plugin.cloud.aws.AWSServiceClientImpl;
 import io.macgyver.plugin.cloud.aws.scanner.DefaultAWSScannerGroup;
 
 public class DefaultAWSScannerTestRunner {
