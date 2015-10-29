@@ -69,7 +69,7 @@ public class EC2InstanceScanner extends AWSServiceScanner {
 			result.getReservations().forEach(reservation -> {
 				
 				reservation.getInstances().forEach(instance -> {
-					
+					System.out.println(instance);
 					JsonNode n = convertAwsObject(instance, region);
 	
 					String cypher = "match (x:AwsSubnet {aws_subnetId:{aws_subnetId}}) "
