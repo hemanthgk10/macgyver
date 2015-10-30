@@ -35,7 +35,7 @@ public class LaunchConfigScanner extends AWSServiceScanner {
 			results.getLaunchConfigurations().forEach(config -> {
 				ObjectNode n = convertAwsObject(config, region);
 				List<String> securityGroups = getSecurityGroups(config);
-				System.out.println(n);
+
 				String cypher = "merge (x:AwsLaunchConfig {aws_arn:{aws_arn}}) set x+={props}, x.aws_securityGroups={sg}, x.updateTimestamp=timestamp()";
 				
 				NeoRxClient neoRx = new NeoRxClient();
