@@ -23,7 +23,6 @@ import io.macgyver.plugin.cloud.aws.AWSServiceClient;
 
 import com.amazonaws.regions.Region;
 import com.amazonaws.services.ec2.AmazonEC2Client;
-import com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient;
 
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 

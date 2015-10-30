@@ -74,6 +74,6 @@ public class VPCScanner extends AWSServiceScanner {
 		
 		String region = n.get("aws_region").asText();
 		
-		return Optional.of(String.format("arn:aws:vpc:%s:%s:vpc/%s",region,n.get("aws_account").asText(),n.get("aws_vpcId").asText()));
+		return Optional.of(String.format("arn:aws:ec2:%s:%s:vpc/%s",region,n.get("aws_account").asText(),n.get("aws_vpcId").asText()));
 	}
 }

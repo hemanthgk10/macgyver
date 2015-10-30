@@ -30,7 +30,7 @@ public class SubnetScanner extends AWSServiceScanner {
 		
 		String region = n.get("aws_region").asText();
 		
-		return Optional.of(String.format("arn:aws:subnet:%s:%s:subnet/%s",region,n.get("aws_account").asText(),n.get("aws_subnetId").asText()));
+		return Optional.of(String.format("arn:aws:ec2:%s:%s:subnet/%s",region,n.get("aws_account").asText(),n.get("aws_subnetId").asText()));
 		
 	}
 	

@@ -18,6 +18,8 @@ import io.macgyver.plugin.cloud.aws.AWSServiceClient;
 
 public class ELBScanner extends AWSServiceScanner {
 	ObjectMapper mapper = new ObjectMapper();
+	NeoRxClient neoRx = getNeoRxClient();
+
 
 	public ELBScanner(AWSServiceClient client, NeoRxClient neo4j) {
 		super(client, neo4j);
@@ -25,7 +27,7 @@ public class ELBScanner extends AWSServiceScanner {
 
 	@Override
 	public Optional<String> computeArn(JsonNode n) {
-		return Optional.of(String.format("arn:aws:elb:%s:%s:elb/%s",n.path("aws_region").asText(), n.path("aws_account").asText(), n.path("aws_loadBalancerName").asText()));
+		return Optional.of(String.format("arn:aws:elasticloadbalancing:%s:%s:loadbalancer/%s",n.path("aws_region").asText(), n.path("aws_account").asText(), n.path("aws_loadBalancerName").asText()));
 	}
 
 	@Override
@@ -40,7 +42,6 @@ public class ELBScanner extends AWSServiceScanner {
 				
 				String cypher = "merge (x:AwsElb {aws_arn:{aws_arn}}) set x+={props} set x.updateTs=timestamp()";
 			
-				NeoRxClient neoRx = getNeoRxClient();
 				Preconditions.checkNotNull(neoRx);
 			
 				neoRx.execCypher(cypher, "aws_arn",elbArn, "props",n);
@@ -52,19 +53,7 @@ public class ELBScanner extends AWSServiceScanner {
 		}
 	}
 	
-	protected void addSecurityGroups(JsonNode securityGroups, String elbArn) { 		
-		List<String> l = new ArrayList<>();
-		for (JsonNode s : securityGroups) { 
-			l.add(s.asText());
-		}
-		
-		NeoRxClient neoRx = getNeoRxClient();
-		Preconditions.checkNotNull(neoRx);
-		
-		String cypher = "match (x:AwsElb {aws_arn:{aws_arn}}) set x.aws_securityGroups={sg}";
-		neoRx.execCypher(cypher, "aws_arn", elbArn, "sg",l);
-	}
-	
+
 	protected void mapElbRelationships(LoadBalancerDescription lb, String elbArn, String region) { 
 		JsonNode n = mapper.valueToTree(lb);
 		JsonNode subnets = n.path("subnets");
@@ -78,9 +67,18 @@ public class ELBScanner extends AWSServiceScanner {
 
 	}
 	
+	protected void addSecurityGroups(JsonNode securityGroups, String elbArn) { 		
+		List<String> l = new ArrayList<>();
+		for (JsonNode s : securityGroups) { 
+			l.add(s.asText());
+		}
+		
+		String cypher = "match (x:AwsElb {aws_arn:{aws_arn}}) set x.aws_securityGroups={sg}";
+		neoRx.execCypher(cypher, "aws_arn", elbArn, "sg",l);
+	}
+	
+	
 	protected void mapElbToSubnet(JsonNode subnets, String elbArn, String region) { 
-		NeoRxClient neoRx = getNeoRxClient();
-		Preconditions.checkNotNull(neoRx);
 		
 		for (JsonNode s : subnets) {
 			String subnetName = s.asText();
@@ -92,8 +90,6 @@ public class ELBScanner extends AWSServiceScanner {
 	}
 	
 	protected void mapElbToInstance(JsonNode instances, String elbArn, String region) { 	
-		NeoRxClient neoRx = getNeoRxClient();
-		Preconditions.checkNotNull(neoRx);
 		
 		for (JsonNode i : instances) { 
 			String instanceName = i.path("instanceId").asText();
