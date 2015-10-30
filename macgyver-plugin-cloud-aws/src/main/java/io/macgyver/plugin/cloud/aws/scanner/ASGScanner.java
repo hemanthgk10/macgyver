@@ -51,15 +51,23 @@ public class ASGScanner extends AWSServiceScanner {
 
 	protected void mapAsgRelationships(AutoScalingGroup asg, String asgArn, String region) { 
 		JsonNode n = mapper.valueToTree(asg);
-
-		String subnets = n.path("vpczoneIdentifier").asText();
+ 
+		String subnets = n.path("vpczoneIdentifier").asText().trim();
+		String launchConfig = n.path("launchConfigurationName").asText().trim();
 		JsonNode instances = n.path("instances");
 		JsonNode elbs = n.path("loadBalancerNames");
 		
 		mapAsgToSubnet(subnets, asgArn, region);
+		mapAsgToLaunchConfig(launchConfig, asgArn, region);
 		mapAsgToInstance(instances, asgArn, region);
 		mapAsgToElb(elbs, asgArn, region);
 		
+	}
+	
+	protected void mapAsgToLaunchConfig(String launchConfig, String asgArn, String region) { 
+		String cypher = "match (x:AwsAsg {aws_arn:{asgArn}}), (y:AwsLaunchConfig {aws_launchConfigurationName:{lcn}, aws_region:{region}}) "
+				+ "merge (y)-[:TEMPLATE_FOR]->(x)";
+		neoRx.execCypher(cypher, "asgArn",asgArn, "lcn",launchConfig, "region",region);
 	}
 	
 	protected void mapAsgToSubnet(String subnets, String asgArn, String region) {
