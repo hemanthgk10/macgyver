@@ -32,7 +32,15 @@ public class AWSServiceClientImpl implements AWSServiceClient {
 
 	AWSCredentialsProvider credentialsProvider;
 	Region defaultRegion=null;
+	String accountId;
 	
+	public  AWSServiceClientImpl() {
+		super();
+	}
+	
+	public AWSServiceClientImpl(AWSCredentialsProvider p) {
+		credentialsProvider = p;
+	}
 	@Override
 	public AWSCredentialsProvider getCredentialsProvider() {
 		return credentialsProvider;
@@ -107,6 +115,16 @@ public class AWSServiceClientImpl implements AWSServiceClient {
 				| InvocationTargetException | NoSuchMethodException e) {
 			throw new MacGyverException("could not create AWS client: " + t, e);
 		}
+	}
+
+	@Override
+	public String getAccountId() {
+		
+		return accountId;
+	}
+	
+	protected void setAccountId(String id) {
+		this.accountId = id;
 	}
 
 }

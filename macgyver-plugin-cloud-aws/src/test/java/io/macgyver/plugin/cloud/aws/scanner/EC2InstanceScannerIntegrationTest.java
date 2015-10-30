@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.macgyver.plugin.cloud.aws.ec2;
+package io.macgyver.plugin.cloud.aws.scanner;
 
 import org.junit.Assume;
 import org.junit.Before;
@@ -26,6 +26,7 @@ import io.macgyver.core.util.StandaloneServiceBuilder;
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.plugin.cloud.aws.AWSServiceClient;
 import io.macgyver.plugin.cloud.aws.AWSServiceFactory;
+import io.macgyver.plugin.cloud.aws.scanner.EC2InstanceScanner;
 import io.macgyver.test.MacGyverIntegrationTest;
 
 public class EC2InstanceScannerIntegrationTest extends MacGyverIntegrationTest {
@@ -54,6 +55,6 @@ public class EC2InstanceScannerIntegrationTest extends MacGyverIntegrationTest {
 
 		EC2InstanceScanner s = new EC2InstanceScanner(sf, neo4j);
 
-		s.scan();
+		s.scanAllRegions();
 	}
 }
