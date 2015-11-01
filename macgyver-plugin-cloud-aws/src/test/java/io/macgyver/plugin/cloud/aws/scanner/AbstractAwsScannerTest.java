@@ -1,23 +1,27 @@
 package io.macgyver.plugin.cloud.aws.scanner;
 
+import org.hibernate.validator.internal.util.privilegedactions.GetMethodFromPropertyName;
 import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.macgyver.neorx.rest.MockNeoRxClient;
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.plugin.cloud.aws.AWSServiceClient;
+import io.macgyver.test.MacGyverIntegrationTest;
 
 /**
- * Some common test scaffolding to make it easy to unit test scanners.
+ * Some common test scaffolding to make it easy to test scanners.  The AWS portion is mocked.  The Neo4j portion is not.
  * @author rschoening
  *
  */
-public abstract class AbstractAwsScannerUnitTest {
+public abstract class AbstractAwsScannerTest extends MacGyverIntegrationTest {
 
 	ObjectMapper mapper = new ObjectMapper();
 	
-	NeoRxClient neo4j = new MockNeoRxClient();
+	@Autowired 
+	NeoRxClient neo4j;
 
 	
 	public String getAccountId() {

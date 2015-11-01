@@ -18,16 +18,20 @@ import java.util.List;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
+import com.amazonaws.services.ec2.AmazonEC2Client;
+import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ec2.model.Reservation;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
 import io.macgyver.plugin.cloud.aws.AWSServiceClient;
 
-public class EC2InstanceScannerTest extends AbstractAwsScannerUnitTest {
+public class EC2InstanceScannerTest extends AbstractAwsScannerTest {
 
 
 
@@ -76,6 +80,31 @@ public class EC2InstanceScannerTest extends AbstractAwsScannerUnitTest {
 	}
 
 	@Test
+	public void testScanRegion() {
+		
+		AmazonEC2Client ec2 = Mockito.mock(AmazonEC2Client.class);
+		
+		AWSServiceClient c = newMockServiceClient();
+		
+		Mockito.when(c.createEC2Client(Region.getRegion(Regions.US_WEST_2))).thenReturn(ec2);
+		
+		DescribeInstancesResult r = new DescribeInstancesResult();
+		
+		List<Reservation> rlist = Lists.newArrayList();
+		Reservation res = new Reservation();
+		rlist.add(res);
+		r.setReservations(rlist);
+		
+		Instance instance = new Instance();
+		instance.setInstanceId("i-123456");
+		res.setInstances(Lists.newArrayList(instance));
+		instance.setSubnetId("subnet-1234");
+		Mockito.when(ec2.describeInstances()).thenReturn(r);
+		EC2InstanceScanner scanner = new EC2InstanceScanner(c, neo4j);
+		scanner.scan("us-west-2");
+	}
+	
+	@Test
 	public void testAttributes() {
 
 
@@ -84,6 +113,7 @@ public class EC2InstanceScannerTest extends AbstractAwsScannerUnitTest {
 	
 		Instance instance = new Instance();
 		instance.setImageId("i-1234");
+		instance.setInstanceId("i-123456");
 		ObjectNode n = scanner.convertAwsObject(instance, Region.getRegion(Regions.US_WEST_2));
 		
 		List<String> fields = Lists.newArrayList(n.fieldNames());
