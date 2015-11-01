@@ -78,25 +78,29 @@ public class EC2InstanceScanner extends AWSServiceScanner {
 		result.getReservations().forEach(reservation -> {
 
 			reservation.getInstances().forEach(instance -> {
+				try {
+					JsonNode n = convertAwsObject(instance, region);
 
-				JsonNode n = convertAwsObject(instance, region);
+					String subnetId = n.path("aws_subnetId").asText(null);
+					String arn = n.path("aws_arn").asText(null);
+					String account = n.path("aws_account").asText(null);
+					Preconditions.checkState(!Strings.isNullOrEmpty(subnetId), "aws_subnetId must not be null");
+					Preconditions.checkState(!Strings.isNullOrEmpty(arn), "aws_arn must not be null");
+					Preconditions.checkState(!Strings.isNullOrEmpty(account), "aws_account must not be null");
+					// This is technically ambiguous since subnetId's are not
+					// guaranteed to be unique across accounts
+					// need to qualify with account. Or more properly, the
+					// computed arn of the subnet
 
-				String subnetId = n.path("aws_subnetId").asText(null);
-				String arn = n.path("aws_arn").asText(null);
-				String account = n.path("aws_account").asText(null);
-				Preconditions.checkState(!Strings.isNullOrEmpty(subnetId),"aws_subnetId must not be null");
-				Preconditions.checkState(!Strings.isNullOrEmpty(arn),"aws_arn must not be null");
-				Preconditions.checkState(!Strings.isNullOrEmpty(account),"aws_account must not be null");
-				// This is technically ambiguous since subnetId's are not guaranteed to be unique across accounts
-				// need to qualify with account.  Or more properly, the computed arn of the subnet
-				
-				String cypher = "match (x:AwsSubnet {aws_subnetId:{aws_subnetId}, aws_account:{aws_account}}) "
-						+ "merge (y:AwsEc2Instance {aws_arn:{arn}}) set y+={props}, y.updateTs=timestamp() "
-						+ "merge (y)-[:RESIDES_IN]->(x)";
+					String cypher = "match (x:AwsSubnet {aws_subnetId:{aws_subnetId}, aws_account:{aws_account}}) "
+							+ "merge (y:AwsEc2Instance {aws_arn:{arn}}) set y+={props}, y.updateTs=timestamp() "
+							+ "merge (y)-[:RESIDES_IN]->(x)";
 
-				NeoRxClient neoRx = getNeoRxClient();
-				neoRx.execCypher(cypher, "aws_subnetId", subnetId, "aws_account",account,"arn",
-						arn, "props", n);
+					NeoRxClient neoRx = getNeoRxClient();
+					neoRx.execCypher(cypher, "aws_subnetId", subnetId, "aws_account", account, "arn", arn, "props", n);
+				} catch (RuntimeException e) {
+					logger.warn("problem scanning", e);
+				}
 
 			});
 
