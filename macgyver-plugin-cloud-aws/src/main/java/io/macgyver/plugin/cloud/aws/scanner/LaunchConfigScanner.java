@@ -29,47 +29,38 @@ public class LaunchConfigScanner extends AWSServiceScanner {
 
 	@Override
 	public void scan(Region region) {
-		try { 
-			AmazonAutoScalingClient client = new AmazonAutoScalingClient(getAWSServiceClient().getCredentialsProvider()).withRegion(region); 
-			DescribeLaunchConfigurationsResult results = client.describeLaunchConfigurations();
-			results.getLaunchConfigurations().forEach(config -> {
+
+		AmazonAutoScalingClient client = new AmazonAutoScalingClient(getAWSServiceClient().getCredentialsProvider())
+				.withRegion(region);
+		DescribeLaunchConfigurationsResult results = client.describeLaunchConfigurations();
+		results.getLaunchConfigurations().forEach(config -> {
+			try {
 				ObjectNode n = convertAwsObject(config, region);
 				List<String> securityGroups = getSecurityGroups(config);
 
 				String cypher = "merge (x:AwsLaunchConfig {aws_arn:{aws_arn}}) set x+={props}, x.aws_securityGroups={sg}, x.updateTimestamp=timestamp()";
-				
+
 				NeoRxClient neoRx = new NeoRxClient();
 				Preconditions.checkNotNull(neoRx);
-				
-				neoRx.execCypher(cypher, "aws_arn", n.path("aws_arn").asText(), "props",n, "sg",securityGroups);
 
-			});
-		
-		} catch (RuntimeException e) { 
-			logger.warn("problem scanning launch configs",e);
-		}
-		
+				neoRx.execCypher(cypher, "aws_arn", n.path("aws_arn").asText(), "props", n, "sg", securityGroups);
+			} catch (RuntimeException e) {
+				logger.warn("problem scanning launch configs", e);
+			}
+		});
+
 	}
-	
-	protected List<String> getSecurityGroups(LaunchConfiguration c) { 
+
+	protected List<String> getSecurityGroups(LaunchConfiguration c) {
 		List<String> toReturnList = new ArrayList<>();
 		JsonNode n = new ObjectMapper().valueToTree(c);
-		
+
 		JsonNode securityGroups = n.path("securityGroups");
-		for (JsonNode sg : securityGroups) { 
+		for (JsonNode sg : securityGroups) {
 			toReturnList.add(sg.asText());
 		}
-		
+
 		return toReturnList;
 	}
 
-	
-	
-	
-	
-	
-	
-	
-	
-	
 }

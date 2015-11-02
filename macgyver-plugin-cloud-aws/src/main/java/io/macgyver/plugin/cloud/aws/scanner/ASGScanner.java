@@ -29,7 +29,7 @@ public class ASGScanner extends AWSServiceScanner {
 
 	@Override
 	public void scan(Region region) {
-		try { 
+
 			AmazonAutoScalingClient client = new AmazonAutoScalingClient(getAWSServiceClient().getCredentialsProvider()).withRegion(region); 
 			DescribeAutoScalingGroupsResult results = client.describeAutoScalingGroups();
 			results.getAutoScalingGroups().forEach(asg -> {
@@ -44,9 +44,7 @@ public class ASGScanner extends AWSServiceScanner {
 				mapAsgRelationships(asg, asgArn, region.getName());				
 				
 			});
-		} catch (RuntimeException e) { 
-			logger.warn("problem scanning auto-scaling groups",e);
-		}
+
 	}
 
 	protected void mapAsgRelationships(AutoScalingGroup asg, String asgArn, String region) { 
