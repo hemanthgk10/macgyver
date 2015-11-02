@@ -46,15 +46,15 @@ public class VPCScanner extends AWSServiceScanner {
 										
 					String cypher = "match (y:AwsSubnet {aws_vpcId:{aws_vpcId}}) "
 							+ "merge (x:AwsVpc {aws_arn:{aws_arn}}) set x+={props} set x.updateTs=timestamp() "
-							+ "merge (x)-[:CONTAINS]->(y)";
+							+ "merge (x)-[r:CONTAINS]->(y) set r.updateTs=timestamp()";
 					
 					neoRx.execCypher(cypher, "aws_arn",n.path("aws_arn").asText(), "aws_vpcId",n.path("aws_vpcId").asText(), "props",n);				
 				});
 	
 				String mapAccountCypher = "match (x:AwsAccount {aws_account:{aws_account}}), (y:AwsVpc {aws_account:{aws_account}}) "
-						+ "merge (x)-[:OWNS]->(y)";
+						+ "merge (x)-[r:OWNS]->(y) set r.updateTs=timestamp()";
 				String mapRegionCypher = "match (v:AwsVpc {aws_region:{aws_region}}), (r:AwsRegion {aws_regionName:{aws_region}}) "
-						+ "merge (r)-[:CONTAINS]->(v)";
+						+ "merge (r)-[r:CONTAINS]->(v) set r.updateTs=timestamp()";
 				
 				neoRx.execCypher(mapAccountCypher, "aws_account",getAWSServiceClient().getAccountId());
 				neoRx.execCypher(mapRegionCypher, "aws_region", region.getName());

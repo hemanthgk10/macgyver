@@ -73,7 +73,7 @@ public class EC2InstanceScanner extends AWSServiceScanner {
 	
 					String cypher = "match (x:AwsSubnet {aws_subnetId:{aws_subnetId}}) "
 							+ "merge (y:AwsEc2Instance {aws_arn:{arn}}) set y+={props}, y.updateTs=timestamp() "
-							+ "merge (y)-[:RESIDES_IN]->(x)";
+							+ "merge (y)-[r:RESIDES_IN]->(x) set r.updateTs=timestamp()";
 					
 					NeoRxClient neoRx = getNeoRxClient();
 					neoRx.execCypher(cypher, "aws_subnetId",n.path("aws_subnetId").asText(), "arn",n.path("aws_arn").asText(),"props",n);
