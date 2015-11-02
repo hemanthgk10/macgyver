@@ -21,6 +21,7 @@ public class DefaultAWSScannerGroup extends AWSScannerGroup {
 		scannerList.add(new ELBScanner(client, neo4j));
 		scannerList.add(new LaunchConfigScanner(client, neo4j));
 		scannerList.add(new ASGScanner(client, neo4j));
+		scannerList.add(new AMIScanner(client, neo4j));
 		
 		
 	}

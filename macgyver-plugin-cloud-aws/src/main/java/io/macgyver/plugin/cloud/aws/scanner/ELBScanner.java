@@ -84,7 +84,7 @@ public class ELBScanner extends AWSServiceScanner {
 			String subnetName = s.asText();
 			String subnetArn = String.format("arn:aws:subnet:%s:%s:subnet/%s", region, getAccountId(), subnetName);
 			String cypher = "match (x:AwsElb {aws_arn:{elbArn}}), (y:AwsSubnet {aws_arn:{subnetArn}}) "
-					+ "merge (x)-[:ROUTES_TO]->(y)";
+					+ "merge (x)-[r:ROUTES_TO]->(y) set r.updateTs=timestamp()";
 			neoRx.execCypher(cypher, "elbArn",elbArn, "subnetArn",subnetArn);					
 		}
 	}
@@ -95,7 +95,7 @@ public class ELBScanner extends AWSServiceScanner {
 			String instanceName = i.path("instanceId").asText();
 			String instanceArn = String.format("arn:aws:ec2:%s:%s:instance/%s", region, getAccountId(), instanceName);
 			String cypher = "match (x:AwsElb {aws_arn:{elbArn}}), (y:AwsEc2Instance {aws_arn:{instanceArn}}) "
-					+ "merge (x)-[:DISTRIBUTES_TRAFFIC_TO]->(y)";
+					+ "merge (x)-[r:DISTRIBUTES_TRAFFIC_TO]->(y) set r.updateTs=timestamp()";
 			neoRx.execCypher(cypher, "elbArn",elbArn, "instanceArn",instanceArn);
 		}
 	}

@@ -66,7 +66,7 @@ public class ASGScanner extends AWSServiceScanner {
 	
 	protected void mapAsgToLaunchConfig(String launchConfig, String asgArn, String region) { 
 		String cypher = "match (x:AwsAsg {aws_arn:{asgArn}}), (y:AwsLaunchConfig {aws_launchConfigurationName:{lcn}, aws_region:{region}}) "
-				+ "merge (y)-[:TEMPLATE_FOR]->(x)";
+				+ "merge (y)-[r:TEMPLATE_FOR]->(x) set r.updateTs=timestamp()";
 		neoRx.execCypher(cypher, "asgArn",asgArn, "lcn",launchConfig, "region",region);
 	}
 	
