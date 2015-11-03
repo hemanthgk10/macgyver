@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.assertj.core.util.Strings;
+import joptsimple.internal.Strings;
 
 import com.amazonaws.regions.Region;
 import com.amazonaws.services.rds.AmazonRDSClient;
