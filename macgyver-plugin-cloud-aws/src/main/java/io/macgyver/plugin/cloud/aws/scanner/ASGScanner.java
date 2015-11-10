@@ -29,7 +29,7 @@ public class ASGScanner extends AWSServiceScanner {
 
 	@Override
 	public void scan(Region region) {
-		try { 
+
 			AmazonAutoScalingClient client = new AmazonAutoScalingClient(getAWSServiceClient().getCredentialsProvider()).withRegion(region); 
 			DescribeAutoScalingGroupsResult results = client.describeAutoScalingGroups();
 			results.getAutoScalingGroups().forEach(asg -> {
@@ -44,9 +44,7 @@ public class ASGScanner extends AWSServiceScanner {
 				mapAsgRelationships(asg, asgArn, region.getName());				
 				
 			});
-		} catch (RuntimeException e) { 
-			logger.warn("problem scanning auto-scaling groups",e);
-		}
+
 	}
 
 	protected void mapAsgRelationships(AutoScalingGroup asg, String asgArn, String region) { 
@@ -65,9 +63,9 @@ public class ASGScanner extends AWSServiceScanner {
 	}
 	
 	protected void mapAsgToLaunchConfig(String launchConfig, String asgArn, String region) { 
-		String cypher = "match (x:AwsAsg {aws_arn:{asgArn}}), (y:AwsLaunchConfig {aws_launchConfigurationName:{lcn}, aws_region:{region}}) "
-				+ "merge (y)-[:TEMPLATE_FOR]->(x)";
-		neoRx.execCypher(cypher, "asgArn",asgArn, "lcn",launchConfig, "region",region);
+		String cypher = "match (x:AwsAsg {aws_arn:{asgArn}}), (y:AwsLaunchConfig {aws_launchConfigurationName:{lcn}, aws_region:{region}, aws_account:{account}}) "
+				+ "merge (x)-[r:HAS]->(y) set r.updateTs=timestamp()";
+		neoRx.execCypher(cypher, "asgArn",asgArn, "lcn",launchConfig, "region",region, "account",getAccountId());
 	}
 	
 	protected void mapAsgToSubnet(String subnets, String asgArn, String region) {
@@ -87,7 +85,7 @@ public class ASGScanner extends AWSServiceScanner {
 			String instanceArn = String.format("arn:aws:ec2:%s:%s:instance/%s", region, getAccountId(), instanceId);
 
 			String cypher = "match (x:AwsEc2Instance {aws_arn:{instanceArn}}), (y:AwsAsg {aws_arn:{asgArn}}) "
-					+ "merge (x)-[r:ATTACHED_TO]->(y) set r.updateTs=timestamp()";
+					+ "merge (y)-[r:CONTAINS]->(x) set r.updateTs=timestamp()";
 			neoRx.execCypher(cypher, "instanceArn",instanceArn, "asgArn",asgArn);
 		}
 	}
@@ -98,7 +96,7 @@ public class ASGScanner extends AWSServiceScanner {
 			String elbArn = String.format("arn:aws:elasticloadbalancing:%s:%s:loadbalancer/%s", region, getAccountId(), elbName);
 
 			String cypher = "match (x:AwsElb {aws_arn:{elbArn}}), (y:AwsAsg {aws_arn:{asgArn}}) "
-					+ "merge (x)-[r:ATTACHED_TO]-(y) set r.updateTs=timestamp()";
+					+ "merge (y)-[r:ATTACHED_TO]-(x) set r.updateTs=timestamp()";
 			neoRx.execCypher(cypher, "elbArn",elbArn, "asgArn",asgArn);
 		}
 	}
