@@ -29,17 +29,25 @@ public class AvailabilityZoneScanner extends AWSServiceScanner {
 
 		DescribeAvailabilityZonesResult result = c.describeAvailabilityZones();
 		result.getAvailabilityZones().forEach(it -> {
+			
 			try {
 				ObjectNode n = convertAwsObject(it, region);
 				
-				String cypher = "match (x:AwsSubnet {aws_availabilityZone:{aws_zoneName}, aws_region:{aws_region}}) "
-						+ "merge (y:AwsAvailabilityZone {aws_zoneName:{aws_zoneName}, aws_region:{aws_region}}) set y+={props} set y.updateTs=timestamp() "
-						+ "merge (y)-[:CONTAINS]->(x)";
+				String cypher = "merge (y:AwsAvailabilityZone {aws_zoneName:{aws_zoneName}, aws_region:{aws_region}, aws_account:{aws_account}}) set y+={props} set y.updateTs=timestamp()";
+				String mapToSubnetCypher = "match (x:AwsSubnet {aws_availabilityZone:{aws_zoneName}, aws_region:{aws_region}, aws_account:{aws_account}}), "
+						+ "(y:AwsAvailabilityZone {aws_zoneName:{aws_zoneName}, aws_region:{aws_region}, aws_account:{aws_account}}) "
+						+ "merge (x)-[r:RESIDES_IN]->(y) set r.updateTs=timestamp()";
+				String mapToRegionCypher = "match (x:AwsRegion {aws_regionName:{aws_region}, aws_account:{aws_account}}), "
+						+ "(y:AwsAvailabilityZone {aws_zoneName:{aws_zoneName}, aws_regionName:{aws_region}, aws_account:{aws_account}}) "
+						+ "merge (x)-[r:CONTAINS]->(y) set r.updateTs=timestamp()";
 				
 				NeoRxClient neoRx = getNeoRxClient();	
 				Preconditions.checkNotNull(neoRx);
-				
-				neoRx.execCypher(cypher, "aws_zoneName",n.path("aws_zoneName").asText(), "aws_region",n.path("aws_region").asText(), "props",n);
+			
+				neoRx.execCypher(cypher, "aws_zoneName",n.path("aws_zoneName").asText(), "aws_region",n.path("aws_region").asText(), "aws_account",getAccountId(), "props",n);
+				neoRx.execCypher(mapToSubnetCypher, "aws_zoneName",n.path("aws_zoneName").asText(), "aws_region",n.path("aws_region").asText(), "aws_account",getAccountId());
+				neoRx.execCypher(mapToRegionCypher, "aws_zoneName",n.path("aws_zoneName").asText(), "aws_region",n.path("aws_region").asText(), "aws_account",getAccountId());
+
 			} catch (RuntimeException e) { 
 				logger.warn("problem scanning availability zones",e);
 			}		
