@@ -69,7 +69,7 @@ public class EC2InstanceScanner extends AWSServiceScanner {
 				try {
 					JsonNode n = convertAwsObject(instance, region);
 					NeoRxClient neoRx = getNeoRxClient();
-
+				
 					String subnetId = n.path("aws_subnetId").asText(null);
 					String instanceArn = n.path("aws_arn").asText(null);
 					String account = n.path("aws_account").asText(null);
@@ -85,14 +85,16 @@ public class EC2InstanceScanner extends AWSServiceScanner {
 					String subnetArn = String.format("arn:aws:ec2:%s:%s:subnet/%s", region.getName(), account, subnetId);
 					String amiArn = String.format("arn:aws:ec2:%s::image/%s", region.getName(), imageId);
 					
-					String mapToSubnetCypher = "match (x:AwsSubnet {aws_arn:{subnetArn}}) "
-							+ "merge (y:AwsEc2Instance {aws_arn:{instanceArn}}) set y+={props}, y.updateTs=timestamp() "
+					String createInstanceCypher = "merge (x:AwsEc2Instance {aws_arn:{instanceArn}}) set x+={props}, x.updateTs=timestamp()";
+					String mapToSubnetCypher = "match (x:AwsSubnet {aws_arn:{subnetArn}}), "
+							+ "(y:AwsEc2Instance {aws_arn:{instanceArn}}) "
 							+ "merge (y)-[r:RESIDES_IN]->(x) set r.updateTs=timestamp()";
 					String mapToImageCypher = "match (x:AwsAmi {aws_arn:{amiArn}}), "
 							+ "(y:AwsEc2Instance {aws_arn:{instanceArn}}) "
-							+ "merge (x)-[r:LAUNCHES]-(y) set r.updateTs=timestamp()";
+							+ "merge (y)-[r:USES]-(x) set r.updateTs=timestamp()";
 
-					neoRx.execCypher(mapToSubnetCypher, "subnetArn", subnetArn, "instanceArn", instanceArn, "props", n);
+					neoRx.execCypher(createInstanceCypher, "instanceArn",instanceArn, "props",n);
+					neoRx.execCypher(mapToSubnetCypher, "subnetArn", subnetArn, "instanceArn", instanceArn);
 					neoRx.execCypher(mapToImageCypher, "amiArn", amiArn, "instanceArn", instanceArn);
 				
 				} catch (RuntimeException e) {

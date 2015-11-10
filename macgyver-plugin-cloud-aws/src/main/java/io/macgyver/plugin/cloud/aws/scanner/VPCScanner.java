@@ -38,11 +38,14 @@ public class VPCScanner extends AWSServiceScanner {
 			try {					
 				ObjectNode n = convertAwsObject(it, region);
 									
-				String cypher = "match (y:AwsSubnet {aws_vpcId:{aws_vpcId}}) "
-						+ "merge (x:AwsVpc {aws_arn:{aws_arn}}) set x+={props} set x.updateTs=timestamp() "
+				String cypher = "merge (x:AwsVpc {aws_arn:{aws_arn}}) set x+={props} set x.updateTs=timestamp()";
+				
+				String mapToSubnetCypher = "match (y:AwsSubnet {aws_vpcId:{aws_vpcId}}), "
+						+ "(x:AwsVpc {aws_arn:{aws_arn}}) "
 						+ "merge (x)-[r:CONTAINS]->(y) set r.updateTs=timestamp()";
 				
-				neoRx.execCypher(cypher, "aws_arn",n.path("aws_arn").asText(), "aws_vpcId",n.path("aws_vpcId").asText(), "props",n);	
+				neoRx.execCypher(cypher, "aws_arn",n.path("aws_arn").asText(), "props",n);
+				neoRx.execCypher(mapToSubnetCypher, "aws_arn",n.path("aws_arn").asText(), "aws_vpcId",n.path("aws_vpcId").asText());	
 			} catch (RuntimeException e) { 
 				logger.warn("problem scanning VPC", e);
 			}
@@ -50,11 +53,11 @@ public class VPCScanner extends AWSServiceScanner {
 	
 		String mapAccountCypher = "match (x:AwsAccount {aws_account:{aws_account}}), (y:AwsVpc {aws_account:{aws_account}}) "
 				+ "merge (x)-[r:OWNS]->(y) set r.updateTs=timestamp()";
-		String mapRegionCypher = "match (v:AwsVpc {aws_region:{aws_region}}), (r:AwsRegion {aws_regionName:{aws_region}}) "
-				+ "merge (r)-[r:CONTAINS]->(v) set r.updateTs=timestamp()";
+		String mapRegionCypher = "match (x:AwsVpc {aws_region:{aws_region}}), (y:AwsRegion {aws_regionName:{aws_region}, aws_account:{aws_account}}) "
+				+ "merge (x)-[r:RESIDES_IN]->(y) set r.updateTs=timestamp()";
 		
-		neoRx.execCypher(mapAccountCypher, "aws_account",getAWSServiceClient().getAccountId());
-		neoRx.execCypher(mapRegionCypher, "aws_region", region.getName());
+		neoRx.execCypher(mapAccountCypher, "aws_account",getAccountId());
+		neoRx.execCypher(mapRegionCypher, "aws_region", region.getName(), "aws_account",getAccountId());
 	}
 	
 

@@ -60,7 +60,7 @@ public class RDSInstanceScanner extends AWSServiceScanner {
 					
 					String mapToSubnetCypher = "match (x:AwsRdsInstance {aws_arn:{rdsArn}}), "
 							+ "(y:AwsSubnet {aws_arn:{subnetArn}}) "
-							+ "merge (x)-[r:RESIDES_IN]->(y) set r.updateTs=timestamp()";
+							+ "merge (x)-[r:AVAILABLE_IN]->(y) set r.updateTs=timestamp()";
 					neoRx.execCypher(mapToSubnetCypher, "rdsArn",rdsArn, "subnetArn",subnetArn);
 				}
 			} catch (RuntimeException e) { 
