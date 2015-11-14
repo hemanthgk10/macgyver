@@ -27,8 +27,11 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,10 +40,14 @@ import org.springframework.context.ApplicationContext;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.gwt.thirdparty.guava.common.base.Strings;
 
 public class ServiceRegistry {
 
@@ -67,7 +74,7 @@ public class ServiceRegistry {
 		return (T) get(name);
 	}
 
-	public Object get(String name) {
+	public <T> T get(String name) {
 
 		Preconditions.checkNotNull(name);
 		Object instance = instances.get(name);
@@ -94,7 +101,7 @@ public class ServiceRegistry {
 			}
 		}
 
-		return unwrap(instance);
+		return (T) unwrap(instance);
 
 	}
 
@@ -271,5 +278,35 @@ public class ServiceRegistry {
 	 */
 	public void addServiceDefinition(ServiceDefinition def) {
 		definitions.put(def.getName(), def);
+	}
+	
+	
+
+	protected List<String> findServiceNames(String serviceType, String propertyName, String propertyValue) {
+		Preconditions.checkArgument(serviceType!=null,"serviceType cannot be null");
+		
+		List<String> list = Lists.newArrayList();
+		
+		definitions.entrySet().forEach(it -> {
+			ServiceDefinition def = it.getValue();
+			if (serviceType.equals(Strings.nullToEmpty(def.getProperty("serviceType")))) {
+				if (Strings.nullToEmpty(def.getProperty(propertyName)).equals(propertyValue)) {
+					list.add(def.getName());
+				}
+			}
+		});
+		
+		return list;
+	}
+	
+	public <T> T getServiceByProperty(String serviceType, String key, String val) {
+		List<String> names = findServiceNames(serviceType,key,val);
+		if (names.isEmpty()) {
+			throw new ServiceNotFoundException("could not locate service type:"+serviceType+" property:"+key+" value: "+val);
+		}
+		if (names.size()>1) {
+			throw new ServiceNotFoundException("found more than one service match:"+serviceType+" property:"+key+" value: "+val);	
+		}
+		return (T) get(names.get(0));
 	}
 }
