@@ -54,8 +54,7 @@ public class ServiceRegistry {
 	Logger logger = LoggerFactory.getLogger(ServiceRegistry.class);
 
 	@SuppressWarnings("rawtypes")
-	protected Map<String, ServiceFactory> serviceFactoryMap = Maps
-			.newConcurrentMap();
+	protected Map<String, ServiceFactory> serviceFactoryMap = Maps.newConcurrentMap();
 
 	Map<String, ServiceDefinition> definitions = Maps.newConcurrentMap();
 	Map<String, Object> instances = Maps.newConcurrentMap();
@@ -80,7 +79,7 @@ public class ServiceRegistry {
 		Object instance = instances.get(name);
 
 		// check for an already-constructed service
-		if (instance==null) {
+		if (instance == null) {
 			if (logger.isDebugEnabled()) {
 				logger.debug("defs: {}", definitions);
 			}
@@ -106,7 +105,7 @@ public class ServiceRegistry {
 	}
 
 	Object unwrap(Object object) {
-		if (object==null) {
+		if (object == null) {
 			return object;
 		}
 		if (object instanceof Supplier) {
@@ -114,6 +113,7 @@ public class ServiceRegistry {
 		}
 		return object;
 	}
+
 	private void registerServiceDefintion(ServiceDefinition def) {
 		def.getServiceFactory().doConfigureDefinition(def);
 		logger.info("registering service definition: {}", def);
@@ -122,8 +122,7 @@ public class ServiceRegistry {
 	}
 
 	@SuppressWarnings("unchecked")
-	public void startAfterSpringContextInitialized() throws RuntimeException,
-			IOException {
+	public void startAfterSpringContextInitialized() throws RuntimeException, IOException {
 
 		collectServiceFactories();
 
@@ -135,23 +134,18 @@ public class ServiceRegistry {
 				String serviceType = properties.getProperty(key);
 
 				@SuppressWarnings("rawtypes")
-				ServiceFactory factory = serviceFactoryMap.get(serviceType
-						.toLowerCase());
+				ServiceFactory factory = serviceFactoryMap.get(serviceType.toLowerCase());
 
 				if (factory == null) {
-					logger.warn("No ServiceFactory registered for service type: "
-							+ serviceType.toLowerCase());
+					logger.warn("No ServiceFactory registered for service type: " + serviceType.toLowerCase());
 				} else {
 
-					String serviceName = key.substring(0, key.length()
-							- ".serviceType".length());
+					String serviceName = key.substring(0, key.length() - ".serviceType".length());
 
-					Properties scopedProperties = extractScopedPropertiesForService(
-							properties, serviceName);
+					Properties scopedProperties = extractScopedPropertiesForService(properties, serviceName);
 
 					Set<ServiceDefinition> set = Sets.newHashSet();
-					factory.createServiceDefintions(set, serviceName,
-							scopedProperties);
+					factory.createServiceDefintions(set, serviceName, scopedProperties);
 
 					for (ServiceDefinition def : set) {
 						registerServiceDefintion(def);
@@ -184,8 +178,7 @@ public class ServiceRegistry {
 		return key != null && key.endsWith(".serviceType");
 	}
 
-	Properties extractScopedPropertiesForService(Properties p,
-			String serviceName) {
+	Properties extractScopedPropertiesForService(Properties p, String serviceName) {
 		Properties scoped = new Properties();
 		for (Object keyObj : p.keySet()) {
 			String key = keyObj.toString();
@@ -204,8 +197,7 @@ public class ServiceRegistry {
 	@SuppressWarnings("rawtypes")
 	void collectServiceFactories() {
 
-		for (ServiceFactory sf : applicationContext.getBeansOfType(
-				ServiceFactory.class).values()) {
+		for (ServiceFactory sf : applicationContext.getBeansOfType(ServiceFactory.class).values()) {
 			logger.info("registering service factory: {}", sf);
 			serviceFactoryMap.put(sf.getServiceType().toLowerCase(), sf);
 		}
@@ -219,8 +211,7 @@ public class ServiceRegistry {
 	public ServiceFactory getServiceFactory(String name) {
 		ServiceFactory sf = serviceFactoryMap.get(name.toLowerCase());
 		if (sf == null) {
-			throw new MacGyverException("no ServiceFactory defined for type: "
-					+ name.toLowerCase());
+			throw new MacGyverException("no ServiceFactory defined for type: " + name.toLowerCase());
 		}
 		return sf;
 	}
@@ -230,18 +221,16 @@ public class ServiceRegistry {
 	}
 
 	public void publish(ServiceCreatedEvent event) {
-		if (syncBus!=null) {
+		if (syncBus != null) {
 			// test for null to assist with unit testing
 			syncBus.post(event);
 		}
 	}
 
-	protected Properties reloadProperties() throws MalformedURLException,
-			IOException {
+	protected Properties reloadProperties() throws MalformedURLException, IOException {
 		Properties p = new Properties();
 
-		File configGroovy = Bootstrap.getInstance().resolveConfig(
-				"services.groovy");
+		File configGroovy = Bootstrap.getInstance().resolveConfig("services.groovy");
 
 		logger.info("loading services from: {}", configGroovy);
 		ConfigSlurper slurper = new ConfigSlurper();
@@ -271,22 +260,32 @@ public class ServiceRegistry {
 	public Map<String, ServiceDefinition> getServiceDefinitions() {
 		return ImmutableMap.copyOf(definitions);
 	}
-	
+
 	/**
 	 * This method is intended for unit testing.
+	 * 
 	 * @param def
 	 */
 	public void addServiceDefinition(ServiceDefinition def) {
 		definitions.put(def.getName(), def);
 	}
-	
-	
 
+	/**
+	 * Resolve a service name by type+property. This is currently an O(n)
+	 * operation, where n is the number of services in the registry. So it
+	 * should not be used recklessly. However, in practice, service resolution
+	 * should be relatively infrequent so this should not be a problem.
+	 * 
+	 * @param serviceType
+	 * @param propertyName
+	 * @param propertyValue
+	 * @return
+	 */
 	protected List<String> findServiceNames(String serviceType, String propertyName, String propertyValue) {
-		Preconditions.checkArgument(serviceType!=null,"serviceType cannot be null");
-		
+		Preconditions.checkArgument(serviceType != null, "serviceType cannot be null");
+
 		List<String> list = Lists.newArrayList();
-		
+
 		definitions.entrySet().forEach(it -> {
 			ServiceDefinition def = it.getValue();
 			if (serviceType.equals(Strings.nullToEmpty(def.getProperty("serviceType")))) {
@@ -295,17 +294,30 @@ public class ServiceRegistry {
 				}
 			}
 		});
-		
+
 		return list;
 	}
-	
-	public <T> T getServiceByProperty(String serviceType, String key, String val) {
-		List<String> names = findServiceNames(serviceType,key,val);
+
+	/**
+	 * Resolve a service name by type+property. This is currently an O(n)
+	 * operation, where n is the number of services in the registry. So it
+	 * should not be used recklessly. However, in practice, service resolution
+	 * should be relatively infrequent so this should not be a problem.
+	 * 
+	 * @param serviceType
+	 * @param propertyName
+	 * @param propertyValue
+	 * @return
+	 */
+	public <T> T getServiceByProperty(String serviceType, String propertyName, String propertyValue) {
+		List<String> names = findServiceNames(serviceType, propertyName, propertyValue);
 		if (names.isEmpty()) {
-			throw new ServiceNotFoundException("could not locate service type:"+serviceType+" property:"+key+" value: "+val);
+			throw new ServiceNotFoundException(
+					"could not locate service type:" + serviceType + " property:" + propertyName + " value: " + propertyValue);
 		}
-		if (names.size()>1) {
-			throw new ServiceNotFoundException("found more than one service match:"+serviceType+" property:"+key+" value: "+val);	
+		if (names.size() > 1) {
+			throw new ServiceNotFoundException(
+					"found ambiguous match:" + serviceType + " property:" + propertyName + " value: " + propertyValue+" matches: "+names);
 		}
 		return (T) get(names.get(0));
 	}
