@@ -38,7 +38,7 @@ public class ServiceDefinition {
 		Preconditions.checkNotNull(name);
 		Preconditions.checkNotNull(primaryName);
 		Preconditions.checkNotNull(props);
-		Preconditions.checkNotNull(sf);
+		Preconditions.checkNotNull(sf, "ServiceFactory cannot be null");
 
 		this.name = name;
 		this.serviceFactory = sf;
