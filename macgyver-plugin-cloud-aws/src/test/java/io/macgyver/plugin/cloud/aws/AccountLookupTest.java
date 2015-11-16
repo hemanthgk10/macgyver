@@ -22,11 +22,11 @@ public class AccountLookupTest {
 		
 		Properties p = new Properties();
 		p.put("accountId", "1234567");
-		p.put("serviceType", "aws");
+	
 		ServiceFactory<AWSServiceClient> sf = new AWSServiceFactory();
 		sf.setServiceRegistry(registry);
 		Assertions.assertThat(sf.getServiceType()).isEqualTo("aws");
-		ServiceDefinition def = new ServiceDefinition("myaws", "myaws", p,sf);	
+		ServiceDefinition def = new ServiceDefinition("myaws", "myaws","aws", p,sf);	
 		registry.addServiceDefinition(def);
 		
 		
