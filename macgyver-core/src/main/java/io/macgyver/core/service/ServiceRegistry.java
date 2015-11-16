@@ -145,7 +145,7 @@ public class ServiceRegistry {
 					Properties scopedProperties = extractScopedPropertiesForService(properties, serviceName);
 
 					Set<ServiceDefinition> set = Sets.newHashSet();
-					factory.createServiceDefintions(set, serviceName, scopedProperties);
+					factory.createServiceDefintions(set, serviceName, scopedProperties,serviceType.toLowerCase());
 
 					for (ServiceDefinition def : set) {
 						registerServiceDefintion(def);
@@ -288,7 +288,7 @@ public class ServiceRegistry {
 
 		definitions.entrySet().forEach(it -> {
 			ServiceDefinition def = it.getValue();
-			if (serviceType.equals(Strings.nullToEmpty(def.getProperty("serviceType")))) {
+			if (serviceType.equals(Strings.nullToEmpty(def.getServiceType()))) {
 				if (Strings.nullToEmpty(def.getProperty(propertyName)).equals(propertyValue)) {
 					list.add(def.getName());
 				}

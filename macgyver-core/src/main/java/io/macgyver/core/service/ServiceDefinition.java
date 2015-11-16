@@ -31,9 +31,16 @@ public class ServiceDefinition {
 
 	@SuppressWarnings("rawtypes")
 	ServiceFactory serviceFactory;
-
+	String serviceType;
+	
+	
 	@SuppressWarnings("rawtypes")
 	public ServiceDefinition(String name, String primaryName, Properties props,
+			ServiceFactory sf) {
+		this(name,primaryName,null,props,sf);
+	}
+	@SuppressWarnings("rawtypes")
+	public ServiceDefinition(String name, String primaryName, String serviceType, Properties props,
 			ServiceFactory sf) {
 		Preconditions.checkNotNull(name);
 		Preconditions.checkNotNull(primaryName);
@@ -44,6 +51,7 @@ public class ServiceDefinition {
 		this.serviceFactory = sf;
 		this.properties.putAll(props);
 		this.primaryName = primaryName;
+		this.serviceType = serviceType;
 		
 		if (props!=null) {
 			boolean lazy = Boolean.parseBoolean(props.getProperty("lazyInit", DEFAULT_LAZY_INIT.toString()));
@@ -80,6 +88,9 @@ public class ServiceDefinition {
 				.add("primaryName", primaryName).toString();
 	}
 
+	public String getServiceType() {
+		return serviceType;
+	}
 	public void setLazyInit(boolean b) {
 		this.lazyInit = b;
 	}
@@ -89,7 +100,7 @@ public class ServiceDefinition {
 	}
 	
 	public ServiceDefinition createCollaboratorDefintiion(String suffix) {
-		ServiceDefinition def = new ServiceDefinition(getName()+suffix, getName(), getProperties(), getServiceFactory());
+		ServiceDefinition def = new ServiceDefinition(getName()+suffix, getName(), serviceType, getProperties(), getServiceFactory());
 		def.setLazyInit(isLazyInit());
 		return def;
 	}
