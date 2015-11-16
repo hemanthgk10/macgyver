@@ -130,11 +130,11 @@ public abstract class ServiceFactory<T> implements ApplicationContextAware {
 			ServiceDefinition primaryDefinition, Object primaryBean) {}
 
 	protected final void createServiceDefintions(Set<ServiceDefinition> defSet,
-			String name, Properties props) {
+			String name, Properties props, String serviceType) {
 		Preconditions.checkNotNull(defSet);
 		Preconditions.checkNotNull(name);
 		Preconditions.checkNotNull(props);
-		ServiceDefinition def = new ServiceDefinition(name, name, props, this);
+		ServiceDefinition def = new ServiceDefinition(name, name, serviceType,props, this);
 		defSet.add(def);
 		doCreateCollaboratorDefinitions(defSet, def);
 	}

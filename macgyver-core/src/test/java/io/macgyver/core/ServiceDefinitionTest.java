@@ -43,7 +43,7 @@ public class ServiceDefinitionTest {
 	public void testCreateCollab() {
 		Properties p = new Properties();
 		p.put("a", "1");
-		ServiceDefinition def = new ServiceDefinition("foo", "foo", p, testServiceFactory);
+		ServiceDefinition def = new ServiceDefinition("foo", "foo","testType", p, testServiceFactory);
 		
 		assertSame(testServiceFactory,def.getServiceFactory());
 		
@@ -63,7 +63,7 @@ public class ServiceDefinitionTest {
 		props.put("a", "1");
 		
 		
-		ServiceDefinition def = new ServiceDefinition("test", "test", props, testServiceFactory);	
+		ServiceDefinition def = new ServiceDefinition("test", "test", "testType",props, testServiceFactory);	
 		def.getProperties().put("b", "2");
 		Assert.assertEquals("1",def.getProperties().getProperty("a"));
 		Assert.assertEquals("2", def.getProperties().getProperty("b"));

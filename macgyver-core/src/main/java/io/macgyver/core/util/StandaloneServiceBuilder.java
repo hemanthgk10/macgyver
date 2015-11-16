@@ -38,6 +38,7 @@ public class StandaloneServiceBuilder {
 
 	String id;
 	ServiceFactory serviceFactory;
+	String serviceType=null;
 	
 	public static StandaloneServiceBuilder forServiceFactory(
 			Class<? extends ServiceFactory> clazz) {
@@ -51,6 +52,10 @@ public class StandaloneServiceBuilder {
 		return this;
 	}
 
+	public StandaloneServiceBuilder serviceType(String s) {
+		this.serviceType = s;
+		return this;
+	}
 	public <T> T build(Class<T> t) {
 		return (T) build();
 	}
@@ -69,7 +74,7 @@ public class StandaloneServiceBuilder {
 
 			serviceFactory = serviceFactoryClass.newInstance();
 
-			ServiceDefinition def = new ServiceDefinition(id, id, props, serviceFactory);
+			ServiceDefinition def = new ServiceDefinition(id, id,serviceType, props, serviceFactory);
 			registry.addServiceDefinition(def);
 
 			serviceFactory.setServiceRegistry(registry);
