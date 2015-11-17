@@ -1,7 +1,12 @@
 package io.macgyver.plugin.cloud.aws.scanner;
 
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.Regions;
+
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.plugin.cloud.aws.AWSServiceClient;
+import io.macgyver.plugin.cloud.aws.AWSServiceClientImpl;
 
 public class DefaultAWSScannerGroup extends AWSScannerGroup {
 
@@ -17,6 +22,7 @@ public class DefaultAWSScannerGroup extends AWSScannerGroup {
 		scannerList.add(new AvailabilityZoneScanner(client, neo4j));
 		scannerList.add(new SubnetScanner(client, neo4j));
 		scannerList.add(new VPCScanner(client, neo4j));
+		scannerList.add(new SecurityGroupScanner(client, neo4j));
 		scannerList.add(new AMIScanner(client, neo4j));
 		scannerList.add(new EC2InstanceScanner(client, neo4j));
 		scannerList.add(new ELBScanner(client, neo4j));
@@ -27,6 +33,15 @@ public class DefaultAWSScannerGroup extends AWSScannerGroup {
 		
 	}
 
-
+	public static  void main(String [] args) throws Exception {
+		
+		AWSServiceClientImpl c = new AWSServiceClientImpl(new DefaultAWSCredentialsProviderChain(),"00000000000");
+	
+		NeoRxClient neo4j = new NeoRxClient();
+		
+		AWSScannerGroup g = new DefaultAWSScannerGroup(c, neo4j);
+		
+		g.scan(Region.getRegion(Regions.US_WEST_2));
+	}
 
 }

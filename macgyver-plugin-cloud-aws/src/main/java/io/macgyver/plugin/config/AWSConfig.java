@@ -14,6 +14,7 @@
 package io.macgyver.plugin.config;
 
 import io.macgyver.plugin.cloud.aws.AWSServiceFactory;
+import io.macgyver.plugin.cloud.aws.scanner.AWSScannerService;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,5 +27,10 @@ public class AWSConfig {
 		
 		return new  AWSServiceFactory();
 		
+	}
+	
+	@Bean
+	public AWSScannerService macAWSScannerService() {
+		return new AWSScannerService();
 	}
 }

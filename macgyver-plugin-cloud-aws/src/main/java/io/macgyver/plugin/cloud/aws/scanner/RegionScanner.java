@@ -38,7 +38,8 @@ public class RegionScanner extends AWSServiceScanner {
 			try {
 				ObjectNode n = convertAwsObject(it, region);
 				
-				String cypher = "merge (x:AwsRegion {aws_regionName:{aws_regionName}}) set x+={props}  remove x.aws_region set x.updateTs=timestamp()";
+				n.remove("aws_account");
+				String cypher = "merge (x:AwsRegion {aws_regionName:{aws_regionName}}) set x+={props}  remove x.aws_region,x.aws_account set x.updateTs=timestamp()";
 				
 				NeoRxClient neoRx = getNeoRxClient();
 				Preconditions.checkNotNull(neoRx);

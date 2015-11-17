@@ -27,7 +27,7 @@ public class AccountScanner extends AWSServiceScanner {
 		
 			NeoRxClient neoRx = getNeoRxClient();
 			Preconditions.checkNotNull(neoRx);
-			
+			Preconditions.checkNotNull(getAccountId(),"accountId must be set on AWSServiceClient");
 			neoRx.execCypher(cypher, "aws_account", getAccountId());
 		
 	}

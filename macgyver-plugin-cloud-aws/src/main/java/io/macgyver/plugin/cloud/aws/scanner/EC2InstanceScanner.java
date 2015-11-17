@@ -27,9 +27,9 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
-
+import com.amazonaws.services.ec2.model.InstanceState;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.gwt.thirdparty.guava.common.base.Preconditions;
+import com.google.common.base.Preconditions;;
 
 public class EC2InstanceScanner extends AWSServiceScanner {
 
@@ -38,7 +38,6 @@ public class EC2InstanceScanner extends AWSServiceScanner {
 	public EC2InstanceScanner(AWSServiceClient client, NeoRxClient neo4j) {
 		super(client, neo4j);
 	}
-
 
 	@Override
 	public Optional<String> computeArn(JsonNode n) {
@@ -67,36 +66,43 @@ public class EC2InstanceScanner extends AWSServiceScanner {
 			reservation.getInstances().forEach(instance -> {
 
 				try {
-					JsonNode n = convertAwsObject(instance, region);
-					NeoRxClient neoRx = getNeoRxClient();
-				
-					String subnetId = n.path("aws_subnetId").asText(null);
-					String instanceArn = n.path("aws_arn").asText(null);
-					String account = n.path("aws_account").asText(null);
-					String imageId = n.path("aws_imageId").asText(null);
-					
-					Preconditions.checkNotNull(neoRx);
-					Preconditions.checkState(!Strings.isNullOrEmpty(subnetId), "aws_subnetId must not be null");
-					Preconditions.checkState(!Strings.isNullOrEmpty(instanceArn), "aws_arn must not be null");
-					Preconditions.checkState(!Strings.isNullOrEmpty(account), "aws_account must not be null");
-					Preconditions.checkState(!Strings.isNullOrEmpty(imageId), "aws_imageId must not be null");
-					
-					
-					String subnetArn = String.format("arn:aws:ec2:%s:%s:subnet/%s", region.getName(), account, subnetId);
-					String amiArn = String.format("arn:aws:ec2:%s::image/%s", region.getName(), imageId);
-					
-					String createInstanceCypher = "merge (x:AwsEc2Instance {aws_arn:{instanceArn}}) set x+={props}, x.updateTs=timestamp()";
-					String mapToSubnetCypher = "match (x:AwsSubnet {aws_arn:{subnetArn}}), "
-							+ "(y:AwsEc2Instance {aws_arn:{instanceArn}}) "
-							+ "merge (y)-[r:RESIDES_IN]->(x) set r.updateTs=timestamp()";
-					String mapToImageCypher = "match (x:AwsAmi {aws_arn:{amiArn}}), "
-							+ "(y:AwsEc2Instance {aws_arn:{instanceArn}}) "
-							+ "merge (y)-[r:USES]-(x) set r.updateTs=timestamp()";
 
-					neoRx.execCypher(createInstanceCypher, "instanceArn",instanceArn, "props",n);
-					neoRx.execCypher(mapToSubnetCypher, "subnetArn", subnetArn, "instanceArn", instanceArn);
-					neoRx.execCypher(mapToImageCypher, "amiArn", amiArn, "instanceArn", instanceArn);
-				
+					if (instance.getState().getName().equals("terminated")) {
+						// instance is terminated
+						// we may want to take the opportunity to delete it right here
+					} else {
+						JsonNode n = convertAwsObject(instance, region);
+						NeoRxClient neoRx = getNeoRxClient();
+
+						String subnetId = n.path("aws_subnetId").asText(null);
+						String instanceArn = n.path("aws_arn").asText(null);
+						String account = n.path("aws_account").asText(null);
+						String imageId = n.path("aws_imageId").asText(null);
+
+						Preconditions.checkNotNull(neoRx);
+						Preconditions.checkState(!Strings.isNullOrEmpty(subnetId),
+								"aws_subnetId must not be null " + JsonNodes.pretty(n));
+						Preconditions.checkState(!Strings.isNullOrEmpty(instanceArn), "aws_arn must not be null");
+						Preconditions.checkState(!Strings.isNullOrEmpty(account), "aws_account must not be null");
+						Preconditions.checkState(!Strings.isNullOrEmpty(imageId), "aws_imageId must not be null");
+
+						String subnetArn = String.format("arn:aws:ec2:%s:%s:subnet/%s", region.getName(), account,
+								subnetId);
+						String amiArn = String.format("arn:aws:ec2:%s::image/%s", region.getName(), imageId);
+
+						String createInstanceCypher = "merge (x:AwsEc2Instance {aws_arn:{instanceArn}}) set x+={props}, x.updateTs=timestamp()";
+						String mapToSubnetCypher = "match (x:AwsSubnet {aws_arn:{subnetArn}}), "
+								+ "(y:AwsEc2Instance {aws_arn:{instanceArn}}) "
+								+ "merge (y)-[r:RESIDES_IN]->(x) set r.updateTs=timestamp()";
+						String mapToImageCypher = "match (x:AwsAmi {aws_arn:{amiArn}}), "
+								+ "(y:AwsEc2Instance {aws_arn:{instanceArn}}) "
+								+ "merge (y)-[r:USES]-(x) set r.updateTs=timestamp()";
+
+						neoRx.execCypher(createInstanceCypher, "instanceArn", instanceArn, "props", n);
+						neoRx.execCypher(mapToSubnetCypher, "subnetArn", subnetArn, "instanceArn", instanceArn);
+						neoRx.execCypher(mapToImageCypher, "amiArn", amiArn, "instanceArn", instanceArn);
+					}
+
 				} catch (RuntimeException e) {
 					logger.warn("problem scanning EC2 instance", e);
 				}

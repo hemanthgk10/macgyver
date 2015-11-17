@@ -41,6 +41,10 @@ public class AWSServiceClientImpl implements AWSServiceClient {
 	public AWSServiceClientImpl(AWSCredentialsProvider p) {
 		credentialsProvider = p;
 	}
+	public AWSServiceClientImpl(AWSCredentialsProvider p, String accountId) {
+		credentialsProvider = p;
+		this.accountId = accountId;
+	}
 	@Override
 	public AWSCredentialsProvider getCredentialsProvider() {
 		return credentialsProvider;
