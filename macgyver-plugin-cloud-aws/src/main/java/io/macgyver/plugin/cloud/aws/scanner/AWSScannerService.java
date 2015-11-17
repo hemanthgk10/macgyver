@@ -1,0 +1,84 @@
+package io.macgyver.plugin.cloud.aws.scanner;
+
+import java.util.List;
+import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import javax.annotation.PostConstruct;
+
+import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.google.common.base.Strings;
+import com.google.gwt.thirdparty.guava.common.base.Splitter;
+
+import io.macgyver.core.service.ServiceRegistry;
+import io.macgyver.neorx.rest.NeoRxClient;
+import io.macgyver.plugin.cloud.aws.AWSServiceClient;
+
+public class AWSScannerService implements Runnable {
+
+	org.slf4j.Logger logger = LoggerFactory.getLogger(AWSScannerService.class);
+	@Autowired
+	ServiceRegistry registy;
+
+	@Autowired
+	NeoRxClient neo4j;
+
+	ScheduledExecutorService executor;
+
+	public AWSScannerService() {
+
+		executor = Executors.newSingleThreadScheduledExecutor();
+
+	}
+
+	@PostConstruct
+	public void startup() {
+		executor.scheduleWithFixedDelay(this, 30, 120, TimeUnit.SECONDS);
+	}
+
+	@Override
+	public void run() {
+		registy.getServiceDefinitions().values().forEach(it -> {
+			try {
+				String type = Strings.nullToEmpty(it.getServiceType());
+				if (type.toLowerCase().equals("aws")) {
+					AWSServiceClient c = registy.get(it.getName());
+					
+					List<String> regionList = Splitter.on(",").omitEmptyStrings().trimResults()
+							.splitToList(Strings.nullToEmpty(it.getProperty("regions")));
+					scan(c,regionList.toArray(new String[0]));
+				}
+			} catch (Exception e) {
+				logger.warn("", e);
+			}
+		});
+	}
+	
+	
+	public void scanAccount(String account, String ... regions) {
+		AWSServiceClient c = registy.getServiceByProperty("aws","accountId", account);
+		scan(c,regions);
+	}
+	
+	public void scan(AWSServiceClient c, String...regions) {
+		
+		if (regions==null || regions.length==0) {
+			new DefaultAWSScannerGroup(c, neo4j).scanAllRegions();
+		} else {
+			for (String regionName: regions) {
+				try {
+					new DefaultAWSScannerGroup(c, neo4j).scan(regionName);
+				} catch (Exception e) {
+					logger.warn("problem scanning region: " + regionName, e);
+				}
+			}
+		}
+	}
+
+}

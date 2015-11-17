@@ -72,7 +72,7 @@ public  abstract class AWSServiceScanner {
 		});
 
 		n.path("tags").iterator().forEachRemaining(it -> {
-			String tagKey = "tag_"+it.path("key").asText();
+			String tagKey = "aws_tag_"+it.path("key").asText();
 			r.put(tagKey, it.path("value").asText());
 		});
 		
