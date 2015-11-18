@@ -26,6 +26,7 @@ import java.io.StringReader;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.ignite.services.Service;
 import org.apache.ignite.services.ServiceContext;
@@ -46,7 +47,7 @@ public class IgniteSchedulerService implements Service, Runnable, Serializable, 
 
 	MacGyverTaskCollector taskCollector;
 
-	volatile Optional<Scheduler> scheduler = Optional.absent();
+	AtomicReference<Scheduler> schedulerRef = new AtomicReference<>();
 
 	public static class CrontabLineProcessor implements LineProcessor<Optional<ObjectNode>> {
 		int i = 0;
@@ -85,9 +86,9 @@ public class IgniteSchedulerService implements Service, Runnable, Serializable, 
 	@Override
 	public synchronized void cancel(ServiceContext ctx) {
 
-	
-			if (scheduler.isPresent()) {
-				scheduler.get().stop();
+		Scheduler s = schedulerRef.get();
+			if (s!=null) {
+				s.stop();
 			}
 
 			scheduledFuture.cancel(true);
@@ -113,9 +114,9 @@ public class IgniteSchedulerService implements Service, Runnable, Serializable, 
 			schedulerInstance.addTaskCollector(taskCollector);
 			schedulerInstance.setDaemon(true);
 			schedulerInstance.addSchedulerListener(new MacGyverScheduleListener());
-			LoggerFactory.getLogger(IgniteSchedulerService.class).info("starting scheduler: {}", scheduler);
+			LoggerFactory.getLogger(IgniteSchedulerService.class).info("starting scheduler: {}", schedulerInstance);
 			schedulerInstance.start();
-			this.scheduler = Optional.fromNullable(schedulerInstance);
+			this.schedulerRef.set(schedulerInstance);
 			Runnable r = new Runnable() {
 
 				@Override
@@ -208,8 +209,9 @@ public class IgniteSchedulerService implements Service, Runnable, Serializable, 
 		n.put("script", scriptName);
 		MacGyverTask task = new MacGyverTask(n);
 		
-		if (scheduler.isPresent()) {
-			scheduler.get().launch(task);
+		Scheduler s = schedulerRef.get();
+		if (s!=null) {
+			s.launch(task);
 		}
 		
 	}
