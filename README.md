@@ -1,7 +1,7 @@
 #MacGyver
 
 
-[![Circle CI](https://circleci.com/gh/if6was9/macgyver.svg?style=svg)](https://circleci.com/gh/if6was9/macgyver) [ ![Download](https://api.bintray.com/packages/robschoening/io-macgyver/io-macgyver/images/download.png) ](https://bintray.com/robschoening/io-macgyver/io-macgyver/_latestVersion)
+[![Circle CI](https://circleci.com/gh/LendingClub/macgyver.svg?style=svg)](https://circleci.com/gh/LendingClub/macgyver) [ ![Download](https://api.bintray.com/packages/robschoening/io-macgyver/io-macgyver/images/download.png) ](https://bintray.com/robschoening/io-macgyver/io-macgyver/_latestVersion)
 
 ##  Quick Start
 
