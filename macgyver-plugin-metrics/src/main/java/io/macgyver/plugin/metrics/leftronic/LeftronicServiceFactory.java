@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 import io.macgyver.core.Kernel;
 import io.macgyver.core.service.BasicServiceFactory;
 import io.macgyver.core.service.ServiceDefinition;
+import io.macgyver.plugin.metrics.RegexMetricFilter;
 
 import org.springframework.stereotype.Component;
 
@@ -52,6 +53,10 @@ public class LeftronicServiceFactory extends
 			b = b.prefixedWith(prefix);
 		}
 
+		String includes = props.getProperty("includes","");
+		String excludes = props.getProperty("excludes",".*counter\\.status.* .*gauge\\.response.*");
+		b = b.filter(new RegexMetricFilter().includes(includes).excludes(excludes));
+		
 		String rateTimeUnit = props.getProperty("rateTimeUnit", "MINUTES");
 		b = b.convertRatesTo(TimeUnit.valueOf(rateTimeUnit));
 

@@ -39,7 +39,7 @@ public class MetricsConfig {
 				.getOrCreate("macMetricRegistry");
 
 		Slf4jReporter r = Slf4jReporter.forRegistry(registry)
-				.withLoggingLevel(LoggingLevel.DEBUG)
+				.withLoggingLevel(LoggingLevel.INFO)
 				.convertDurationsTo(TimeUnit.MILLISECONDS)
 				.convertRatesTo(TimeUnit.SECONDS)
 				.outputTo(LoggerFactory.getLogger("io.macgyver.metrics"))
@@ -47,6 +47,7 @@ public class MetricsConfig {
 
 		r.start(60, TimeUnit.SECONDS);
 
+		
 		return registry;
 	}
 
