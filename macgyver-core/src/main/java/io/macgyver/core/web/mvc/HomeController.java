@@ -58,6 +58,8 @@ public class HomeController implements UIContextDecorator {
 		ctx.getOrCreateMenuItem("dashboard", "home").label("Home").url("/home");
 		
 		
+        ctx.getOrCreateMenuItem("misc").label("Misc").style("fa fa-cubes").order(40);
+        ctx.getOrCreateMenuItem("misc","snapshare").label("Snap Share").url("/core/snap-share");
 		if (AuthUtil.currentUserHasRole(MacGyverRole.ROLE_MACGYVER_ADMIN)) {
 			ctx.getOrCreateMenuItem("admin").label("Manage MacGyver").style("fa fa-gear").order(50);
 			ctx.getOrCreateMenuItem("admin", "scripts").label("Scripts").url("/core/admin/scripts");
