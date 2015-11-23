@@ -54,14 +54,14 @@ public class HomeController implements UIContextDecorator {
 
 	@Override
 	public void call(UIContext ctx) {
-		ctx.getOrCreateMenuItem("dashboard").label("Dashboard").style("fa fa-dashboard").order(10);
+		ctx.getOrCreateMenuItem("dashboard").label("Dashboard").style("fa fa-dashboard").order(5);
 		ctx.getOrCreateMenuItem("dashboard", "home").label("Home").url("/home");
 		
 		
-        ctx.getOrCreateMenuItem("misc").label("Misc").style("fa fa-cubes").order(40);
+        ctx.getOrCreateMenuItem("misc").label("Misc").style("fa fa-cubes");
         ctx.getOrCreateMenuItem("misc","snapshare").label("Snap Share").url("/core/snap-share");
 		if (AuthUtil.currentUserHasRole(MacGyverRole.ROLE_MACGYVER_ADMIN)) {
-			ctx.getOrCreateMenuItem("admin").label("Manage MacGyver").style("fa fa-gear").order(50);
+			ctx.getOrCreateMenuItem("admin").label("Manage MacGyver").style("fa fa-gear").order(100);
 			ctx.getOrCreateMenuItem("admin", "scripts").label("Scripts").url("/core/admin/scripts");
 			ctx.getOrCreateMenuItem("admin", "cluster-info").label("Cluster").url("/core/admin/cluster-info");
 			ctx.getOrCreateMenuItem("admin", "encrypt-string").label("Encrypt String")
