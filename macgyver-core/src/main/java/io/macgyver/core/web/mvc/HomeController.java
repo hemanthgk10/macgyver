@@ -13,6 +13,13 @@
  */
 package io.macgyver.core.web.mvc;
 
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
@@ -20,32 +27,50 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.Maps;
+
 import io.macgyver.core.auth.AuthUtil;
 import io.macgyver.core.auth.MacGyverRole;
 import io.macgyver.core.web.UIContext;
 import io.macgyver.core.web.UIContextDecorator;
+import io.macgyver.neorx.rest.NeoRxClient;
 
 @Component("macHomeController")
 @Controller
 @PreAuthorize("hasAnyRole('ROLE_MACGYVER_USER','ROLE_MACGYVER_ADMIN')")
 public class HomeController implements UIContextDecorator {
 
+
+	@Autowired
+	NeoRxClient neo4j;
+
+	Logger logger = LoggerFactory.getLogger(HomeController.class);
+
+	public HomeController() {
+		
+	}
+
 	@RequestMapping("/")
 	@ResponseBody
 	public ModelAndView home() {
 
 		return new ModelAndView("redirect:/home");
-		
+
 	}
-	
+
 	@RequestMapping("/home")
 	@ResponseBody
 	public ModelAndView lteHome() {
 
+
 		return new ModelAndView("/home");
-		
+
 	}
-	
+
 	@RequestMapping("/test/throwException")
 	@ResponseBody
 	public ModelAndView throwException() {
@@ -54,21 +79,30 @@ public class HomeController implements UIContextDecorator {
 
 	@Override
 	public void call(UIContext ctx) {
-		ctx.getOrCreateMenuItem("dashboard").label("Dashboard").style("fa fa-dashboard").order(5);
+		ctx.getOrCreateMenuItem("dashboard").label("Dashboard")
+				.style("fa fa-dashboard").order(5);
 		ctx.getOrCreateMenuItem("dashboard", "home").label("Home").url("/home");
-		
-		
-        ctx.getOrCreateMenuItem("misc").label("Misc").style("fa fa-cubes");
-        ctx.getOrCreateMenuItem("misc","snapshare").label("Snap Share").url("/core/snap-share");
+
+		ctx.getOrCreateMenuItem("misc").label("Misc").style("fa fa-cubes");
+		ctx.getOrCreateMenuItem("misc", "snapshare").label("Snap Share")
+				.url("/core/snap-share");
 		if (AuthUtil.currentUserHasRole(MacGyverRole.ROLE_MACGYVER_ADMIN)) {
-			ctx.getOrCreateMenuItem("admin").label("Manage MacGyver").style("fa fa-gear").order(100);
-			ctx.getOrCreateMenuItem("admin", "scripts").label("Scripts").url("/core/admin/scripts");
-			ctx.getOrCreateMenuItem("admin", "cluster-info").label("Cluster").url("/core/admin/cluster-info");
-			ctx.getOrCreateMenuItem("admin", "encrypt-string").label("Encrypt String")
-					.url("/core/admin/encrypt-string");
-			ctx.getOrCreateMenuItem("admin", "services").label("Services").url("/core/admin/services");
-			ctx.getOrCreateMenuItem("admin", "spring").label("Spring").url("/core/admin/spring-beans");
-			ctx.getOrCreateMenuItem("admin", "neo4j-browser").label("Neo4j").url("/browser");
+			ctx.getOrCreateMenuItem("admin").label("Manage MacGyver")
+					.style("fa fa-gear").order(100);
+			ctx.getOrCreateMenuItem("admin", "scripts").label("Scripts")
+					.url("/core/admin/scripts");
+			ctx.getOrCreateMenuItem("admin", "cluster-info").label("Cluster")
+					.url("/core/admin/cluster-info");
+			ctx.getOrCreateMenuItem("admin", "encrypt-string")
+					.label("Encrypt String").url("/core/admin/encrypt-string");
+			ctx.getOrCreateMenuItem("admin", "services").label("Services")
+					.url("/core/admin/services");
+			ctx.getOrCreateMenuItem("admin", "spring").label("Spring")
+					.url("/core/admin/spring-beans");
+			ctx.getOrCreateMenuItem("admin", "neo4j-browser").label("Neo4j")
+					.url("/browser");
 		}
 	}
+
+
 }
