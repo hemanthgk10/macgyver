@@ -22,23 +22,23 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Maps;
 import com.google.common.io.BaseEncoding;
 
-@Component("macSnapPassController")
+@Component("macSnapShareController")
 @Controller
 @PreAuthorize("hasAnyRole('ROLE_MACGYVER_USER')")
-public class SnapPassController {
+public class SnapShareController {
 
-	Logger logger = LoggerFactory.getLogger(SnapPassController.class);
+	Logger logger = LoggerFactory.getLogger(SnapShareController.class);
 	
 	int expirationMinutes = 15;
 
 	@Autowired
 	NeoRxClient neo4j;
 
-	public SnapPassController() {
+	public SnapShareController() {
 
 	}
 
-	@RequestMapping("/core/snappass")
+	@RequestMapping("/core/snap-share")
 	@ResponseBody
 	public ModelAndView search(HttpServletRequest request) {
 
@@ -56,7 +56,7 @@ public class SnapPassController {
 			long expiration = System.currentTimeMillis()+TimeUnit.MINUTES.toMillis(expirationMinutes);
 			
 			neo4j.execCypher(
-					"merge (s:SnapPass {token: {token}}) set s.value={value}, s.updateTs=timestamp(), s.expirationTs={expirationTs}",
+					"merge (s:SnapShare {token: {token}}) set s.value={value}, s.updateTs=timestamp(), s.expirationTs={expirationTs}",
 					"token", token, "value", val,"expirationTs",expiration);
 
 			String url = request.getRequestURL() + "?token=" + token;
@@ -65,7 +65,7 @@ public class SnapPassController {
 			m.put("tokenUrl", url);
 			m.put("expirationMinutes", expirationMinutes);
 
-			return new ModelAndView("/core/snappass", m);
+			return new ModelAndView("/core/snap-share", m);
 		}
 
 		if (token != null) {
@@ -73,14 +73,14 @@ public class SnapPassController {
 
 				JsonNode n = neo4j
 						.execCypher(
-								"match (s:SnapPass {token:{token}}) where timestamp()<s.expirationTs  return s",
+								"match (s:SnapShare {token:{token}}) where timestamp()<s.expirationTs  return s",
 								"token", token)
 						.toBlocking().first();
 			
 				String v = decrypt(n.path("value").asText());
 
 				
-				return new ModelAndView("/core/snappass", "secret", v);
+				return new ModelAndView("/core/snap-share", "secret", v);
 
 			} catch (RuntimeException e) {
 				logger.warn("retrieval failure: "+e.toString());
@@ -88,7 +88,7 @@ public class SnapPassController {
 			}
 		}
 
-		return new ModelAndView("/core/snappass", "notFound", true);
+		return new ModelAndView("/core/snap-share", "notFound", true);
 
 	}
 	
@@ -103,7 +103,7 @@ public class SnapPassController {
 	}
 	
 	public void purgeExpired() {
-		neo4j.execCypher("match (s:SnapPass) where timestamp()>s.expirationTs delete s");
+		neo4j.execCypher("match (s:SnapShare) where timestamp()>s.expirationTs delete s");
 	}
 
 }
