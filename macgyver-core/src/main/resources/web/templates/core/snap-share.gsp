@@ -39,10 +39,10 @@ if (tokenUrl ) {
 
 		    <div class="box box-info">
         <div class="box-header with-border">
-          <h3 class="box-title">Snap Pass</h3>
+          <h3 class="box-title">Snap Share</h3>
         </div> <!-- /.box-header -->
         <!-- form start -->
-        <form class="form-horizontal" method="post" action="/core/snappass" role="form">
+        <form class="form-horizontal" method="post" action="/core/snap-share" role="form">
                <div class="box-body">
         
         <%
