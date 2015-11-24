@@ -152,7 +152,7 @@ public class WebConfig implements EnvironmentAware {
 						RemoteIpValve remoteIpValve = new RemoteIpValve();
 						remoteIpValve
 								.setTrustedProxies("10\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}|192\\.168\\.\\d{1,3}\\.\\d{1,3}|169\\.254\\.\\d{1,3}\\.\\d{1,3}|127\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}|::1|0:0:0:0:0:0:0:1");
-
+						remoteIpValve.setProtocolHeader("X-Forwarded-Proto");
 						factory.addContextValves(remoteIpValve);
 
 						AccessLogValve accessLogValve = new AccessLogValve();
