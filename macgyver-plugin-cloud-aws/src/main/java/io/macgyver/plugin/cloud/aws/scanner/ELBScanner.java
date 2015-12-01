@@ -37,17 +37,18 @@ public class ELBScanner extends AWSServiceScanner {
 		AmazonElasticLoadBalancingClient client = new AmazonElasticLoadBalancingClient(
 				getAWSServiceClient().getCredentialsProvider()).withRegion(region);
 		DescribeLoadBalancersResult results = client.describeLoadBalancers();
+		GraphNodeGarbageCollector gc = new GraphNodeGarbageCollector().neo4j(getNeoRxClient()).region(region.getName()).account(getAccountId()).label("AwsElb");
 		results.getLoadBalancerDescriptions().forEach(lb -> {
 			try {
 				ObjectNode n = convertAwsObject(lb, region);
 
 				String elbArn = n.path("aws_arn").asText();
 
-				String cypher = "merge (x:AwsElb {aws_arn:{aws_arn}}) set x+={props} set x.updateTs=timestamp()";
+				String cypher = "merge (x:AwsElb {aws_arn:{aws_arn}}) set x+={props} set x.updateTs=timestamp() return x";
 
 				Preconditions.checkNotNull(neoRx);
 
-				neoRx.execCypher(cypher, "aws_arn", elbArn, "props", n);
+				neoRx.execCypher(cypher, "aws_arn", elbArn, "props", n).forEach(gc.MERGE_ACTION);
 
 				mapElbRelationships(lb, elbArn, region.getName());
 			} catch (RuntimeException e) {
@@ -56,6 +57,7 @@ public class ELBScanner extends AWSServiceScanner {
 
 		});
 
+		gc.invoke();
 	}
 
 	protected void mapElbRelationships(LoadBalancerDescription lb, String elbArn, String region) {

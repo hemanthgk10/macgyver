@@ -2,7 +2,8 @@ package io.macgyver.plugin.cloud.aws.scanner;
 
 import java.util.Optional;
 
-import joptsimple.internal.Strings;
+
+
 
 import com.amazonaws.regions.Region;
 import com.amazonaws.services.ec2.AmazonEC2Client;
@@ -11,6 +12,7 @@ import com.amazonaws.services.ec2.model.DescribeImagesResult;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.plugin.cloud.aws.AWSServiceClient;
@@ -39,7 +41,7 @@ public class AMIScanner extends AWSServiceScanner {
 		
 		NeoRxClient neoRx = getNeoRxClient();
 		Preconditions.checkNotNull(neoRx);
-		
+		GraphNodeGarbageCollector gc = newGarbageCollector().label("AwsAmi").region(region);
 		DescribeImagesRequest req = new DescribeImagesRequest().withOwners("self");
 		DescribeImagesResult result = c.describeImages(req);
 		
@@ -48,12 +50,13 @@ public class AMIScanner extends AWSServiceScanner {
 				ObjectNode n = convertAwsObject(i, region);
 				
 				String cypher = "merge (x:AwsAmi {aws_arn:{aws_arn}}) set x+={props} set x.updateTs=timestamp()";
-				neoRx.execCypher(cypher, "aws_arn", n.path("aws_arn").asText(), "props",n);		
+				neoRx.execCypher(cypher, "aws_arn", n.path("aws_arn").asText(), "props",n).forEach(gc.MERGE_ACTION);	
 				
 			} catch (RuntimeException e) { 
 				logger.warn("problem scanning AMI", e);
 			}
 		});
+		gc.invoke();
 	}
 
 }
