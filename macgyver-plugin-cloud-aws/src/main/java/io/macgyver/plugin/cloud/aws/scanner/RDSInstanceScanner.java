@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import joptsimple.internal.Strings;
-
 import com.amazonaws.regions.Region;
 import com.amazonaws.services.rds.AmazonRDSClient;
 import com.amazonaws.services.rds.model.DBInstance;
@@ -13,6 +11,7 @@ import com.amazonaws.services.rds.model.DescribeDBInstancesResult;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Strings;
 import com.google.gwt.thirdparty.guava.common.base.Preconditions;
 
 import io.macgyver.neorx.rest.NeoRxClient;
@@ -43,6 +42,7 @@ public class RDSInstanceScanner extends AWSServiceScanner {
 		AmazonRDSClient client = new AmazonRDSClient(getAWSServiceClient().getCredentialsProvider()).withRegion(region);
 		DescribeDBInstancesResult result = client.describeDBInstances();
 		
+		GraphNodeGarbageCollector gc = new GraphNodeGarbageCollector().label("AwsRdsInstance").account(getAccountId()).region(region);
 		result.getDBInstances().forEach(instance -> { 	
 			try { 
 				ObjectNode n = convertAwsObject(instance, region);
@@ -52,7 +52,7 @@ public class RDSInstanceScanner extends AWSServiceScanner {
 				String rdsArn = n.path("aws_arn").asText();
 				
 				String cypher = "merge (x:AwsRdsInstance {aws_arn:{aws_arn}}) set x+={props} set x.updateTs=timestamp()";
-				neoRx.execCypher(cypher, "aws_arn", rdsArn, "props",n);
+				neoRx.execCypher(cypher, "aws_arn", rdsArn, "props",n).forEach(gc.MERGE_ACTION);
 				
 				List<String> subnets = getSubnets(instance);
 				for (String s : subnets) { 
@@ -68,6 +68,7 @@ public class RDSInstanceScanner extends AWSServiceScanner {
 			}
 		});
 	
+		gc.invoke();
 	
 	}
 	

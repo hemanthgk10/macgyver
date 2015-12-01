@@ -30,21 +30,22 @@ public class ASGScanner extends AWSServiceScanner {
 	@Override
 	public void scan(Region region) {
 
+		GraphNodeGarbageCollector gc = newGarbageCollector().label("AwsAsg").region(region);
 			AmazonAutoScalingClient client = new AmazonAutoScalingClient(getAWSServiceClient().getCredentialsProvider()).withRegion(region); 
 			DescribeAutoScalingGroupsResult results = client.describeAutoScalingGroups();
 			results.getAutoScalingGroups().forEach(asg -> {
 				ObjectNode n = convertAwsObject(asg, region);
 				String asgArn = n.path("aws_arn").asText();
 				
-				String cypher = "merge (x:AwsAsg {aws_arn:{aws_arn}}) set x+={props}, x.updateTs=timestamp()";
+				String cypher = "merge (x:AwsAsg {aws_arn:{aws_arn}}) set x+={props}, x.updateTs=timestamp() return x";
 				
 				Preconditions.checkNotNull(neoRx);
-				neoRx.execCypher(cypher, "aws_arn",asgArn, "props",n);
+				neoRx.execCypher(cypher, "aws_arn",asgArn, "props",n).forEach(gc.MERGE_ACTION);
 
 				mapAsgRelationships(asg, asgArn, region.getName());				
 				
 			});
-
+			gc.invoke();
 	}
 
 	protected void mapAsgRelationships(AutoScalingGroup asg, String asgArn, String region) { 

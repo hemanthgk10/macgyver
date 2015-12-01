@@ -2,6 +2,7 @@ package io.macgyver.plugin.cloud.aws.scanner;
 
 import java.util.Optional;
 
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,4 +95,9 @@ public  abstract class AWSServiceScanner {
 		n = flatten(n);
 		return n;
 	}
+	
+	public GraphNodeGarbageCollector newGarbageCollector() {
+		return new GraphNodeGarbageCollector().neo4j(getNeoRxClient()).account(getAccountId());
+	}
+	
 }

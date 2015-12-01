@@ -27,13 +27,14 @@ public class AvailabilityZoneScanner extends AWSServiceScanner {
 	public void scan(Region region) {
 		AmazonEC2Client c = getAWSServiceClient().createEC2Client(region);
 
+		GraphNodeGarbageCollector gc = newGarbageCollector().region(region).label("AwsAvailabilityZone");
 		DescribeAvailabilityZonesResult result = c.describeAvailabilityZones();
 		result.getAvailabilityZones().forEach(it -> {
 			
 			try {
 				ObjectNode n = convertAwsObject(it, region);
 				
-				String cypher = "merge (y:AwsAvailabilityZone {aws_zoneName:{aws_zoneName}, aws_region:{aws_region}, aws_account:{aws_account}}) set y+={props} set y.updateTs=timestamp()";
+				String cypher = "merge (y:AwsAvailabilityZone {aws_zoneName:{aws_zoneName}, aws_region:{aws_region}, aws_account:{aws_account}}) set y+={props} set y.updateTs=timestamp() return y";
 				String mapToSubnetCypher = "match (x:AwsSubnet {aws_availabilityZone:{aws_zoneName}, aws_region:{aws_region}, aws_account:{aws_account}}), "
 						+ "(y:AwsAvailabilityZone {aws_zoneName:{aws_zoneName}, aws_region:{aws_region}, aws_account:{aws_account}}) "
 						+ "merge (x)-[r:RESIDES_IN]->(y) set r.updateTs=timestamp()";
@@ -44,7 +45,7 @@ public class AvailabilityZoneScanner extends AWSServiceScanner {
 				NeoRxClient neoRx = getNeoRxClient();	
 				Preconditions.checkNotNull(neoRx);
 			
-				neoRx.execCypher(cypher, "aws_zoneName",n.path("aws_zoneName").asText(), "aws_region",n.path("aws_region").asText(), "aws_account",getAccountId(), "props",n);
+				neoRx.execCypher(cypher, "aws_zoneName",n.path("aws_zoneName").asText(), "aws_region",n.path("aws_region").asText(), "aws_account",getAccountId(), "props",n).forEach(gc.MERGE_ACTION);
 				neoRx.execCypher(mapToSubnetCypher, "aws_zoneName",n.path("aws_zoneName").asText(), "aws_region",n.path("aws_region").asText(), "aws_account",getAccountId());
 				neoRx.execCypher(mapToRegionCypher, "aws_zoneName",n.path("aws_zoneName").asText(), "aws_region",n.path("aws_region").asText(), "aws_account",getAccountId());
 
@@ -52,6 +53,7 @@ public class AvailabilityZoneScanner extends AWSServiceScanner {
 				logger.warn("problem scanning availability zones",e);
 			}		
 		});		
+		gc.invoke();
 	}
 
 }

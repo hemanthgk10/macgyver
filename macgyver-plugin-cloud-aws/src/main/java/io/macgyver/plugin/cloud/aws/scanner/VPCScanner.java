@@ -31,6 +31,7 @@ public class VPCScanner extends AWSServiceScanner {
 
 		DescribeVpcsResult result = c.describeVpcs();
 
+		GraphNodeGarbageCollector gc = newGarbageCollector().region(region).label("AwsVpc");
 		NeoRxClient neoRx = getNeoRxClient();
 		Preconditions.checkNotNull(neoRx);
 
@@ -38,13 +39,13 @@ public class VPCScanner extends AWSServiceScanner {
 			try {					
 				ObjectNode n = convertAwsObject(it, region);
 									
-				String cypher = "merge (x:AwsVpc {aws_arn:{aws_arn}}) set x+={props} set x.updateTs=timestamp()";
+				String cypher = "merge (x:AwsVpc {aws_arn:{aws_arn}}) set x+={props} set x.updateTs=timestamp() return x";
 				
 				String mapToSubnetCypher = "match (y:AwsSubnet {aws_vpcId:{aws_vpcId}}), "
 						+ "(x:AwsVpc {aws_arn:{aws_arn}}) "
 						+ "merge (x)-[r:CONTAINS]->(y) set r.updateTs=timestamp()";
 				
-				neoRx.execCypher(cypher, "aws_arn",n.path("aws_arn").asText(), "props",n);
+				neoRx.execCypher(cypher, "aws_arn",n.path("aws_arn").asText(), "props",n).forEach(gc.MERGE_ACTION);
 				neoRx.execCypher(mapToSubnetCypher, "aws_arn",n.path("aws_arn").asText(), "aws_vpcId",n.path("aws_vpcId").asText());	
 			} catch (RuntimeException e) { 
 				logger.warn("problem scanning VPC", e);
@@ -58,6 +59,7 @@ public class VPCScanner extends AWSServiceScanner {
 		
 		neoRx.execCypher(mapAccountCypher, "aws_account",getAccountId());
 		neoRx.execCypher(mapRegionCypher, "aws_region", region.getName(), "aws_account",getAccountId());
+		gc.invoke();
 	}
 	
 
