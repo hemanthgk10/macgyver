@@ -53,7 +53,7 @@ if (tokenUrl ) {
             <div class="form-group">
               <label for="token" class="col-sm-2 control-label">Sharing URL</label>
               <div class="col-sm-10">
-              <input type="text" class="form-control" id="token" placeholder="Enter text to share securely...." name="tokenUrl" value="<%=tokenUrl%>" disabled>
+              <input type="text" class="form-control" id="token" placeholder="Enter text to share securely...." name="tokenUrl" value="<%=tokenUrl%>" readonly>
               </div>
 			  
             </div>           
