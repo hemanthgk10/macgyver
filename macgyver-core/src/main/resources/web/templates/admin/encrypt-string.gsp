@@ -17,7 +17,7 @@
                 </div><!-- /.box-header -->
   <form role="form" method="post" action="/core/admin/encrypt-string">
                     <div class="box-body">
-                      <div class="form-group">
+                      <div class="form-group" id="plaintext-div">
                         <label for="plaintext1">Plain Text</label>
                         <input type="password" name="plaintext" class="form-control" id="plaintext" placeholder="">
                       </div>

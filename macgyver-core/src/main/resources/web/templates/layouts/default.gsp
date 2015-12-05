@@ -234,7 +234,41 @@ else {
 
     <!-- REQUIRED JS SCRIPTS -->
 
+	<script language="javascript">
+	
+	<%
+	// This allows us to pass CSS / JS from java and have it applied to the page.
+	
+	request.getAttribute(io.macgyver.core.web.BrowserControl.OPLIST_KEY).each { it ->
+	
 
+		if (it.operation.equals("addClass")) {
+		%>
+		document.getElementById('<%=it.element%>').classList.add('<%=it.className%>');
+		<%
+		}
+		else if (it.operation.equals("removeClass")) {
+				%>
+		document.getElementById('<%=it.element%>').classList.remove('<%=it.className%>');
+		<%
+		}
+		else if (it.operation.equals("toggleClass")) {
+				%>
+		document.getElementById('<%=it.element%>').classList.toggle('<%=it.className%>');
+		<%
+		}
+		else if (it.operation.equals("javascript")) {
+				%>
+		<%=it.javascript%>
+		<%
+		}
+	%>
+	
+	<%
+	}
+	%>
+	
+	</script>
 	
 
   </body>
