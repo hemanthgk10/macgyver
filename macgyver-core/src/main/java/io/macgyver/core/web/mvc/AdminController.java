@@ -64,6 +64,7 @@ import io.macgyver.core.script.ExtensionResourceProvider;
 import io.macgyver.core.service.ServiceDefinition;
 import io.macgyver.core.service.ServiceFactory;
 import io.macgyver.core.service.ServiceRegistry;
+import io.macgyver.core.web.BrowserControl;
 import io.macgyver.core.web.UIContext;
 import io.macgyver.core.web.UIContextDecorator;
 
@@ -71,7 +72,7 @@ import io.macgyver.core.web.UIContextDecorator;
 @Controller
 @RequestMapping("/core/admin")
 @PreAuthorize("hasAnyRole('ROLE_MACGYVER_ADMIN')")
-public class AdminController  {
+public class AdminController {
 
 	@Autowired
 	Crypto crypto;
@@ -97,7 +98,8 @@ public class AdminController  {
 	@ResponseBody
 	public ModelAndView clusterInfo() {
 
-		ClusterManager clusterManager = Kernel.getApplicationContext().getBean(ClusterManager.class);
+		ClusterManager clusterManager = Kernel.getApplicationContext().getBean(
+				ClusterManager.class);
 
 		Ignite ignite = Kernel.getApplicationContext().getBean(Ignite.class);
 		List<ObjectNode> list = new ArrayList<>();
@@ -130,16 +132,26 @@ public class AdminController  {
 
 		String alias = request.getParameter("alias");
 		String plaintext = request.getParameter("plaintext");
-
+	
 		Map<String, Object> data = com.google.common.collect.Maps.newHashMap();
-		if (request.getMethod().equals("POST") && !Strings.isNullOrEmpty(alias) && !Strings.isNullOrEmpty(plaintext)) {
 
-			String ciphertext = encrypt(plaintext.trim(), alias);
-			data.put("ciphertext", ciphertext);
+		if (request.getMethod().equals("POST")) {
+
+			if (Strings.isNullOrEmpty(plaintext)) {
+				BrowserControl.addClass("plaintext-div", "has-error");	
+			}
+			else if (
+					 !Strings.isNullOrEmpty(alias)
+					&& !Strings.isNullOrEmpty(plaintext)) {
+
+				String ciphertext = encrypt(plaintext.trim(), alias);
+				data.put("ciphertext", ciphertext);
+			}
 		}
 		try {
 
-			List tmp = Collections.list(crypto.getKeyStoreManager().getKeyStore().aliases());
+			List tmp = Collections.list(crypto.getKeyStoreManager()
+					.getKeyStore().aliases());
 			data.put("aliases", tmp);
 			return new ModelAndView("/admin/encrypt-string", data);
 		} catch (GeneralSecurityException e) {
@@ -151,7 +163,8 @@ public class AdminController  {
 	@RequestMapping("/services")
 	@ResponseBody
 	public ModelAndView services() {
-		Map<String, ServiceDefinition> defMap = serviceRegistry.getServiceDefinitions();
+		Map<String, ServiceDefinition> defMap = serviceRegistry
+				.getServiceDefinitions();
 
 		List<JsonNode> serviceList = Lists.newArrayList();
 		for (ServiceDefinition def : defMap.values()) {
@@ -172,7 +185,6 @@ public class AdminController  {
 
 	@RequestMapping("/scripts")
 	@ResponseBody
-
 	public ModelAndView scripts(HttpServletRequest request) {
 		List<JsonNode> list = Lists.newArrayList();
 		try {
@@ -191,7 +203,8 @@ public class AdminController  {
 				}
 			}
 
-			ExtensionResourceProvider extensionProvider = Kernel.getInstance().getApplicationContext()
+			ExtensionResourceProvider extensionProvider = Kernel.getInstance()
+					.getApplicationContext()
 					.getBean(ExtensionResourceProvider.class);
 			extensionProvider.refresh();
 			ObjectMapper mapper = new ObjectMapper();
@@ -224,8 +237,12 @@ public class AdminController  {
 
 	public void scheduleImmediate(Resource r) {
 		try {
-			DirectScriptExecutor service = Kernel.getApplicationContext().getBean(Ignite.class).services()
-					.serviceProxy(IgniteSchedulerService.class.getName(), DirectScriptExecutor.class, true);
+			DirectScriptExecutor service = Kernel
+					.getApplicationContext()
+					.getBean(Ignite.class)
+					.services()
+					.serviceProxy(IgniteSchedulerService.class.getName(),
+							DirectScriptExecutor.class, true);
 
 			service.executeScriptImmediately(r.getPath());
 
@@ -235,7 +252,8 @@ public class AdminController  {
 	}
 
 	protected ExtensionResourceProvider getExtensionResourceProvider() {
-		return Kernel.getInstance().getApplicationContext().getBean(ExtensionResourceProvider.class);
+		return Kernel.getInstance().getApplicationContext()
+				.getBean(ExtensionResourceProvider.class);
 	}
 
 	Optional<Resource> findResourceByHash(String hash) throws IOException {
@@ -252,7 +270,8 @@ public class AdminController  {
 
 		try {
 
-			Crypto crypto = Kernel.getApplicationContext().getBean(Crypto.class);
+			Crypto crypto = Kernel.getApplicationContext()
+					.getBean(Crypto.class);
 
 			String val = crypto.encryptString(plaintext, alias);
 
@@ -264,12 +283,11 @@ public class AdminController  {
 	}
 
 	List<ServiceFactory> getServiceFactories() {
-		Map<String, ServiceFactory> map = Kernel.getApplicationContext().getBeansOfType(ServiceFactory.class);
+		Map<String, ServiceFactory> map = Kernel.getApplicationContext()
+				.getBeansOfType(ServiceFactory.class);
 		List<ServiceFactory> list = Lists.newArrayList(map.values());
 
 		return list;
 	}
-
-
 
 }
