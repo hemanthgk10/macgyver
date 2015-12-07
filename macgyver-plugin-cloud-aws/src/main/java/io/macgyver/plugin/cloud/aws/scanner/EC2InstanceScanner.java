@@ -13,23 +13,20 @@
  */
 package io.macgyver.plugin.cloud.aws.scanner;
 
+import io.macgyver.neorx.rest.NeoRxClient;
+import io.macgyver.plugin.cloud.aws.AWSServiceClient;
+
 import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.macgyver.core.util.JsonNodes;
-import io.macgyver.neorx.rest.NeoRxClient;
-import io.macgyver.plugin.cloud.aws.AWSServiceClient;
-import joptsimple.internal.Strings;
-
 import com.amazonaws.regions.Region;
 import com.amazonaws.services.ec2.AmazonEC2Client;
-
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
-import com.amazonaws.services.ec2.model.InstanceState;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.base.Preconditions;;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
 public class EC2InstanceScanner extends AWSServiceScanner {
 
@@ -57,16 +54,18 @@ public class EC2InstanceScanner extends AWSServiceScanner {
 	@Override
 	public void scan(Region region) {
 
+		
 		AmazonEC2Client client = getAWSServiceClient().createEC2Client(region);
 
 		DescribeInstancesResult result = client.describeInstances();
 
+		GraphNodeGarbageCollector gc = new GraphNodeGarbageCollector().neo4j(getNeoRxClient()).account(getAccountId()).label("AwsEc2Instance").region(region.getName());
 		result.getReservations().forEach(reservation -> {
 
 			reservation.getInstances().forEach(instance -> {
 
 				try {
-
+					
 					if (instance.getState().getName().equals("terminated")) {
 						// instance is terminated
 						// we may want to take the opportunity to delete it right here
@@ -80,27 +79,33 @@ public class EC2InstanceScanner extends AWSServiceScanner {
 						String imageId = n.path("aws_imageId").asText(null);
 
 						Preconditions.checkNotNull(neoRx);
-						Preconditions.checkState(!Strings.isNullOrEmpty(subnetId),
-								"aws_subnetId must not be null " + JsonNodes.pretty(n));
+
 						Preconditions.checkState(!Strings.isNullOrEmpty(instanceArn), "aws_arn must not be null");
 						Preconditions.checkState(!Strings.isNullOrEmpty(account), "aws_account must not be null");
-						Preconditions.checkState(!Strings.isNullOrEmpty(imageId), "aws_imageId must not be null");
 
-						String subnetArn = String.format("arn:aws:ec2:%s:%s:subnet/%s", region.getName(), account,
-								subnetId);
-						String amiArn = String.format("arn:aws:ec2:%s::image/%s", region.getName(), imageId);
+						
+						
+						String createInstanceCypher = "merge (x:AwsEc2Instance {aws_arn:{instanceArn}}) set x+={props}, x.updateTs=timestamp() return x";
+						neoRx.execCypher(createInstanceCypher, "instanceArn", instanceArn, "props", n).forEach(gc.MERGE_ACTION);
+						
+						if (!Strings.isNullOrEmpty(imageId)) {
+							String amiArn = String.format("arn:aws:ec2:%s::image/%s", region.getName(), imageId);
 
-						String createInstanceCypher = "merge (x:AwsEc2Instance {aws_arn:{instanceArn}}) set x+={props}, x.updateTs=timestamp()";
-						String mapToSubnetCypher = "match (x:AwsSubnet {aws_arn:{subnetArn}}), "
-								+ "(y:AwsEc2Instance {aws_arn:{instanceArn}}) "
-								+ "merge (y)-[r:RESIDES_IN]->(x) set r.updateTs=timestamp()";
 						String mapToImageCypher = "match (x:AwsAmi {aws_arn:{amiArn}}), "
 								+ "(y:AwsEc2Instance {aws_arn:{instanceArn}}) "
 								+ "merge (y)-[r:USES]-(x) set r.updateTs=timestamp()";
-
-						neoRx.execCypher(createInstanceCypher, "instanceArn", instanceArn, "props", n);
-						neoRx.execCypher(mapToSubnetCypher, "subnetArn", subnetArn, "instanceArn", instanceArn);
 						neoRx.execCypher(mapToImageCypher, "amiArn", amiArn, "instanceArn", instanceArn);
+						}
+						
+						if (!Strings.isNullOrEmpty(subnetId)) {
+							String subnetArn = String.format("arn:aws:ec2:%s:%s:subnet/%s", region.getName(), account,
+									subnetId);
+							String mapToSubnetCypher = "match (x:AwsSubnet {aws_arn:{subnetArn}}), "
+									+ "(y:AwsEc2Instance {aws_arn:{instanceArn}}) "
+									+ "merge (y)-[r:RESIDES_IN]->(x) set r.updateTs=timestamp()";
+							neoRx.execCypher(mapToSubnetCypher, "subnetArn", subnetArn, "instanceArn", instanceArn);
+							
+						}
 					}
 
 				} catch (RuntimeException e) {
@@ -110,7 +115,10 @@ public class EC2InstanceScanner extends AWSServiceScanner {
 			});
 
 		});
-
+		
+		gc.invoke();
+		
 	}
+
 
 }

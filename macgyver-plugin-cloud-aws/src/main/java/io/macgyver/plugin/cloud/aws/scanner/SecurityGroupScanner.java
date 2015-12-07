@@ -47,7 +47,7 @@ public class SecurityGroupScanner extends AWSServiceScanner {
 		DescribeSecurityGroupsResult result = client.describeSecurityGroups();
 
 		long now = System.currentTimeMillis();
-		
+		GraphNodeGarbageCollector gc = newGarbageCollector().region(region).label("AwsSecurityGroup");
 		result.getSecurityGroups().forEach(sg -> {
 
 			ObjectNode g = convertAwsObject(sg, region);
@@ -60,11 +60,12 @@ public class SecurityGroupScanner extends AWSServiceScanner {
 					.execCypher(cypher, "vpcId", vpcId, "groupId", sg.getGroupId(), "props", g,"now",now).toBlocking()
 					.first();
 		
+			gc.updateEarliestTimestamp(xx);
 			cypher = "match (v:AwsVpc {aws_vpcId: {vpcId}}), (sg:AwsSecurityGroup {aws_groupId:{groupId}, aws_vpcId: {vpcId}}) merge (sg)-[:RESIDES_IN]->(v)";
 			getNeoRxClient().execCypher(cypher, "vpcId", vpcId, "groupId", sg.getGroupId());
 		});
 
-		
+		gc.invoke();
 
 	}
 

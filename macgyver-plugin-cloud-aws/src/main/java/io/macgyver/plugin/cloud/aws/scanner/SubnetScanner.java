@@ -55,23 +55,25 @@ public class SubnetScanner extends AWSServiceScanner {
 
 		DescribeSubnetsResult result = c.describeSubnets();
 
+		GraphNodeGarbageCollector gc = newGarbageCollector().label("AwsSubnet").region(region);
 		
 		result.getSubnets().forEach(it -> {
 			try {
 				ObjectNode n = convertAwsObject(it, region);
 				
 				
-				String cypher = "MERGE (v:AwsSubnet {aws_arn:{aws_arn}}) set v+={props}, v.updateTs=timestamp()";
+				String cypher = "MERGE (v:AwsSubnet {aws_arn:{aws_arn}}) set v+={props}, v.updateTs=timestamp() return v";
 				
 				NeoRxClient client = getNeoRxClient();
 				Preconditions.checkNotNull(client);
-				client.execCypher(cypher, "aws_arn",n.get("aws_arn").asText(),"props",n);
+				client.execCypher(cypher, "aws_arn",n.get("aws_arn").asText(),"props",n).forEach(gc.MERGE_ACTION);
 
 			} catch (RuntimeException e) {
 				logger.warn("problem scanning subnets",e);
 			}
 		});
 		
+		gc.invoke();
 	}
 
 	
