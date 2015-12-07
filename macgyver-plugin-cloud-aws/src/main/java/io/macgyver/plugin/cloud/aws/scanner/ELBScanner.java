@@ -99,7 +99,7 @@ public class ELBScanner extends AWSServiceScanner {
 
 		for (JsonNode s : subnets) {
 			String subnetName = s.asText();
-			String subnetArn = String.format("arn:aws:subnet:%s:%s:subnet/%s", region, getAccountId(), subnetName);
+			String subnetArn = String.format("arn:aws:ec2:%s:%s:subnet/%s", region, getAccountId(), subnetName);
 			String cypher = "match (x:AwsElb {aws_arn:{elbArn}}), (y:AwsSubnet {aws_arn:{subnetArn}}) "
 					+ "merge (x)-[r:AVAILABLE_IN]->(y) set r.updateTs=timestamp()";
 			neoRx.execCypher(cypher, "elbArn",elbArn, "subnetArn",subnetArn);					
