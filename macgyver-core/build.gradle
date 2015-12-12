@@ -108,7 +108,7 @@ dependencies {
   	//compile("com.vaadin:vaadin-push:${VAADIN_VERSION}")
 	  
 
-
+	compile 'org.hjson:hjson:1.1.2'
 
 
     compile 'org.webjars:bootstrap:3.3.1'
