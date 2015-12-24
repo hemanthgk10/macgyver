@@ -66,7 +66,7 @@ if (tokenUrl ) {
               <div class="form-group">
                       <label for="secret" class="col-sm-2 control-label">Secret Text</label>
                       <div class="col-sm-10">
-                      <textarea id="secret" name="secret" class="form-control" rows="3" placeholder="Enter ..." <%=inputDisabled ? "" : "disabled"%> ><%=secret%></textarea>
+                      <textarea id="secret" name="secret" class="form-control" rows="3" placeholder="Enter ..." <%=inputDisabled ? "" : "readonly"%> ><%=secret%></textarea>
                       </div>
               </div>	  
        
