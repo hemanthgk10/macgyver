@@ -48,7 +48,7 @@ public class DefaultAWSScannerGroup extends AWSScannerGroup {
 
 	public static  void main(String [] args) throws Exception {
 		
-		AWSServiceClientImpl c = new AWSServiceClientImpl(new DefaultAWSCredentialsProviderChain(),"684690320560");
+		AWSServiceClientImpl c = new AWSServiceClientImpl(new DefaultAWSCredentialsProviderChain(),"000000000000");
 	
 		NeoRxClient neo4j = new NeoRxClient();
 		
