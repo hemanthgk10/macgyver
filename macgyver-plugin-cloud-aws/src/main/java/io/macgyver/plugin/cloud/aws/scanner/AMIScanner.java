@@ -32,6 +32,9 @@ import io.macgyver.plugin.cloud.aws.AWSServiceClient;
 
 public class AMIScanner extends AWSServiceScanner {
 
+	public AMIScanner() {
+		
+	}
 	public AMIScanner(AWSServiceClient client, NeoRxClient neo4j) {
 		super(client, neo4j);
 	}

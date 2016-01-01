@@ -33,6 +33,9 @@ public class RegionScanner extends AWSServiceScanner {
 
 	Logger logger = LoggerFactory.getLogger(RegionScanner.class);
 
+	public RegionScanner() {
+		super();
+	}
 	public RegionScanner(AWSServiceClient client, NeoRxClient neo4j) {
 		super(client, neo4j);
 	}

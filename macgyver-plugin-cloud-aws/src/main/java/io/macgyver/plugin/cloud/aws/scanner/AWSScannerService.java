@@ -79,14 +79,17 @@ public class AWSScannerService implements Runnable {
 		scan(c,regions);
 	}
 	
+	public AWSServiceScanner createScanner(AWSServiceClient client, NeoRxClient neo4j) {
+		return new DefaultAWSScannerGroup(client, neo4j);
+	}
 	public void scan(AWSServiceClient c, String...regions) {
 		
 		if (regions==null || regions.length==0) {
-			new DefaultAWSScannerGroup(c, neo4j).scanAllRegions();
+			createScanner(c, neo4j).scanAllRegions();
 		} else {
 			for (String regionName: regions) {
 				try {
-					new DefaultAWSScannerGroup(c, neo4j).scan(regionName);
+					createScanner(c,neo4j).scan(regionName);
 				} catch (Exception e) {
 					logger.warn("problem scanning region: " + regionName, e);
 				}

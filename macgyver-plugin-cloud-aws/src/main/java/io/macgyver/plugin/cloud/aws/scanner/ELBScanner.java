@@ -33,6 +33,9 @@ public class ELBScanner extends AWSServiceScanner {
 	ObjectMapper mapper = new ObjectMapper();
 	NeoRxClient neoRx = getNeoRxClient();
 
+	public ELBScanner() {
+		super();
+	}
 	public ELBScanner(AWSServiceClient client, NeoRxClient neo4j) {
 		super(client, neo4j);
 	}

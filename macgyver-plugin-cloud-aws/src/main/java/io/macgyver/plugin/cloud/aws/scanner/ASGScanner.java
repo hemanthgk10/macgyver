@@ -31,6 +31,9 @@ public class ASGScanner extends AWSServiceScanner {
 	NeoRxClient neoRx = new NeoRxClient();
 	ObjectMapper mapper = new ObjectMapper();
 
+	public ASGScanner() {
+		
+	}
 	public ASGScanner(AWSServiceClient client, NeoRxClient neo4j) {
 		super(client, neo4j);
 	}

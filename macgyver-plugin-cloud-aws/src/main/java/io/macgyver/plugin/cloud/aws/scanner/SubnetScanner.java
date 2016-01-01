@@ -32,6 +32,10 @@ import io.macgyver.plugin.cloud.aws.AWSServiceClient;
 public class SubnetScanner extends AWSServiceScanner {
 
 	Logger logger = LoggerFactory.getLogger(SubnetScanner.class);
+	
+	public SubnetScanner(){
+		super();
+	}
 	public SubnetScanner(AWSServiceClient client, NeoRxClient neo4j) {
 		super(client, neo4j);
 		

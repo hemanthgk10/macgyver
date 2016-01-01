@@ -32,6 +32,10 @@ public class VPCScanner extends AWSServiceScanner {
 
 	Logger logger = LoggerFactory.getLogger(VPCScanner.class);
 
+	public VPCScanner() {
+		super();
+	}
+	
 	public VPCScanner(AWSServiceClient client, NeoRxClient neo4j) {
 		super(client, neo4j);
 

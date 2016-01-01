@@ -41,7 +41,6 @@ public class AWSScannerGroup extends AWSServiceScanner {
 		super(client, neo4j);
 
 
-
 	}
 
 	@Override
@@ -64,5 +63,10 @@ public class AWSScannerGroup extends AWSServiceScanner {
 		
 	}
 
+	public void addScanner(AWSServiceScanner scanner) {
+		scannerList.add(scanner);
+		scanner.client = client;
+		scanner.neo4j = neo4j;
+	}
 
 }

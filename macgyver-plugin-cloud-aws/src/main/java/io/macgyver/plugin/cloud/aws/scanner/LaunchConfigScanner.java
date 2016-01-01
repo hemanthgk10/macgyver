@@ -31,6 +31,9 @@ import io.macgyver.plugin.cloud.aws.AWSServiceClient;
 
 public class LaunchConfigScanner extends AWSServiceScanner {
 
+	public LaunchConfigScanner() {
+		super();
+	}
 	public LaunchConfigScanner(AWSServiceClient client, NeoRxClient neo4j) {
 		super(client, neo4j);
 	}

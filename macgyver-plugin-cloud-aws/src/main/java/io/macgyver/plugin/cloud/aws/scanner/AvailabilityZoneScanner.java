@@ -27,6 +27,9 @@ import com.google.common.base.Preconditions;
 
 public class AvailabilityZoneScanner extends AWSServiceScanner {
 
+	public AvailabilityZoneScanner() {
+		super();
+	}
 	public AvailabilityZoneScanner(AWSServiceClient client, NeoRxClient neo4j) {
 		super(client, neo4j);
 	}

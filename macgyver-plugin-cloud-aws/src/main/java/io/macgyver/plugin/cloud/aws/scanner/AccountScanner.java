@@ -24,9 +24,14 @@ import io.macgyver.plugin.cloud.aws.AWSServiceClient;
 
 public class AccountScanner extends AWSServiceScanner {
 
+	public AccountScanner() {
+		super();
+	}
+	
 	public AccountScanner(AWSServiceClient client, NeoRxClient neo4j) {
 		super(client, neo4j);
 	}
+
 
 	@Override
 	public Optional<String> computeArn(JsonNode n) {

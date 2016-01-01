@@ -29,6 +29,10 @@ import io.macgyver.plugin.cloud.aws.AWSServiceClient;
 
 public class SecurityGroupScanner extends AWSServiceScanner {
 
+	public SecurityGroupScanner() {
+		super();
+	}
+	
 	public SecurityGroupScanner(AWSServiceClient client, NeoRxClient neo4j) {
 		super(client, neo4j);
 

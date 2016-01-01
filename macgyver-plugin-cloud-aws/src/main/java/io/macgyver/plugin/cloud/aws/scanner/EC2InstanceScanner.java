@@ -32,6 +32,9 @@ public class EC2InstanceScanner extends AWSServiceScanner {
 
 	Logger logger = LoggerFactory.getLogger(EC2InstanceScanner.class);
 
+	public EC2InstanceScanner() {
+		super();
+	}
 	public EC2InstanceScanner(AWSServiceClient client, NeoRxClient neo4j) {
 		super(client, neo4j);
 	}

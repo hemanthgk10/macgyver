@@ -37,6 +37,9 @@ public  abstract class AWSServiceScanner {
 	NeoRxClient neo4j;
 
 	
+	public AWSServiceScanner() {
+		super();
+	}
 	public AWSServiceScanner(AWSServiceClient client, NeoRxClient neo4j) {
 		Preconditions.checkNotNull(client);
 		Preconditions.checkNotNull(neo4j);

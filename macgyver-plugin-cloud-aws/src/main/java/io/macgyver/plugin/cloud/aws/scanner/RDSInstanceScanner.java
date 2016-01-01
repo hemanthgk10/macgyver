@@ -32,6 +32,9 @@ import io.macgyver.plugin.cloud.aws.AWSServiceClient;
 
 public class RDSInstanceScanner extends AWSServiceScanner {
 
+	public RDSInstanceScanner() {
+		super();
+	}
 	public RDSInstanceScanner(AWSServiceClient client, NeoRxClient neo4j) {
 		super(client, neo4j);
 	}
