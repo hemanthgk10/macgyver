@@ -29,9 +29,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.google.common.base.Strings;
 import com.google.gwt.thirdparty.guava.common.base.Splitter;
 
+import io.macgyver.core.MacGyverException;
 import io.macgyver.core.service.ServiceRegistry;
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.plugin.cloud.aws.AWSServiceClient;
+import sun.security.krb5.internal.rcache.DflCache;
 
 public class AWSScannerService implements Runnable {
 
@@ -62,39 +64,47 @@ public class AWSScannerService implements Runnable {
 				String type = Strings.nullToEmpty(it.getServiceType());
 				if (type.toLowerCase().equals("aws")) {
 					AWSServiceClient c = registy.get(it.getName());
-					
+
 					List<String> regionList = Splitter.on(",").omitEmptyStrings().trimResults()
 							.splitToList(Strings.nullToEmpty(it.getProperty("regions")));
-					scan(c,regionList.toArray(new String[0]));
+					scan(getScannerClass(), c, regionList.toArray(new String[0]));
 				}
 			} catch (Exception e) {
 				logger.warn("", e);
 			}
 		});
 	}
-	
-	
-	public void scanAccount(String account, String ... regions) {
-		AWSServiceClient c = registy.getServiceByProperty("aws","accountId", account);
-		scan(c,regions);
+
+	public Class<? extends AWSServiceScanner> getScannerClass() {
+		return DefaultAWSScannerGroup.class;
 	}
-	
-	public AWSServiceScanner createScanner(AWSServiceClient client, NeoRxClient neo4j) {
-		return new DefaultAWSScannerGroup(client, neo4j);
-	}
-	public void scan(AWSServiceClient c, String...regions) {
-		
-		if (regions==null || regions.length==0) {
-			createScanner(c, neo4j).scanAllRegions();
-		} else {
-			for (String regionName: regions) {
-				try {
-					createScanner(c,neo4j).scan(regionName);
-				} catch (Exception e) {
-					logger.warn("problem scanning region: " + regionName, e);
+	public void scan(Class<? extends AWSServiceScanner> scannerClass, AWSServiceClient c, String... regions) {
+
+		try {
+			AWSServiceScanner scanner = scannerClass.newInstance();
+			scanner.client = c;
+			scanner.neo4j = neo4j;
+
+			if (regions == null || regions.length == 0) {
+				scanner.scanAllRegions();
+			} else {
+				for (String regionName : regions) {
+					try {
+
+						scanner.scan(regionName);
+					} catch (Exception e) {
+						logger.warn("problem scanning region: " + regionName, e);
+					}
 				}
 			}
+		} catch (IllegalAccessException | InstantiationException e) {
+			throw new MacGyverException(e);
 		}
 	}
 
+	public void scan(Class<? extends AWSServiceScanner> scannerClass, String accountId, String...regions) {
+		AWSServiceClient client = registy.getServiceByProperty("aws", "accountId", accountId);
+		scan(scannerClass,client,regions);	
+	}
+	
 }
