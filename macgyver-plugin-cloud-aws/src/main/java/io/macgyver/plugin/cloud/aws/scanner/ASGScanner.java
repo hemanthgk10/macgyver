@@ -32,7 +32,7 @@ public class ASGScanner extends AWSServiceScanner {
 	ObjectMapper mapper = new ObjectMapper();
 
 	public ASGScanner() {
-		
+		super();
 	}
 	public ASGScanner(AWSServiceClient client, NeoRxClient neo4j) {
 		super(client, neo4j);
