@@ -20,10 +20,17 @@ import io.macgyver.core.auth.InternalAuthenticationProvider;
 import io.macgyver.core.auth.InternalGroupRoleTranslator;
 import io.macgyver.core.auth.LogOnlyAccessDecisionVoter;
 import io.macgyver.core.auth.MacGyverAccessDecisionManager;
+
+import io.macgyver.core.auth.ApiTokenController;
+import io.macgyver.core.auth.ApiTokenAuthenticationFilter;
+import io.macgyver.core.auth.ApiTokenAuthenticationProvider;
+
 import io.macgyver.core.crypto.KeyStoreManager;
 
 import java.util.List;
 import java.util.Map;
+
+import javax.inject.Inject;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -40,6 +47,8 @@ import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.annotation.web.servlet.configuration.EnableWebMvcSecurity;
 import org.springframework.security.web.access.expression.WebExpressionVoter;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -47,14 +56,18 @@ import com.google.common.collect.Maps;
 @Configuration
 @EnableWebMvcSecurity
 // @EnableWebSecurity
-@EnableGlobalMethodSecurity(securedEnabled = true, proxyTargetClass = true,prePostEnabled=true)
+@EnableGlobalMethodSecurity(securedEnabled = true, proxyTargetClass = true, prePostEnabled = true)
 public class CoreSecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Autowired
 	InternalAuthenticationProvider internalAuthenticationProvider;
 
 	@Autowired
+	ApiTokenAuthenticationProvider tokenAuthenticationProvider;
+	
+	@Autowired
 	ScriptHookManager hookScriptManager;
+
 
 	@Override
 	public void configure(WebSecurity web) throws Exception {
@@ -71,30 +84,26 @@ public class CoreSecurityConfig extends WebSecurityConfigurerAdapter {
 
 		httpSecurity.authorizeRequests()
 
-		.antMatchers("/login","/error**", "/public/**", "/resources/**", "/webjars/**")
-				.permitAll().and().
+		.antMatchers("/login", "/error**", "/public/**", "/resources/**", "/webjars/**").permitAll().and().
 
-				formLogin().loginPage("/login").failureUrl("/login")
-				.defaultSuccessUrl("/home").and().logout().permitAll();
+		formLogin().loginPage("/login").failureUrl("/login").defaultSuccessUrl("/home").and().logout().permitAll();
 	}
 
 	@Override
-	protected void configure(AuthenticationManagerBuilder auth)
-			throws Exception {
+	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 
-		auth.authenticationProvider(internalAuthenticationProvider);
-
+		auth.authenticationProvider(internalAuthenticationProvider).authenticationProvider(tokenAuthenticationProvider);
+		
 		Map<String, Object> map = Maps.newHashMap();
 		map.put("authBuilder", auth);
 		hookScriptManager.invokeHook("configureAuthProviders", map);
 	}
 
 	@Autowired
-	public void registerSharedAuthentication(AuthenticationManagerBuilder auth)
-			throws Exception {
+	public void registerSharedAuthentication(AuthenticationManagerBuilder auth) throws Exception {
 
-		auth.authenticationProvider(internalAuthenticationProvider);
-
+		auth.authenticationProvider(internalAuthenticationProvider).authenticationProvider(tokenAuthenticationProvider);
+		
 		Map<String, Object> map = Maps.newHashMap();
 		map.put("authBuilder", auth);
 		hookScriptManager.invokeHook("configureAuthProviders", map);
@@ -102,11 +111,10 @@ public class CoreSecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Configuration
 	@Order(92)
-	public static class ApiWebSecurityConfigurationAdapter extends
-			WebSecurityConfigurerAdapter {
+	public static class ApiWebSecurityConfigurationAdapter extends WebSecurityConfigurerAdapter {
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
-			http.csrf().disable().antMatcher("/api/**").httpBasic();
+			http.csrf().disable().addFilterBefore(new ApiTokenAuthenticationFilter(), BasicAuthenticationFilter.class).antMatcher("/api/**").httpBasic();
 		}
 	}
 
@@ -119,6 +127,7 @@ public class CoreSecurityConfig extends WebSecurityConfigurerAdapter {
 		x.add(new WebExpressionVoter());
 		x.add(new Jsr250Voter());
 		return x;
+
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -132,8 +141,7 @@ public class CoreSecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Configuration
 	@Order(91)
-	public static class ApiPublicWebSecurityConfigurationAdapter extends
-			WebSecurityConfigurerAdapter {
+	public static class ApiPublicWebSecurityConfigurationAdapter extends WebSecurityConfigurerAdapter {
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
 			http.antMatcher("/api/public/**").anonymous();
@@ -145,14 +153,15 @@ public class CoreSecurityConfig extends WebSecurityConfigurerAdapter {
 	public InternalGroupRoleTranslator macInternalGroupRoleTranslator() {
 		return new InternalGroupRoleTranslator();
 	}
-	
-	@Bean(name="macGrantedAuthoritiesTranslatorChain")
+
+	@Bean(name = "macGrantedAuthoritiesTranslatorChain")
 	public GrantedAuthoritiesTranslatorChain macGrantedAuthoritiesTranslatorChain() {
 		GrantedAuthoritiesTranslatorChain chain = new GrantedAuthoritiesTranslatorChain();
 		chain.addTranslator(macInternalGroupRoleTranslator());
 		chain.addTranslator(macGrantedAuthoritiesTranslatorScriptHook());
 		return chain;
 	}
+
 	@Bean
 	public GrantedAuthoritiesTranslatorScriptHook macGrantedAuthoritiesTranslatorScriptHook() {
 		return new GrantedAuthoritiesTranslatorScriptHook();
@@ -165,7 +174,18 @@ public class CoreSecurityConfig extends WebSecurityConfigurerAdapter {
 		return p;
 	}
 
+	@Bean
+	public ApiTokenController macTokenController() {
+		return new ApiTokenController();
+	}
 
+
+
+	
+	@Bean
+	public ApiTokenAuthenticationProvider macTokenAuthenticationProvider() {
+		return new ApiTokenAuthenticationProvider();
+	}
 
 
 }

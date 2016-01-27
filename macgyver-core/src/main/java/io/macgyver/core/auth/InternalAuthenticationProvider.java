@@ -39,8 +39,6 @@ public class InternalAuthenticationProvider implements AuthenticationProvider {
 	@Autowired(required=true)
 	UserManager userManager;
 
-	@Autowired
-	AccessDecisionManager adm;
 
 	GrantedAuthoritiesMapper grantedAuthoritiesMapper;
 
