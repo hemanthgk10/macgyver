@@ -47,14 +47,6 @@ public class ApiTokenAuthenticationFilter extends  GenericFilterBean {
 		AtomicBoolean hasToken = new AtomicBoolean(false);
 		try {
 			
-			if (request.getAttribute(ApiTokenAuthenticationFilter.class.getName())!=null) {
-				return;
-			}
-			request.setAttribute(ApiTokenAuthenticationFilter.class.getName(),Boolean.TRUE.toString());
-			logger.info("doFilter");
-
-			
-		
 			extractToken((HttpServletRequest)request).ifPresent(it -> {
 				SecurityContextHolder.getContext().setAuthentication(it);
 				hasToken.set(true);
