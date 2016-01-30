@@ -18,6 +18,7 @@ import io.macgyver.core.eventbus.MacGyverEventBus;
 import org.slf4j.Logger;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.context.event.ApplicationFailedEvent;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -60,10 +61,16 @@ public class ServerMain {
 			public void onApplicationEvent(ApplicationEvent event) {
 				if (event instanceof ServletRequestHandledEvent || event instanceof PublicInvocationEvent) {
 					// this will generate crazy logging if we log all servlet requests
-					logger.debug("onApplicationEvent({})", event);
+					if (logger.isDebugEnabled()) {
+						logger.debug("onApplicationEvent({})", event);
+					}
 				} else {
 					// but it is very nice to have this logging output, so log it at info
 					logger.info("onApplicationEvent({})", event);
+				}
+				if (event instanceof ApplicationFailedEvent) {
+					logger.error("Application failed to start.  Process will exit.");
+					System.exit(99);
 				}
 
 			}
@@ -76,7 +83,7 @@ public class ServerMain {
 		Environment env = ctx.getEnvironment();
 
 		logger.info("spring environment: {}", env);
-		Kernel.getInstance().getApplicationContext()
+		Kernel.getApplicationContext()
 				.getBean(MacGyverEventBus.class)
 				.post(new Kernel.ServerStartedEvent(Kernel.getInstance()));
 	}
