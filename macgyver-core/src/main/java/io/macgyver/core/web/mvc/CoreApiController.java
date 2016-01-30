@@ -15,9 +15,11 @@ package io.macgyver.core.web.mvc;
 
 import io.macgyver.core.CoreSystemInfo;
 import io.macgyver.core.script.ExtensionResourceProvider;
+import io.macgyver.core.util.JsonNodes;
 
 import java.io.IOException;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
@@ -29,6 +31,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 
 @RequestMapping("/api/core")
@@ -44,14 +47,17 @@ public class CoreApiController {
 	@Autowired
 	ExtensionResourceProvider extensionProvider;
 	
+	ObjectMapper mapper = new ObjectMapper();
+	
 	@RequestMapping(value = "/systemInfo", method=RequestMethod.GET, produces = { "application/json" })
 	@ResponseBody
 	@PreAuthorize("permitAll")
 	public String coreRevisionInfo() {
 
-		return new Gson().toJson(coreRevisionInfo.getData());
+		return JsonNodes.pretty(mapper.valueToTree(coreRevisionInfo.getData()));
 
 	}
+	
 	
 	@RequestMapping(value="refreshResourceProviderHook",produces="application/json")
 	@ResponseBody
