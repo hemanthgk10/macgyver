@@ -14,6 +14,7 @@
 package io.macgyver.core;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
@@ -120,17 +121,22 @@ public class Bootstrap {
 
 		String val = bootstrapProps.getProperty("macgyver.home");
 
-		Preconditions.checkNotNull(val,"macgyver.home must be set");
-		macgyverHome = new File(val).getAbsoluteFile();
+		Preconditions.checkState(!Strings.isNullOrEmpty(val),"macgyver.home must be set");
+		try {
+			macgyverHome = new File(val).getCanonicalFile();
+		}
+		catch (IOException e) {
+			macgyverHome = new File(val).getAbsoluteFile();
+		}
 
 
 
 
-			logger.info("macgyver home    : {}",getMacGyverHome());
-			logger.info("macgyver config  : {}",getConfigDir());
+			logger.info("macgyver    home : {}",getMacGyverHome());
+			logger.info("macgyver  config : {}",getConfigDir());
 			logger.info("macgyver scripts : {}",getScriptsDir());
-			logger.info("macgyver   data  : {}",getDataDir());
-			logger.info("macgyver    web  : {}",getWebDir());
+			logger.info("macgyver    data : {}",getDataDir());
+			logger.info("macgyver     web : {}",getWebDir());
 
 
 

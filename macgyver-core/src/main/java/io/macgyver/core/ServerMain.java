@@ -15,7 +15,13 @@ package io.macgyver.core;
 
 import io.macgyver.core.eventbus.MacGyverEventBus;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+
+import org.assertj.core.util.Lists;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.event.ApplicationFailedEvent;
@@ -27,6 +33,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.security.access.event.PublicInvocationEvent;
 import org.springframework.web.context.support.ServletRequestHandledEvent;
+import com.sun.akuma.*;
 
 /**
  * Simple wrapper to start server.
@@ -36,8 +43,7 @@ import org.springframework.web.context.support.ServletRequestHandledEvent;
  */
 
 @Configuration
-@ComponentScan(basePackages = { "io.macgyver.config",
-		"io.macgyver.plugin.config", "io.macgyver.core.config" })
+@ComponentScan(basePackages = { "io.macgyver.config", "io.macgyver.plugin.config", "io.macgyver.core.config" })
 @EnableAutoConfiguration
 public class ServerMain {
 
@@ -45,47 +51,58 @@ public class ServerMain {
 
 	static boolean daemonized = false;
 
+	public static final AtomicReference<List<String>> serverProcessArgs = new AtomicReference<List<String>>(Lists.newArrayList());
+	
 	public static void main(String[] args) throws Exception {
 
 		daemonizeIfRequired();
 
+		LoggingConfig.ensureJavaUtilLoggingIsBridged();
+
+		logServerProcessArguments();
+
 		Bootstrap.printBanner();
 
 		if (!daemonized) {
-			logger.info("process not daemonized; set -Dmacgyver.daemon=true to daemonize");
+			logger.info("process not daemonized; set -Dmacgyver.daemon=true to daemonize (EXPERIMENTAL)");
 		}
 
 		ApplicationListener<ApplicationEvent> x = new ApplicationListener<ApplicationEvent>() {
 
 			@Override
 			public void onApplicationEvent(ApplicationEvent event) {
+
+				/// https://springframework.guru/running-code-on-spring-boot-startup/
+
 				if (event instanceof ServletRequestHandledEvent || event instanceof PublicInvocationEvent) {
-					// this will generate crazy logging if we log all servlet requests
+					// this will generate crazy logging if we log all servlet
+					// events
+					// requests
 					if (logger.isDebugEnabled()) {
 						logger.debug("onApplicationEvent({})", event);
 					}
 				} else {
-					// but it is very nice to have this logging output, so log it at info
+					// but it is very nice to have this logging output, so log
+					// it at info
 					logger.info("onApplicationEvent({})", event);
 				}
 				if (event instanceof ApplicationFailedEvent) {
 					logger.error("Application failed to start.  Process will exit.");
 					System.exit(99);
+
 				}
 
 			}
 		};
-		ConfigurableApplicationContext ctx = new SpringApplicationBuilder()
-				.sources(ServerMain.class)
-				.initializers(new SpringContextInitializer()).listeners(x)
-				.run(args);
+		ConfigurableApplicationContext ctx = new SpringApplicationBuilder().sources(ServerMain.class)
+				.initializers(new SpringContextInitializer()).listeners(x).run(args);
 
 		Environment env = ctx.getEnvironment();
 
 		logger.info("spring environment: {}", env);
-		Kernel.getApplicationContext()
-				.getBean(MacGyverEventBus.class)
+		Kernel.getApplicationContext().getBean(MacGyverEventBus.class)
 				.post(new Kernel.ServerStartedEvent(Kernel.getInstance()));
+
 	}
 
 	public static void daemonizeIfRequired() throws Exception {
@@ -108,4 +125,16 @@ public class ServerMain {
 		}
 	}
 
+	public static void logServerProcessArguments() {
+		try {
+			if (serverProcessArgs.get()==null) {
+				serverProcessArgs.set(JavaVMArguments.current());
+			}
+			serverProcessArgs.get().forEach(it -> LoggerFactory.getLogger(ServerMain.class).info("jvm arg: " + it));
+		}
+		catch (Throwable e) {
+			// could fail in a platform specific way (windows, etc.)
+			logger.warn("problem logging arguments",e);
+		}
+	}
 }
