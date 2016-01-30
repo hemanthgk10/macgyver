@@ -14,7 +14,7 @@
 package io.macgyver.core.config;
 
 import io.macgyver.core.factory.TestBeanServiceFactory;
-import io.macgyver.core.web.mvc.MacgyverWeb;
+import io.macgyver.core.web.mvc.MacGyverWeb;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,8 +27,8 @@ public class CoreTestConfig {
 	}
 	
 	@Bean
-	public MacgyverWeb macWeb() {
-		return new MacgyverWeb();
+	public MacGyverWeb macWeb() {
+		return new MacGyverWeb();
 	}
 }
 

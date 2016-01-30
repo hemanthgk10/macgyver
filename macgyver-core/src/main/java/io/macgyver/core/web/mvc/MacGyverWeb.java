@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
-public class MacgyverWeb extends WebMvcConfigurerAdapter {
+public class MacGyverWeb extends WebMvcConfigurerAdapter {
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 

@@ -19,11 +19,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.assertj.core.util.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.web.EmbeddedServletContainerAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainer;
 import org.springframework.boot.context.event.ApplicationFailedEvent;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
@@ -33,6 +34,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.security.access.event.PublicInvocationEvent;
 import org.springframework.web.context.support.ServletRequestHandledEvent;
+
+import com.google.common.collect.Lists;
 import com.sun.akuma.*;
 
 /**
@@ -102,6 +105,16 @@ public class ServerMain {
 		logger.info("spring environment: {}", env);
 		Kernel.getApplicationContext().getBean(MacGyverEventBus.class)
 				.post(new Kernel.ServerStartedEvent(Kernel.getInstance()));
+		
+	
+		logger.info("\n\n\n"+  
+		Bootstrap.getBannerText()+
+		"\n\n"+
+		"Ready for Action!\n\n\n");
+		
+		
+		
+		
 
 	}
 

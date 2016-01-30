@@ -44,6 +44,7 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.annotation.web.servlet.configuration.EnableWebMvcSecurity;
 import org.springframework.security.web.access.expression.WebExpressionVoter;
@@ -54,8 +55,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 @Configuration
-@EnableWebMvcSecurity
-// @EnableWebSecurity
+@EnableWebSecurity
 @EnableGlobalMethodSecurity(securedEnabled = true, proxyTargetClass = true, prePostEnabled = true)
 public class CoreSecurityConfig extends WebSecurityConfigurerAdapter {
 
@@ -120,8 +120,8 @@ public class CoreSecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@SuppressWarnings("rawtypes")
 	@Bean
-	List<AccessDecisionVoter> macAccessDecisionVoterList() {
-		List<AccessDecisionVoter> x = Lists.newCopyOnWriteArrayList();
+	List<AccessDecisionVoter<? extends Object>> macAccessDecisionVoterList() {
+		List<AccessDecisionVoter<? extends Object>> x = Lists.newCopyOnWriteArrayList();
 		x.add(new LogOnlyAccessDecisionVoter());
 		x.add(new RoleVoter());
 		x.add(new WebExpressionVoter());
@@ -134,7 +134,7 @@ public class CoreSecurityConfig extends WebSecurityConfigurerAdapter {
 	@Bean
 	AccessDecisionManager macAccessDecisionManager() {
 
-		List<AccessDecisionVoter> list = macAccessDecisionVoterList();
+		List<AccessDecisionVoter<? extends Object>> list = macAccessDecisionVoterList();
 
 		return new MacGyverAccessDecisionManager(list);
 	}

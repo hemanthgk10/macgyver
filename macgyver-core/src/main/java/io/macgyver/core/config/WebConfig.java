@@ -49,7 +49,7 @@ import io.macgyver.core.web.MacGyverContextFilter;
 import io.macgyver.core.web.UIContextManager;
 import io.macgyver.core.web.mvc.CoreApiController;
 import io.macgyver.core.web.mvc.HomeController;
-import io.macgyver.core.web.mvc.MacgyverWeb;
+import io.macgyver.core.web.mvc.MacGyverWeb;
 import io.macgyver.core.web.neo4j.Neo4jProxyServlet;
 import io.macgyver.core.web.vaadin.MacGyverUI;
 import io.macgyver.core.web.vaadin.MacGyverVaadinServlet;
@@ -107,8 +107,8 @@ public class WebConfig implements EnvironmentAware {
 	}
 
 	@Bean
-	public MacgyverWeb macWebConfig() {
-		return new MacgyverWeb();
+	public MacGyverWeb macWebConfig() {
+		return new MacGyverWeb();
 	}
 
 	@Bean

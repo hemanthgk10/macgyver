@@ -166,40 +166,45 @@ public class Bootstrap {
 		}
 
 	}
+	
+	public static String getBannerText() {
+		// Spring boot doesn't support alternate banner until 1.1.x
+				String bannerText = "\n";
+				try {
+					URL url = ServerMain.class.getResource("/banner_alt.txt");
+					if (url != null) {
+						try (InputStreamReader reader = new InputStreamReader(
+								url.openStream(), Charsets.UTF_8)) {
+							String text = CharStreams.toString(reader);
+
+							bannerText += text;
+						}
+					}
+
+					url = null;
+					url = ServerMain.class
+							.getResource("/macgyver-core-revision.properties");
+					if (url != null) {
+						Properties p = new Properties();
+						try (InputStream x = url.openStream()) {
+							p.load(x);
+						}
+
+						bannerText += String.format(
+								"\n\n                      (v%s rev:%s)\n",
+								p.getProperty("version"),
+								p.getProperty("gitShortCommitId"));
+					}
+
+				} catch (Exception e) {
+					logger.warn("could not load banner");
+				}
+				return bannerText;
+	}
 	public static void printBanner() {
 
-		// Spring boot doesn't support alternate banner until 1.1.x
-		String bannerText = "\n";
-		try {
-			URL url = ServerMain.class.getResource("/banner_alt.txt");
-			if (url != null) {
-				try (InputStreamReader reader = new InputStreamReader(
-						url.openStream(), Charsets.UTF_8)) {
-					String text = CharStreams.toString(reader);
-
-					bannerText += text;
-				}
-			}
-
-			url = null;
-			url = ServerMain.class
-					.getResource("/macgyver-core-revision.properties");
-			if (url != null) {
-				Properties p = new Properties();
-				try (InputStream x = url.openStream()) {
-					p.load(x);
-				}
-
-				bannerText += String.format(
-						"\n\n                      (v%s rev:%s)\n",
-						p.getProperty("version"),
-						p.getProperty("gitShortCommitId"));
-			}
-
-		} catch (Exception e) {
-			logger.warn("could not load banner");
-		}
-		logger.info(bannerText);
+		
+		logger.info(getBannerText());
 	}
 
 
