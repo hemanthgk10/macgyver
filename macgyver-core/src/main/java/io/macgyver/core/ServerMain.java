@@ -36,7 +36,8 @@ import org.springframework.security.access.event.PublicInvocationEvent;
 import org.springframework.web.context.support.ServletRequestHandledEvent;
 
 import com.google.common.collect.Lists;
-import com.sun.akuma.*;
+import com.sun.akuma.JavaVMArguments;
+import com.sun.akuma.Daemon;
 
 /**
  * Simple wrapper to start server.
