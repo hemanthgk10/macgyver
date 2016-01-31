@@ -28,13 +28,12 @@ import io.macgyver.neorx.rest.NeoRxClient;
 
 @Controller
 @PreAuthorize("hasAnyRole('ROLE_MACGYVER_USER','ROLE_MACGYVER_ADMIN')")
-@RequestMapping("/plugin/cmdb")
 public class AppInstanceController {
 
 	@Autowired
 	NeoRxClient neo4j;
 	
-	@RequestMapping("/app-instances")
+	@RequestMapping(value = {"/cmdb/app-instances","/plugin/cmdb/app-instances"})
 	@ResponseBody
 	public ModelAndView lteHome() {
 
@@ -42,8 +41,10 @@ public class AppInstanceController {
 		
 
 		
-		return new ModelAndView("/plugin/cmdb/app-instances","results",results);
+		return new ModelAndView("/cmdb/app-instances","results",results);
 
 	}
+    
+
 
 }

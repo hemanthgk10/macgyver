@@ -83,7 +83,7 @@ public class CmdbApiController {
 		return new ResponseEntity<ObjectNode>(mapper.createObjectNode(), HttpStatus.OK);
 	}
 
-	@RequestMapping(value="/appInstances", method=RequestMethod.GET) 
+	@RequestMapping(value={"/appInstances","/app-instances"}, method=RequestMethod.GET) 
 	@PreAuthorize("hasAnyRole('ROLE_MACGYVER_USER','ROLE_MACGYVER_API_RO')")
 	public ResponseEntity<List<JsonNode>> allAppInstances() {
 		String cypher = "match (x:AppInstance) return x";
@@ -92,7 +92,7 @@ public class CmdbApiController {
 		return new ResponseEntity<List<JsonNode>>(results, HttpStatus.OK);
 	}
 	
-	@RequestMapping(value="/appInstances/environment/{env}", method=RequestMethod.GET)
+	@RequestMapping(value={"/appInstances/environment/{env}","/app-instances/environment/{env}"}, method=RequestMethod.GET)
 	@PreAuthorize("hasAnyRole('ROLE_MACGYVER_USER','ROLE_MACGYVER_API_RO')")
 	public ResponseEntity<List<JsonNode>> appInstancesByEnv(@PathVariable String env) {
 		String cypher = "match (x:AppInstance {environment:{env}}) return x";
@@ -101,7 +101,7 @@ public class CmdbApiController {
 		return new ResponseEntity<List<JsonNode>>(results, HttpStatus.OK);
 	}
 	
-	@RequestMapping(value="/appInstances/environment/{env}/appId/{appId}", method=RequestMethod.GET) 
+	@RequestMapping(value={"/appInstances/environment/{env}/appId/{appId}","/app-instances/environment/{env}/appId/{appId}"}, method=RequestMethod.GET) 
 	@PreAuthorize("hasAnyRole('ROLE_MACGYVER_USER','ROLE_MACGYVER_API_RO')")
 	public ResponseEntity<List<JsonNode>> appInstance(@PathVariable String env, @PathVariable String appId) {
 		String cypher = "match (x:AppInstance {appId:{appIds},environment:{env}}) return x";
@@ -116,6 +116,7 @@ public class CmdbApiController {
 			long val = n.path("lastContactTs").asLong(0);
 			Date d = new Date(val);
 			ObjectNode on = (ObjectNode) n;
+			
 			on.put("lastContactPrettyTs", pt.format(d));
 		}
 	}

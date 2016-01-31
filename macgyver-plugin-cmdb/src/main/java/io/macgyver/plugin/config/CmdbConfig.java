@@ -13,11 +13,15 @@
  */
 package io.macgyver.plugin.config;
 
+import io.macgyver.plugin.cmdb.AppDefinitionController;
+import io.macgyver.plugin.cmdb.AppDefinitionLoader;
 import io.macgyver.plugin.cmdb.AppInstanceController;
 import io.macgyver.plugin.cmdb.AppInstanceManager;
 import io.macgyver.plugin.cmdb.CmdbApiController;
 import io.macgyver.plugin.cmdb.CmdbMenuDecorator;
 import io.macgyver.plugin.cmdb.CmdbPlugin;
+import io.macgyver.plugin.cmdb.JobCatalogController;
+import io.macgyver.plugin.cmdb.JobCatalogLoader;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -50,5 +54,23 @@ public class CmdbConfig {
 	@Bean
 	public CmdbMenuDecorator macCmdbMenuDecorator() {
 		return new CmdbMenuDecorator();
+	}
+	@Bean
+	public JobCatalogLoader macJobCatalogLoader() {
+		return new JobCatalogLoader();
+	}
+	@Bean
+	public AppDefinitionLoader macServiceCatalogLoader() {
+		return new AppDefinitionLoader();
+	}
+	
+	@Bean
+	public AppDefinitionController macServiceCatalogController() {
+		return new AppDefinitionController();
+	}
+	
+	@Bean
+	public JobCatalogController macJobCatalogController() {
+		return new JobCatalogController();
 	}
 }
