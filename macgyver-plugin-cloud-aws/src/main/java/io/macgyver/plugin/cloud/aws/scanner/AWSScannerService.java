@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.base.Strings;
-import com.google.gwt.thirdparty.guava.common.base.Splitter;
+import com.google.common.base.Splitter;
 
 import io.macgyver.core.service.ServiceRegistry;
 import io.macgyver.neorx.rest.NeoRxClient;

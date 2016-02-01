@@ -15,21 +15,31 @@ package io.macgyver.plugin.git;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 
+import org.assertj.core.api.Assertions;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Maps;
 import com.google.common.io.Files;
+
+import io.macgyver.core.resource.Resource;
+import io.macgyver.core.resource.ResourceMatcher;
+import io.macgyver.core.resource.ResourceMatchers;
 
 public class GitResourceProviderTest {
 
+	Logger logger = LoggerFactory.getLogger(GitRepositoryServiceFactory.class);
 	static File repoDir = null;
 	static GitResourceProvider provider;
 
@@ -71,6 +81,23 @@ public class GitResourceProviderTest {
 		}
 	}
 
+	@Test
+	public void testX() throws IOException {
+		GitResourceProvider rp = new GitResourceProvider("https://github.com/if6was9/macgyver-resource-test.git");
+		
+		Map<String,Resource> m = Maps.newHashMap();
+		rp.allResources().forEach(it -> {
+			try {
+				logger.info("found resource: {}",it);
+				m.put(it.getPath(), it);
+			}
+			catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		} );
+
+		Assertions.assertThat(m).containsKey("scripts/hello.groovy");
+	}
 
 	@Test
 	@Ignore

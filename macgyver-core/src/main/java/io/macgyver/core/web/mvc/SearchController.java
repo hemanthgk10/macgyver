@@ -24,8 +24,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
-import com.google.gwt.thirdparty.guava.common.base.Strings;
-import com.google.gwt.thirdparty.guava.common.collect.Lists;
+import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 
 import io.macgyver.core.web.UIContext;
 import io.macgyver.core.web.UIContext.MenuItem;

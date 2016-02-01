@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gwt.thirdparty.guava.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 import io.macgyver.core.event.DistributedEvent;
 import io.macgyver.core.event.DistributedEventProvider;

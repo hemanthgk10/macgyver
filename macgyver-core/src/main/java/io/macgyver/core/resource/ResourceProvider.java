@@ -18,6 +18,8 @@ import java.io.IOException;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 
+import rx.Observable;
+
 public abstract class ResourceProvider {
 
 	String prefix=null;
@@ -27,6 +29,11 @@ public abstract class ResourceProvider {
 	public final Iterable<Resource> findResources() throws IOException {
 		return findResources(ResourceMatchers.matchAll());
 	}
+	
+	public Observable<Resource> allResources() throws IOException {
+		return Observable.from(findResources());
+	}
+	
 	public Optional<Resource> findResourceByHash(String hash) throws IOException {
 		for (Resource r: findResources()) {
 			if (r.getHash().equals(hash)) {

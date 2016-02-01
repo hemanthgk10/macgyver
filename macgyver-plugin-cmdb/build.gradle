@@ -19,6 +19,7 @@ dependencies {
   
     testCompile project(':macgyver-test')
      compile project(':macgyver-core')
+     compile project(':macgyver-plugin-git')
      
 }
 
