@@ -18,7 +18,7 @@ dependencies {
   
     testCompile project(':macgyver-test')
      compile project(':macgyver-core')
-	 compile 'org.eclipse.jgit:org.eclipse.jgit:3.3.2.201404171909-r'
+     compile 'org.eclipse.jgit:org.eclipse.jgit:3.7.1.201504261725-r'
 
 }
 
