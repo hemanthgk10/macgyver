@@ -84,7 +84,7 @@ dependencies {
     
     compile 'org.jdom:jdom2:2.0.6'
     
-    compile 'org.rapidoid:rapidoid-fluent:5.0.8'
+    compile "org.rapidoid:rapidoid-fluent:${RAPIDOID_VERSION}"
 
 	
    /* compile(group: 'javax.validation', name: 'validation-api', version: '1.1.0.Final') { 

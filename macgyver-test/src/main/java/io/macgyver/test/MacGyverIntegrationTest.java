@@ -14,6 +14,7 @@
 package io.macgyver.test;
 
 import io.macgyver.neorx.rest.NeoRxClient;
+import io.macgyver.neorx.rest.NeoRxClientBuilder;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -56,7 +57,7 @@ public abstract class MacGyverIntegrationTest extends
 		if (neo4jAvailable == null) {
 
 			try {
-				neo4jAvailable = new NeoRxClient().checkConnection(); // TODO configurable endpoint
+				neo4jAvailable = new NeoRxClientBuilder().build().checkConnection(); // TODO configurable endpoint
 
 			} catch (Exception e) {
 				logger.info("problem communicating with neo4j", e);
