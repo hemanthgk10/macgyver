@@ -59,6 +59,9 @@ import io.macgyver.core.event.provider.local.LocalEventProvider;
 import io.macgyver.core.eventbus.EventBusPostProcessor;
 import io.macgyver.core.eventbus.MacGyverAsyncEventBus;
 import io.macgyver.core.eventbus.MacGyverEventBus;
+import io.macgyver.core.log.EventLogger;
+import io.macgyver.core.log.Neo4jEventLogger;
+import io.macgyver.core.log.EventLogger.Event;
 import io.macgyver.core.resource.provider.filesystem.FileSystemResourceProvider;
 import io.macgyver.core.script.BindingSupplierManager;
 import io.macgyver.core.script.ExtensionResourceProvider;
@@ -296,6 +299,11 @@ public class CoreConfig implements EnvironmentAware {
 		LocalEventProvider p = new LocalEventProvider(proxy);
 		p.start();
 		return proxy;
+	}
+	
+	@Bean
+	public EventLogger macEventLogger() {
+		return new Neo4jEventLogger();
 	}
 
 }

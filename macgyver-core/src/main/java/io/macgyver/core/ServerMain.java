@@ -14,6 +14,7 @@
 package io.macgyver.core;
 
 import io.macgyver.core.eventbus.MacGyverEventBus;
+import io.macgyver.core.log.EventLogger;
 
 import java.io.IOException;
 import java.util.List;
@@ -113,7 +114,7 @@ public class ServerMain {
 		"\n\n"+
 		"Ready for Action!\n\n\n");
 		
-		
+		Kernel.getApplicationContext().getBean(EventLogger.class).event().withMessage("MacGyver server started").log();
 		
 		
 
