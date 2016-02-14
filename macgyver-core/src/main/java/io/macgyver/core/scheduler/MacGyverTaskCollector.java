@@ -13,6 +13,7 @@
  */
 package io.macgyver.core.scheduler;
 
+import io.macgyver.core.Kernel;
 import io.macgyver.neorx.rest.NeoRxClient;
 import it.sauronsoftware.cron4j.SchedulingPattern;
 import it.sauronsoftware.cron4j.TaskCollector;
@@ -58,11 +59,13 @@ public class MacGyverTaskCollector implements TaskCollector {
 	protected TaskTable toTaskTable(List<JsonNode> list) {
 		TaskTable tt = new TaskTable();
 
+		ScheduledTaskManager stm = Kernel.getApplicationContext().getBean(ScheduledTaskManager.class);
+		
 		for (JsonNode n : list) {
 			try {
 
 				String cron = n.path("cron").asText();
-				boolean enabled = n.path("enabled").asBoolean(true);
+				boolean enabled = stm.isEnabled(n);
 
 				if (enabled
 						&& !com.google.common.base.Strings.isNullOrEmpty(cron)) {

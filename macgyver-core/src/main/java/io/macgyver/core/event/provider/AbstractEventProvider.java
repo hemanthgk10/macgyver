@@ -24,6 +24,7 @@ import com.google.common.base.Preconditions;
 import io.macgyver.core.event.DistributedEvent;
 import io.macgyver.core.event.DistributedEventProvider;
 import io.macgyver.core.event.DistributedEventProviderProxy;
+import io.macgyver.core.event.DistributedEventSystem;
 import rx.Observable;
 import rx.Subscriber;
 import rx.functions.Action1;
@@ -38,17 +39,33 @@ public abstract class AbstractEventProvider implements DistributedEventProvider,
 	AtomicBoolean running = new AtomicBoolean(false);
 
 	DistributedEventProviderProxy proxy;
-	
 
+
+	public AbstractEventProvider() {
+		
+	}
+
+	public void internalInstall(DistributedEventSystem system) {
+		Preconditions.checkState(proxy==null,"proxy already set");
+		this.proxy = (DistributedEventProviderProxy) system.getDistributedEventProvider();
+		proxy.setDelegate(this);
+	}
 	public AbstractEventProvider(DistributedEventProviderProxy proxy) {
 		this.proxy = proxy;
 		proxy.setDelegate(this);
 	}
 
+	public abstract void doStart();
+
+	protected DistributedEventProviderProxy getProxy() {
+		return proxy;
+	}
 	public void start() {
+		logger.info("start()");
+		doStart();
 		dispatcherThread = new Thread(this, "distributed-event-dispatcher");
 		dispatcherThread.setDaemon(true);
-
+		logger.info("starting {}",dispatcherThread);
 		dispatcherThread.start();
 	}
 
@@ -56,30 +73,40 @@ public abstract class AbstractEventProvider implements DistributedEventProvider,
 		running.set(false);
 		// need to add an event to wake up the receiver
 	}
-
+	public boolean isRunning() {
+		return running.get();
+	}
 	public Observable<DistributedEvent> getObservableDistributedEvent() {
-		Preconditions.checkState(proxy!=null, "proxy must be set");
+		Preconditions.checkState(proxy != null, "proxy must be set");
 		return proxy.getObservableDistributedEvent();
 	}
 
-
-
 	@Override
 	public void run() {
-		Preconditions.checkState(proxy!=null, "proxy must be set");
+		Preconditions.checkState(proxy != null, "proxy must be set");
 		running.set(true);
 		while (running.get()) {
 			try {
 				DistributedEvent event = fetchNextEvent();
-				proxy.dispatch(event);
-			} catch (RuntimeException e) {
-				logger.warn("", e);
+				proxy.internalDispatch(event);
+			} 
+			catch (UnsupportedOperationException e) {
+				try {
+					Thread.sleep(30000);
+				} catch (Exception ex) {
+				}	
 			}
+			catch (RuntimeException e) {
+				logger.warn("", e);
+				try {
+					Thread.sleep(500);
+				} catch (Exception ex) {
+				}
+			}
+			
 		}
+		logger.info("thread exiting event loop");
 	}
-
-
-
 
 	public abstract DistributedEvent fetchNextEvent();
 }

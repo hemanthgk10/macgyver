@@ -16,6 +16,9 @@ package io.macgyver.core.scheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.macgyver.core.Kernel;
+import io.macgyver.core.log.EventLogger;
+import io.macgyver.core.log.Neo4jEventLogger;
 import it.sauronsoftware.cron4j.SchedulerListener;
 import it.sauronsoftware.cron4j.TaskExecutor;
 
@@ -26,19 +29,19 @@ public class MacGyverScheduleListener implements SchedulerListener {
 	@Override
 	public void taskFailed(TaskExecutor taskExecutor, Throwable exception) {
 		logger.warn("taskFailed - "+taskExecutor.getTask(),exception);
-
+		Kernel.getApplicationContext().getBean(TaskStateManager.class).endTask(taskExecutor.getGuid(),TaskStateManager.TaskState.FAILED);
 	}
 
 	@Override
 	public void taskLaunching(TaskExecutor taskExecutor) {
 		logger.info("taskLaunching: {}",taskExecutor.getTask());
-
+		Kernel.getApplicationContext().getBean(TaskStateManager.class).startTask(taskExecutor.getGuid());
 	}
 
 	@Override
 	public void taskSucceeded(TaskExecutor taskExecutor) {
 		logger.info("taskSucceeded: {}",taskExecutor.getTask());
-
+		Kernel.getApplicationContext().getBean(TaskStateManager.class).endTask(taskExecutor.getGuid(),TaskStateManager.TaskState.COMPLETED);
 	}
 
 }
