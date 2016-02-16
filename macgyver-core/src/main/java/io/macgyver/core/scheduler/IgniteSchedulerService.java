@@ -117,16 +117,10 @@ public class IgniteSchedulerService implements Service, Runnable, Serializable, 
 			LoggerFactory.getLogger(IgniteSchedulerService.class).info("starting scheduler: {}", schedulerInstance);
 			schedulerInstance.start();
 			this.schedulerRef.set(schedulerInstance);
-			Runnable r = new Runnable() {
-
-				@Override
-				public void run() {
-					LoggerFactory.getLogger(it.sauronsoftware.cron4j.Scheduler.class).info("heartbeat");
-
-				}
-
-			};
-			String key = schedulerInstance.schedule("* * * * *", r);
+			
+			
+			schedulerInstance.schedule("* * * * *", Kernel.getApplicationContext().getBean(TaskStateManager.class).newMarkTerminatedRunnable());
+			schedulerInstance.schedule("*/5 * * * *", Kernel.getApplicationContext().getBean(TaskStateManager.class).newPurgeRunnable());
 		}
 
 	}
@@ -147,6 +141,7 @@ public class IgniteSchedulerService implements Service, Runnable, Serializable, 
 		long scanTime = System.currentTimeMillis();
 		NeoRxClient client = Kernel.getApplicationContext().getBean(NeoRxClient.class);
 
+		ScheduledTaskManager scheduledTaskManager = Kernel.getApplicationContext().getBean(ScheduledTaskManager.class);
 		ScriptExecutor se = new ScriptExecutor();
 		for (Resource r : extensionLoader.findResources()) {
 			if (logger.isDebugEnabled()) {

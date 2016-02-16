@@ -13,20 +13,28 @@
  */
 package io.macgyver.core.scheduler;
 
+import io.macgyver.core.Bootstrap;
+import io.macgyver.core.Kernel;
 import io.macgyver.core.MacGyverException;
 import io.macgyver.core.script.ScriptExecutor;
+import io.macgyver.neorx.rest.NeoRxClient;
 import it.sauronsoftware.cron4j.Task;
 import it.sauronsoftware.cron4j.TaskExecutionContext;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.io.Files;
 
 public class MacGyverTask extends Task {
 
@@ -41,15 +49,63 @@ public class MacGyverTask extends Task {
 	@Override
 	public void execute(TaskExecutionContext context) throws RuntimeException {
 
+		String cypher = "merge (t:Task {id:{taskId}}) set t+={props} return t";
+		Kernel.getApplicationContext().getBean(NeoRxClient.class).execCypher(cypher, "taskId",
+				context.getTaskExecutor().getGuid(), "props", config);
+
 		try {
 			if (logger.isDebugEnabled()) {
 				logger.debug("execute {} context={}", this, context);
 			}
-			ScriptExecutor se = new ScriptExecutor();
 
-			Map<String, Object> args = createArgsFromConfig();
+			if (config.has("script")) {
+				ScriptExecutor se = new ScriptExecutor();
 
-			se.run(config.path("script").asText(), args, true);
+				Map<String, Object> args = createArgsFromConfig();
+
+				
+				se.run(config.path("script").asText(), args, true);
+			}
+			else if (config.has("inlineScript")) {
+				
+				
+				String language = config.path("inlineScriptLanguage").asText("groovy");
+				
+				String n = UUID.randomUUID().toString()+"."+language;
+				
+				File tempScriptsDir = new File(Bootstrap.getInstance().getScriptsDir().getAbsolutePath(),"temp");
+				tempScriptsDir.mkdirs();
+				
+				File scriptFile = new File(tempScriptsDir,n);
+				
+				try {
+					String scriptBody = config.path("inlineScript").asText();
+					if (logger.isInfoEnabled()) {
+						logger.info("executing inline script: {}",scriptBody);
+					}
+					Files.write(scriptBody, scriptFile, Charsets.UTF_8);
+				
+					ScriptExecutor se = new ScriptExecutor();
+
+					Map<String, Object> args = createArgsFromConfig();
+
+				
+					se.run("temp/"+n, args, true);
+				}
+				finally {
+					if (scriptFile.exists()) {
+						try {
+							scriptFile.delete();
+						}
+						catch (Exception e) {
+							logger.warn("could not delete file: {}",scriptFile);
+						}
+					}
+				}
+				
+				
+				
+			}
 		} catch (IOException e) {
 			throw new MacGyverException(e);
 		}

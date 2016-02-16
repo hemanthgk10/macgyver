@@ -29,6 +29,12 @@ public class DistributedEvent {
 		json.put("source", getDefaultSource());
 	}
 
+	public static DistributedEvent fromJsonNode(JsonNode n) {
+		DistributedEvent event = new DistributedEvent();
+		event.json = (ObjectNode) n;
+		return event;
+	}
+	
 	public static DistributedEvent create() {
 		return new DistributedEvent();
 	}
