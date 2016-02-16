@@ -15,6 +15,9 @@ package io.macgyver.core.event;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import rx.Observable;
 import rx.Subscriber;
 import rx.functions.Action1;
@@ -24,6 +27,8 @@ import rx.observers.Subscribers;
 public class DistributedEventProviderProxy implements DistributedEventProvider {
 
 	AtomicReference<DistributedEventProvider> proxy = new AtomicReference<DistributedEventProvider>();
+
+	Logger logger = LoggerFactory.getLogger(DistributedEventProviderProxy.class);
 
 	public DistributedEventProviderProxy() {
 
@@ -38,7 +43,15 @@ public class DistributedEventProviderProxy implements DistributedEventProvider {
 
 	@Override
 	public boolean publish(DistributedEvent event) {
-		return proxy.get().publish(event);
+		DistributedEventProvider provider = proxy.get();
+
+		if (provider != null) {
+			provider.publish(event);
+			return true;
+		} else {
+			logger.warn("no provider set.  message will be discarded");
+			return false;
+		}
 
 	}
 
@@ -76,23 +89,41 @@ public class DistributedEventProviderProxy implements DistributedEventProvider {
 		observable.connect();
 	}
 
-	public void dispatch(DistributedEvent event) {
+	public void internalDispatch(DistributedEvent event) {
+		if (event == null) {
+			// won't normally happen except during shutdown
+			return;
+		}
+		if (logger.isDebugEnabled()) {
+			logger.debug("dispatching {}", event);
+		}
 		subscriber.onNext(event);
 	}
 
 	public void setDelegate(DistributedEventProvider p) {
 		DistributedEventProvider oldProvider = proxy.getAndSet(p);
 		if (oldProvider != null) {
-			oldProvider.shutdown();
+			logger.info("stopping {}", oldProvider);
+			try {
+				oldProvider.stop();
+			} catch (RuntimeException e) {
+				logger.warn("", e);
+			}
 		}
 	}
 
 	@Override
-	public void shutdown() {
+	public void stop() {
 		DistributedEventProvider p = proxy.get();
 		if (p != null) {
-			p.shutdown();
+			p.stop();
 		}
 
+	}
+
+	public void start() {
+		if (proxy.get() == null) {
+			throw new IllegalStateException("proxy not set");
+		}
 	}
 }

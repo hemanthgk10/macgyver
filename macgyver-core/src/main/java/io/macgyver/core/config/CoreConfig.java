@@ -55,6 +55,7 @@ import io.macgyver.core.cluster.ClusterManager;
 import io.macgyver.core.cluster.NeoRxTcpDiscoveryIpFinder;
 import io.macgyver.core.crypto.Crypto;
 import io.macgyver.core.event.DistributedEventProviderProxy;
+import io.macgyver.core.event.DistributedEventSystem;
 import io.macgyver.core.event.provider.local.LocalEventProvider;
 import io.macgyver.core.eventbus.EventBusPostProcessor;
 import io.macgyver.core.eventbus.MacGyverAsyncEventBus;
@@ -63,6 +64,8 @@ import io.macgyver.core.log.EventLogger;
 import io.macgyver.core.log.Neo4jEventLogger;
 import io.macgyver.core.log.EventLogger.Event;
 import io.macgyver.core.resource.provider.filesystem.FileSystemResourceProvider;
+import io.macgyver.core.scheduler.ScheduledTaskManager;
+import io.macgyver.core.scheduler.TaskStateManager;
 import io.macgyver.core.script.BindingSupplierManager;
 import io.macgyver.core.script.ExtensionResourceProvider;
 import io.macgyver.core.service.ServiceRegistry;
@@ -293,12 +296,15 @@ public class CoreConfig implements EnvironmentAware {
 	}
 	
 	@Bean
-	public DistributedEventProviderProxy macDistributedEventProviderProxy() {
-		
+	public DistributedEventProviderProxy macDistributedEventProviderProxy() {		
 		DistributedEventProviderProxy proxy = new DistributedEventProviderProxy();
-		LocalEventProvider p = new LocalEventProvider(proxy);
-		p.start();
+
 		return proxy;
+	}
+	
+	@Bean 
+	public DistributedEventSystem macDistributedEventSystem() {
+		return new DistributedEventSystem();
 	}
 	
 	@Bean
@@ -306,4 +312,12 @@ public class CoreConfig implements EnvironmentAware {
 		return new Neo4jEventLogger();
 	}
 
+	@Bean
+	public TaskStateManager macTaskStateManager() {
+		return new TaskStateManager();
+	}
+	@Bean
+	public ScheduledTaskManager macScheduledTaskManager() {
+		return new ScheduledTaskManager();
+	}
 }

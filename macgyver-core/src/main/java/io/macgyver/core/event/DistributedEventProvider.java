@@ -19,7 +19,7 @@ public interface DistributedEventProvider {
 
 
 	public boolean publish(DistributedEvent event);
-	 Observable<DistributedEvent> getObservableDistributedEvent();
-	 
-	 public void shutdown();
+	Observable<DistributedEvent> getObservableDistributedEvent(); 
+	public void stop();
+	public void start();
 }

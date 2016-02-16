@@ -14,6 +14,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
+import io.macgyver.core.event.DistributedEventSystem;
 import io.macgyver.neorx.rest.NeoRxClient;
 
 public class Neo4jEventLogger extends EventLogger {
@@ -23,8 +24,9 @@ public class Neo4jEventLogger extends EventLogger {
 	@Autowired
 	NeoRxClient neo4j;
 	
+
 	@Override
-	protected void logEvent(Event event) {
+	protected void doLogEvent(Event event) {
 		
 		Preconditions.checkNotNull(neo4j,"neo4j must be set");
 	
@@ -40,6 +42,7 @@ public class Neo4jEventLogger extends EventLogger {
 		String cypher = "create (x:EventLog" + labelClause  +") set x={props}";
 		
 		neo4j.execCypher(cypher, "props",props);
+		
 		
 	}
 	

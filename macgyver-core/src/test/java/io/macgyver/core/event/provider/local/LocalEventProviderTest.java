@@ -31,6 +31,7 @@ public class LocalEventProviderTest {
 		provider = new DistributedEventProviderProxy();
 		
 		localProvider = new LocalEventProvider(provider);
+
 		localProvider.start();
 	}
 	
