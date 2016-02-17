@@ -55,7 +55,7 @@ public class LaunchConfigScanner extends AWSServiceScanner {
 				String cypher = "merge (x:AwsLaunchConfig {aws_arn:{aws_arn}}) set x+={props}, x.aws_securityGroups={sg}, x.updateTimestamp=timestamp() return x";
 
 			
-				Preconditions.checkNotNull(neoRx);
+				Preconditions.checkNotNull(getNeoRxClient());
 
 				getNeoRxClient().execCypher(cypher, "aws_arn", n.path("aws_arn").asText(), "props", n, "sg", securityGroups).forEach(gc.MERGE_ACTION);
 			} catch (RuntimeException e) {
