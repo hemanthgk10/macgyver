@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 
@@ -46,7 +47,7 @@ public class TaskStateManager {
 	long purgeHorizon = 24;
 	TimeUnit purgeHorizonUnit = TimeUnit.HOURS;
 
-	public void startTask(String id) {
+	public void recordTaskStart(String id) {
 
 		String host = "localhost";
 		try {
@@ -59,7 +60,7 @@ public class TaskStateManager {
 
 		String date = formatInstant(now);
 
-		String cypher = "create (t:TaskState {id:{taskId}}) set t.state={state},t.hostname={hostname},t.processUuid={processUuid}, t.startTs={ts}, t.startDate={date} return t";
+		String cypher = "merge (t:TaskState {id:{taskId}}) set t.state={state},t.hostname={hostname},t.processUuid={processUuid}, t.startTs={ts}, t.startDate={date} return t";
 
 		String processId = "unknown";
 		try {
@@ -76,13 +77,18 @@ public class TaskStateManager {
 		return DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX").withZone(ZoneOffset.UTC).format(instant);
 	}
 
-	public void endTask(String id, TaskState state) {
+	public void recordTaskStateProperties(String id, JsonNode props) {
+		String cypher = "match (t:TaskState {id:{taskId}}) set t+={props} return t";
+		Kernel.getApplicationContext().getBean(NeoRxClient.class).execCypher(cypher, "taskId",
+				id, "props", props);
+	}
+	public void recordTaskEnd(String id, TaskState state) {
 
 		Instant now = Instant.now();
 
 		String date = formatInstant(now);
 
-		String cypher = "merge (t:TaskState {id:{taskId}}) set t.endTs={ts},t.endDate={date} ,t.state={state} return t";
+		String cypher = "match (t:TaskState {id:{taskId}}) set t.endTs={ts},t.endDate={date} ,t.state={state} return t";
 
 		neo4j.execCypher(cypher, "taskId", id, "ts", now.toEpochMilli(), "date", date, "state", state.toString());
 
@@ -112,7 +118,7 @@ public class TaskStateManager {
 	}
 
 	
-	public void markTerminatedTasksAsCompleted() {
+	public void markTerminatedTasksAsCancelled() {
 		
 		List<String> idList = Lists.newArrayList();
 
@@ -134,7 +140,7 @@ public class TaskStateManager {
 			@Override
 			public void run() {
 				try {
-					markTerminatedTasksAsCompleted();
+					markTerminatedTasksAsCancelled();
 				} catch (Exception e) {
 					logger.warn("problem marking terminated tasks", e);
 				}

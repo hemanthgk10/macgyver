@@ -49,9 +49,16 @@ public class MacGyverTask extends Task {
 	@Override
 	public void execute(TaskExecutionContext context) throws RuntimeException {
 
-		String cypher = "merge (t:Task {id:{taskId}}) set t+={props} return t";
-		Kernel.getApplicationContext().getBean(NeoRxClient.class).execCypher(cypher, "taskId",
-				context.getTaskExecutor().getGuid(), "props", config);
+		try {
+			// Need this Kernel.getApplicationContext() pattern because this
+			// class is no Spring-managed, and thus autowiring does not work.
+			Kernel.getApplicationContext().getBean(TaskStateManager.class)
+					.recordTaskStateProperties(context.getTaskExecutor().getGuid(), config);
+		} catch (RuntimeException e) {
+			// do not allow a logging operation to stop the execution of the
+			// task
+			logger.warn("problem updating TaskState", e);
+		}
 
 		try {
 			if (logger.isDebugEnabled()) {
@@ -63,48 +70,40 @@ public class MacGyverTask extends Task {
 
 				Map<String, Object> args = createArgsFromConfig();
 
-				
 				se.run(config.path("script").asText(), args, true);
-			}
-			else if (config.has("inlineScript")) {
-				
-				
+			} else if (config.has("inlineScript")) {
+
 				String language = config.path("inlineScriptLanguage").asText("groovy");
-				
-				String n = UUID.randomUUID().toString()+"."+language;
-				
-				File tempScriptsDir = new File(Bootstrap.getInstance().getScriptsDir().getAbsolutePath(),"temp");
+
+				String n = UUID.randomUUID().toString() + "." + language;
+
+				File tempScriptsDir = new File(Bootstrap.getInstance().getScriptsDir().getAbsolutePath(), "temp");
 				tempScriptsDir.mkdirs();
-				
-				File scriptFile = new File(tempScriptsDir,n);
-				
+
+				File scriptFile = new File(tempScriptsDir, n);
+
 				try {
 					String scriptBody = config.path("inlineScript").asText();
 					if (logger.isInfoEnabled()) {
-						logger.info("executing inline script: {}",scriptBody);
+						logger.info("executing inline script: {}", scriptBody);
 					}
 					Files.write(scriptBody, scriptFile, Charsets.UTF_8);
-				
+
 					ScriptExecutor se = new ScriptExecutor();
 
 					Map<String, Object> args = createArgsFromConfig();
 
-				
-					se.run("temp/"+n, args, true);
-				}
-				finally {
+					se.run("temp/" + n, args, true);
+				} finally {
 					if (scriptFile.exists()) {
 						try {
 							scriptFile.delete();
-						}
-						catch (Exception e) {
-							logger.warn("could not delete file: {}",scriptFile);
+						} catch (Exception e) {
+							logger.warn("could not delete file: {}", scriptFile);
 						}
 					}
 				}
-				
-				
-				
+
 			}
 		} catch (IOException e) {
 			throw new MacGyverException(e);

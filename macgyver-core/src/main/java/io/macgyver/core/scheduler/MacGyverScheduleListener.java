@@ -29,19 +29,19 @@ public class MacGyverScheduleListener implements SchedulerListener {
 	@Override
 	public void taskFailed(TaskExecutor taskExecutor, Throwable exception) {
 		logger.warn("taskFailed - "+taskExecutor.getTask(),exception);
-		Kernel.getApplicationContext().getBean(TaskStateManager.class).endTask(taskExecutor.getGuid(),TaskStateManager.TaskState.FAILED);
+		Kernel.getApplicationContext().getBean(TaskStateManager.class).recordTaskEnd(taskExecutor.getGuid(),TaskStateManager.TaskState.FAILED);
 	}
 
 	@Override
 	public void taskLaunching(TaskExecutor taskExecutor) {
 		logger.info("taskLaunching: {}",taskExecutor.getTask());
-		Kernel.getApplicationContext().getBean(TaskStateManager.class).startTask(taskExecutor.getGuid());
+		Kernel.getApplicationContext().getBean(TaskStateManager.class).recordTaskStart(taskExecutor.getGuid());
 	}
 
 	@Override
 	public void taskSucceeded(TaskExecutor taskExecutor) {
 		logger.info("taskSucceeded: {}",taskExecutor.getTask());
-		Kernel.getApplicationContext().getBean(TaskStateManager.class).endTask(taskExecutor.getGuid(),TaskStateManager.TaskState.COMPLETED);
+		Kernel.getApplicationContext().getBean(TaskStateManager.class).recordTaskEnd(taskExecutor.getGuid(),TaskStateManager.TaskState.COMPLETED);
 	}
 
 }
