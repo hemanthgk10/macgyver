@@ -24,11 +24,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Preconditions;
 
+import io.macgyver.core.Kernel;
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.plugin.cloud.aws.AWSServiceClient;
 
 public class ASGScanner extends AWSServiceScanner {
-	NeoRxClient neoRx = new NeoRxClient();
+
 	ObjectMapper mapper = new ObjectMapper();
 
 	public ASGScanner(AWSServiceClient client, NeoRxClient neo4j) {
@@ -52,8 +53,8 @@ public class ASGScanner extends AWSServiceScanner {
 				
 				String cypher = "merge (x:AwsAsg {aws_arn:{aws_arn}}) set x+={props}, x.updateTs=timestamp() return x";
 				
-				Preconditions.checkNotNull(neoRx);
-				neoRx.execCypher(cypher, "aws_arn",asgArn, "props",n).forEach(gc.MERGE_ACTION);
+				Preconditions.checkNotNull(getNeoRxClient());
+				getNeoRxClient().execCypher(cypher, "aws_arn",asgArn, "props",n).forEach(gc.MERGE_ACTION);
 
 				mapAsgRelationships(asg, asgArn, region.getName());				
 				
@@ -79,7 +80,7 @@ public class ASGScanner extends AWSServiceScanner {
 	protected void mapAsgToLaunchConfig(String launchConfig, String asgArn, String region) { 
 		String cypher = "match (x:AwsAsg {aws_arn:{asgArn}}), (y:AwsLaunchConfig {aws_launchConfigurationName:{lcn}, aws_region:{region}, aws_account:{account}}) "
 				+ "merge (x)-[r:HAS]->(y) set r.updateTs=timestamp()";
-		neoRx.execCypher(cypher, "asgArn",asgArn, "lcn",launchConfig, "region",region, "account",getAccountId());
+		getNeoRxClient().execCypher(cypher, "asgArn",asgArn, "lcn",launchConfig, "region",region, "account",getAccountId());
 	}
 	
 	protected void mapAsgToSubnet(String subnets, String asgArn, String region) {
@@ -89,7 +90,7 @@ public class ASGScanner extends AWSServiceScanner {
 
 			String cypher = "match (x:AwsAsg {aws_arn:{asgArn}}), (y:AwsSubnet {aws_arn:{subnetArn}}) "
 					+ "merge (x)-[r:LAUNCHES_INSTANCES_IN]->(y) set r.updateTs=timestamp()";
-			neoRx.execCypher(cypher, "asgArn",asgArn, "subnetArn",subnetArn);
+			getNeoRxClient().execCypher(cypher, "asgArn",asgArn, "subnetArn",subnetArn);
 		}
 	}
 	
@@ -100,7 +101,7 @@ public class ASGScanner extends AWSServiceScanner {
 
 			String cypher = "match (x:AwsEc2Instance {aws_arn:{instanceArn}}), (y:AwsAsg {aws_arn:{asgArn}}) "
 					+ "merge (y)-[r:CONTAINS]->(x) set r.updateTs=timestamp()";
-			neoRx.execCypher(cypher, "instanceArn",instanceArn, "asgArn",asgArn);
+			getNeoRxClient().execCypher(cypher, "instanceArn",instanceArn, "asgArn",asgArn);
 		}
 	}
 
@@ -111,7 +112,7 @@ public class ASGScanner extends AWSServiceScanner {
 
 			String cypher = "match (x:AwsElb {aws_arn:{elbArn}}), (y:AwsAsg {aws_arn:{asgArn}}) "
 					+ "merge (y)-[r:ATTACHED_TO]-(x) set r.updateTs=timestamp()";
-			neoRx.execCypher(cypher, "elbArn",elbArn, "asgArn",asgArn);
+			getNeoRxClient().execCypher(cypher, "elbArn",elbArn, "asgArn",asgArn);
 		}
 	}
 		
