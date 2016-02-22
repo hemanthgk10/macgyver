@@ -163,6 +163,7 @@ public class A10HAClientImpl implements A10HAClient, Runnable {
 		logger.debug("searching for active A10");
 
 		List<A10Client> tmp = Lists.newArrayList(clients);
+		if(tmp.size() == 0) return tmp.get(0);
 		for (A10Client c : tmp) {
 			try {
 				if (c.isActive()) {
