@@ -20,6 +20,7 @@ import java.util.Optional;
 import com.amazonaws.regions.Region;
 import com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient;
 import com.amazonaws.services.elasticloadbalancing.model.DescribeLoadBalancersResult;
+import com.amazonaws.services.elasticloadbalancing.model.DescribeTagsRequest;
 import com.amazonaws.services.elasticloadbalancing.model.LoadBalancerDescription;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -50,7 +51,8 @@ public class ELBScanner extends AWSServiceScanner {
 		AmazonElasticLoadBalancingClient client = new AmazonElasticLoadBalancingClient(
 				getAWSServiceClient().getCredentialsProvider()).withRegion(region);
 		DescribeLoadBalancersResult results = client.describeLoadBalancers();
-		GraphNodeGarbageCollector gc = new GraphNodeGarbageCollector().neo4j(getNeoRxClient()).region(region.getName()).account(getAccountId()).label("AwsElb");
+		GraphNodeGarbageCollector gc = new GraphNodeGarbageCollector().neo4j(getNeoRxClient()).region(region.getName())
+				.account(getAccountId()).label("AwsElb");
 		results.getLoadBalancerDescriptions().forEach(lb -> {
 			try {
 				ObjectNode n = convertAwsObject(lb, region);
@@ -64,11 +66,32 @@ public class ELBScanner extends AWSServiceScanner {
 				neoRx.execCypher(cypher, "aws_arn", elbArn, "props", n).forEach(gc.MERGE_ACTION);
 
 				mapElbRelationships(lb, elbArn, region.getName());
+
 			} catch (RuntimeException e) {
 				logger.warn("problem scanning ELBs", e);
 			}
 
 		});
+		if (!results.getLoadBalancerDescriptions().isEmpty()) {
+
+			String[] loadBalancerNames = results.getLoadBalancerDescriptions().stream()
+					.map(lb -> lb.getLoadBalancerName()).toArray(String[]::new);
+			client.describeTags(new DescribeTagsRequest().withLoadBalancerNames(loadBalancerNames)).getTagDescriptions()
+					.forEach(tag -> {
+						try {
+							ObjectNode n = convertAwsObject(tag, region);
+							String elbArn = n.path("aws_arn").asText();
+
+							String cypher = "merge (x:AwsElb {aws_arn:{aws_arn}}) set x+={props} return x";
+
+							Preconditions.checkNotNull(neoRx);
+
+							neoRx.execCypher(cypher, "aws_arn", elbArn, "props", n);
+						} catch (RuntimeException e) {
+							logger.warn("problem scanning ELB tags", e);
+						}
+					});
+		}
 
 		gc.invoke();
 	}
@@ -102,7 +125,7 @@ public class ELBScanner extends AWSServiceScanner {
 			String subnetArn = String.format("arn:aws:ec2:%s:%s:subnet/%s", region, getAccountId(), subnetName);
 			String cypher = "match (x:AwsElb {aws_arn:{elbArn}}), (y:AwsSubnet {aws_arn:{subnetArn}}) "
 					+ "merge (x)-[r:AVAILABLE_IN]->(y) set r.updateTs=timestamp()";
-			neoRx.execCypher(cypher, "elbArn",elbArn, "subnetArn",subnetArn);					
+			neoRx.execCypher(cypher, "elbArn", elbArn, "subnetArn", subnetArn);
 		}
 	}
 
@@ -113,7 +136,7 @@ public class ELBScanner extends AWSServiceScanner {
 			String instanceArn = String.format("arn:aws:ec2:%s:%s:instance/%s", region, getAccountId(), instanceName);
 			String cypher = "match (x:AwsElb {aws_arn:{elbArn}}), (y:AwsEc2Instance {aws_arn:{instanceArn}}) "
 					+ "merge (x)-[r:DISTRIBUTES_TRAFFIC_TO]->(y) set r.updateTs=timestamp()";
-			neoRx.execCypher(cypher, "elbArn",elbArn, "instanceArn",instanceArn);
+			neoRx.execCypher(cypher, "elbArn", elbArn, "instanceArn", instanceArn);
 
 		}
 	}
