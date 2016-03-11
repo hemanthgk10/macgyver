@@ -13,9 +13,7 @@
  */
 package io.macgyver.plugin.elb.a10;
 
-import io.macgyver.core.util.WeakRefScheduler;
-import io.macgyver.plugin.elb.ElbException;
-
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -28,13 +26,15 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.squareup.okhttp.Response;
+
+import io.macgyver.core.util.WeakRefScheduler;
+import io.macgyver.plugin.elb.ElbException;
 
 public class A10HAClientImpl implements A10HAClient, Runnable {
 
@@ -45,7 +45,6 @@ public class A10HAClientImpl implements A10HAClient, Runnable {
 	protected LoadingCache<String, A10Client> cache;
 
 	public static final int DEFAULT_NODE_CHECK_SECS = 60;
-	private boolean certVerificationEnabled = false;
 
 	private static WeakRefScheduler daemon = new WeakRefScheduler(3);
 
@@ -53,18 +52,13 @@ public class A10HAClientImpl implements A10HAClient, Runnable {
 
 	public A10HAClientImpl() {
 		this(DEFAULT_NODE_CHECK_SECS, false);
-
 	}
 
 	public A10HAClientImpl(int nodeCheckSecs, boolean certVerificationEnabled) {
-		cache = CacheBuilder.newBuilder()
-				.expireAfterWrite(nodeCheckSecs, TimeUnit.SECONDS)
-				.build(new ClientSelector());
-		this.certVerificationEnabled = false;
+		cache = CacheBuilder.newBuilder().expireAfterWrite(nodeCheckSecs, TimeUnit.SECONDS).build(new ClientSelector());
 
 		int interval = Math.max(10, nodeCheckSecs - 10);
-		daemon.scheduleWithFixedDelay(this, interval, interval,
-				TimeUnit.SECONDS);
+		daemon.scheduleWithFixedDelay(this, interval, interval, TimeUnit.SECONDS);
 
 	}
 
@@ -72,8 +66,8 @@ public class A10HAClientImpl implements A10HAClient, Runnable {
 		this(urlList, username, password, DEFAULT_NODE_CHECK_SECS, false);
 	}
 
-	public A10HAClientImpl(String urlList, String username, String password,
-			int nodeCheckSecs, boolean certVerificationEnabled) {
+	public A10HAClientImpl(String urlList, String username, String password, int nodeCheckSecs,
+			boolean certVerificationEnabled) {
 
 		this(nodeCheckSecs, certVerificationEnabled);
 
@@ -91,6 +85,7 @@ public class A10HAClientImpl implements A10HAClient, Runnable {
 		clients.add(a);
 		clients.add(b);
 	}
+
 	public class ClientSelector extends CacheLoader<String, A10Client> {
 
 		@Override
@@ -121,21 +116,23 @@ public class A10HAClientImpl implements A10HAClient, Runnable {
 			throw e;
 		}
 	}
-	
+
 	/**
 	 * Obtains a client to the standby A10.
+	 * 
 	 * @return
 	 */
 	public A10Client getStandbyClient() {
-		
-		// We are going to assume that the first client that is not the active client is the standby.
+
+		// We are going to assume that the first client that is not the active
+		// client is the standby.
 		A10Client activeClient = getActiveClient();
-		if (clients==null) {
+		if (clients == null) {
 			return null;
 		}
-		
-		for (A10Client c: clients) {
-			if (c!=activeClient) {
+
+		for (A10Client c : clients) {
+			if (c != activeClient) {
 				return c;
 			}
 		}
@@ -163,11 +160,11 @@ public class A10HAClientImpl implements A10HAClient, Runnable {
 		logger.debug("searching for active A10");
 
 		List<A10Client> tmp = Lists.newArrayList(clients);
-		if(tmp.size() == 1) {
+		if (tmp.size() == 1) {
 			A10Client result = tmp.get(0);
 			cache.put(ACTIVE_KEY, result);
 			return result;
-		} 
+		}
 		for (A10Client c : tmp) {
 			try {
 				if (c.isActive()) {
@@ -181,9 +178,15 @@ public class A10HAClientImpl implements A10HAClient, Runnable {
 				}
 
 			} catch (Exception e) {
-				logger.warn(
-						"problem determining if node is active: "
-								+ c.toString(), e);
+				Throwable cause = getUltimateCause(e);
+				if (cause instanceof IOException || cause instanceof ElbException) {
+					// omit stack trace in this case to cut down on noise
+					logger.warn(
+							"could not determine if node " + c + " is active to due IOException " + cause.getMessage());
+				} else {
+
+					logger.warn("problem determining if node is active: " + c.toString(), e);
+				}
 			}
 
 		}
@@ -232,61 +235,67 @@ public class A10HAClientImpl implements A10HAClient, Runnable {
 			logger.debug("performing maintenance on {}", this);
 			findActiveA10();
 		} catch (Exception e) {
-			logger.warn("", e);
+			if (e instanceof ElbException) {
+				// don't spam log with stack traces
+				logger.warn(e.getMessage());
+			} else {
+				logger.warn("", e);
+			}
 		}
+	}
+
+	private Throwable getUltimateCause(Throwable e) {
+		while (e.getCause() != null) {
+			e = e.getCause();
+		}
+		return e;
 	}
 
 	@Override
 	@Deprecated
-	public ObjectNode invokeJson(String method, JsonNode body,
-			Map<String, String> params) {
+	public ObjectNode invokeJson(String method, JsonNode body, Map<String, String> params) {
 		return getActiveClient().invokeJson(method, body, params);
 	}
 
 	@Override
 	@Deprecated
 	public ObjectNode invokeJson(String method, JsonNode body, String... args) {
-		return getActiveClient().invokeJson(method,body, args);
+		return getActiveClient().invokeJson(method, body, args);
 	}
 
 	@Override
 	@Deprecated
 	public Element invokeXml(String method, Element body, String... args) {
-		return getActiveClient().invokeXml(method,body, args);
+		return getActiveClient().invokeXml(method, body, args);
 	}
 
 	@Override
 	@Deprecated
-	public Element invokeXml(String method, Element body,
-			Map<String, String> params) {
+	public Element invokeXml(String method, Element body, Map<String, String> params) {
 		return getActiveClient().invokeXml(method, body, params);
 	}
 
 	@Override
 	@Deprecated
-	public Response invokeJsonWithRawResponse(String method, JsonNode body,
-			String... args) {
+	public Response invokeJsonWithRawResponse(String method, JsonNode body, String... args) {
 		return getActiveClient().invokeJsonWithRawResponse(method, body, args);
 	}
 
 	@Override
-	public Response invokeJsonWithRawResponse(String method, JsonNode body,
-			Map<String, String> params) {
+	public Response invokeJsonWithRawResponse(String method, JsonNode body, Map<String, String> params) {
 		return getActiveClient().invokeJsonWithRawResponse(method, body, params);
 
 	}
 
 	@Override
 	@Deprecated
-	public Response invokeXmlWithRawResponse(String method, Element body,
-			String... args) {
+	public Response invokeXmlWithRawResponse(String method, Element body, String... args) {
 		return getActiveClient().invokeXmlWithRawResponse(method, body, args);
 	}
 
 	@Override
 	@Deprecated
-	public Response invokeXmlWithRawResponse(String method, Element body,
-			Map<String, String> params) {
+	public Response invokeXmlWithRawResponse(String method, Element body, Map<String, String> params) {
 		return getActiveClient().invokeXmlWithRawResponse(method, body, params);
 
 	}
@@ -296,5 +305,4 @@ public class A10HAClientImpl implements A10HAClient, Runnable {
 		return getActiveClient().newRequest(method);
 	}
 
-	
 }
