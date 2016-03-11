@@ -78,4 +78,10 @@ public class AppDefinitionLoader extends AbstractCatalogLoader {
 		discoverResourceProviders();
 	}
 
+	@Override
+	public void doRecordParseError(String name, Resource resource, Throwable error) {
+		String cypher = "merge (j:AppDefinition {appId:{appId}}) set j.error={error} return j";
+		neo4j.execCypher(cypher, "appId",name,"error",error.toString());	
+	}
+
 }

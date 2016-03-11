@@ -20,8 +20,10 @@ import io.macgyver.plugin.cmdb.AppInstanceManager;
 import io.macgyver.plugin.cmdb.CmdbApiController;
 import io.macgyver.plugin.cmdb.CmdbMenuDecorator;
 import io.macgyver.plugin.cmdb.CmdbPlugin;
-import io.macgyver.plugin.cmdb.JobCatalogController;
-import io.macgyver.plugin.cmdb.JobCatalogLoader;
+import io.macgyver.plugin.cmdb.DatabaseDefinitionController;
+import io.macgyver.plugin.cmdb.DatabaseDefinitionLoader;
+import io.macgyver.plugin.cmdb.JobDefinitionController;
+import io.macgyver.plugin.cmdb.JobDefinitionLoader;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -56,8 +58,8 @@ public class CmdbConfig {
 		return new CmdbMenuDecorator();
 	}
 	@Bean
-	public JobCatalogLoader macJobCatalogLoader() {
-		return new JobCatalogLoader();
+	public JobDefinitionLoader macJobCatalogLoader() {
+		return new JobDefinitionLoader();
 	}
 	@Bean
 	public AppDefinitionLoader macServiceCatalogLoader() {
@@ -70,7 +72,17 @@ public class CmdbConfig {
 	}
 	
 	@Bean
-	public JobCatalogController macJobCatalogController() {
-		return new JobCatalogController();
+	public JobDefinitionController macJobCatalogController() {
+		return new JobDefinitionController();
+	}
+	
+	@Bean
+	public DatabaseDefinitionLoader macDatabaseDefinitionLoader() {
+		return new DatabaseDefinitionLoader();
+	}
+	
+	@Bean
+	public DatabaseDefinitionController macDatabaseDefinitionController() {
+		return new DatabaseDefinitionController();
 	}
 }

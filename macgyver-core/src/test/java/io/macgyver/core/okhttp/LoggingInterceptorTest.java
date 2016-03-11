@@ -1,6 +1,8 @@
 package io.macgyver.core.okhttp;
 
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.bouncycastle.crypto.RuntimeCryptoException;
 import org.junit.Rule;
@@ -26,7 +28,7 @@ public class LoggingInterceptorTest {
 		
 		x.enqueue(new MockResponse().setBody("{\"hello\":\"world\"}").addHeader("Content-type","application/json"));
 		OkHttpClient c = new OkHttpClient();
-		c.interceptors().add(LoggingInterceptor.create(LoggerFactory.getLogger(LoggingInterceptorTest.class)));
+		c.interceptors().add(LoggingInterceptor.create(LoggerFactory.getLogger(LoggingInterceptorTest.class),Level.NONE));
 		
 		c.newCall(new Request.Builder().url(x.url("/foo")).addHeader("Authorization", "foo").build()).execute();
 	}
@@ -46,6 +48,7 @@ public class LoggingInterceptorTest {
 		
 	}
 	
+
 	
 	@Test
 	public void testResponseException() throws IOException {

@@ -27,9 +27,9 @@ import io.macgyver.neorx.rest.NeoRxClient;
 @Controller
 @PreAuthorize("hasAnyRole('ROLE_MACGYVER_USER', 'ROLE_MACGYVER_ADMIN')")
 
-public class JobCatalogController {
+public class JobDefinitionController {
 
-	Logger logger = LoggerFactory.getLogger(JobCatalogController.class);
+	Logger logger = LoggerFactory.getLogger(JobDefinitionController.class);
 	ObjectMapper mapepr = new ObjectMapper();
 
 	@Inject

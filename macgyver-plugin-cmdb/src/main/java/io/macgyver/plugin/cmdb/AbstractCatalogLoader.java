@@ -92,6 +92,17 @@ public abstract class AbstractCatalogLoader {
 		}
 
 	}
-
 	public abstract void importAll();
+	
+	
+	public final void recordParseError(String name, Resource resource, Throwable error) {
+		try {
+			doRecordParseError(name, resource, error);
+		}
+		catch (RuntimeException e) {
+			logger.warn("problem recording parse error",e);
+		}
+	}
+	public abstract void doRecordParseError(String name, Resource resource, Throwable e);
+	
 }

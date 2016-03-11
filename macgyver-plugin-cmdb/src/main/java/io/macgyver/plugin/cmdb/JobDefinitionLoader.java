@@ -19,11 +19,11 @@ import rx.Observable;
 import rx.functions.Action1;
 import rx.functions.Func1;
 
-public class JobCatalogLoader extends AbstractCatalogLoader {
+public class JobDefinitionLoader extends AbstractCatalogLoader {
 
 
 	Pattern jobPattern = Pattern.compile(".*jobs.*?\\/((\\S+)\\.[h]*json)");
-	Logger logger = LoggerFactory.getLogger(JobCatalogLoader.class);
+	Logger logger = LoggerFactory.getLogger(JobDefinitionLoader.class);
 
 
 
@@ -104,6 +104,13 @@ public class JobCatalogLoader extends AbstractCatalogLoader {
 	@Subscribe
 	public void start(Kernel.ServerStartedEvent event) {
 		discoverResourceProviders();
+	}
+
+
+	@Override
+	public void doRecordParseError(String name, Resource resource, Throwable e) {
+		String cypher = "merge (j:JobDefinition {id:{id}}) set j.error={error} return j";
+		neo4j.execCypher(cypher, "id",name,"error",e.toString());
 	}
 
 }
