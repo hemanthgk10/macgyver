@@ -13,6 +13,7 @@
  */
 package io.macgyver.plugin.elb.a10;
 
+import io.macgyver.core.okhttp.LoggingInterceptor;
 import io.macgyver.plugin.elb.ElbException;
 
 import java.io.IOException;
@@ -400,11 +401,12 @@ public class A10ClientImpl implements A10Client {
 			OkHttpClient c = new OkHttpClient();
 
 			c.setConnectTimeout(20, TimeUnit.SECONDS);
-
+			
 			c.setHostnameVerifier(withoutHostnameVerification());
 			c.setSslSocketFactory(withoutCertificateValidation().getSocketFactory());
 
 			c.setConnectionSpecs(getA10CompatibleConnectionSpecs());
+			c.interceptors().add(LoggingInterceptor.create(A10ClientImpl.class));
 			clientReference.set(c);
 		}
 		return clientReference.get();
