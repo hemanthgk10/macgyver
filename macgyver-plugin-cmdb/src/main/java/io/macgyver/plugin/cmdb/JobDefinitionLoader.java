@@ -39,7 +39,7 @@ public class JobDefinitionLoader extends AbstractCatalogLoader {
 			try {
 				logger.info("app ({}): {}", n.get("appId"), n);
 
-				String cypher = "merge (a:AppDefinition {appId:{appId}}) set a+={props} return a";
+				String cypher = "merge (a:AppDefinition {appId:{appId}}) set a+={props} remove a.error return a";
 
 				return neo4j.execCypher(cypher, "appId", n.get("appId").asText(), "props", n);
 			} catch (RuntimeException e) {

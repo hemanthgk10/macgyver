@@ -31,7 +31,7 @@ public class DatabaseDefinitionLoader extends AbstractCatalogLoader {
 			logger.info("job ({}): {}", n.get("id"), n);
 			Preconditions.checkState(neo4j != null, "neo4j not set");
 			try {
-				String cypher = "merge (j:DatabaseDefinition {id:{id}}) set j+={props}, j.updateTs=timestamp()";
+				String cypher = "merge (j:DatabaseDefinition {id:{id}}) set j+={props}, j.updateTs=timestamp() remove j.error";
 				neo4j.execCypher(cypher, "id", n.get("id").asText(), "props", n);
 			} catch (RuntimeException e) {
 				logger.warn("problem processing database definition", e);

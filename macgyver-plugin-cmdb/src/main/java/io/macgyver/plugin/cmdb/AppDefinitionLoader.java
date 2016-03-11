@@ -33,7 +33,7 @@ public class AppDefinitionLoader extends AbstractCatalogLoader {
 			logger.info("app ({}): {}", n.get("appId").asText(), n);
 			Preconditions.checkState(neo4j!=null,"neo4j not set");
 			try {
-				String cypher = "merge (a:"+APP_DEFINITION_LABEL+" {"+APP_DEFINITION_ID+":{"+APP_DEFINITION_ID+"}}) set a+={props},a.updateTs=timestamp()";
+				String cypher = "merge (a:"+APP_DEFINITION_LABEL+" {"+APP_DEFINITION_ID+":{"+APP_DEFINITION_ID+"}}) set a+={props},a.updateTs=timestamp() remove a.error";
 				neo4j.execCypher(cypher, APP_DEFINITION_ID, n.get(APP_DEFINITION_ID).asText(), "props", n);
 			} catch (RuntimeException e) {
 				logger.warn("problem processing app definition", e);
