@@ -65,11 +65,13 @@ import io.macgyver.core.log.Neo4jEventLogger;
 import io.macgyver.core.log.EventLogger.Event;
 import io.macgyver.core.resource.provider.filesystem.FileSystemResourceProvider;
 import io.macgyver.core.scheduler.ScheduledTaskManager;
+import io.macgyver.core.scheduler.TaskController;
 import io.macgyver.core.scheduler.TaskStateManager;
 import io.macgyver.core.script.BindingSupplierManager;
 import io.macgyver.core.script.ExtensionResourceProvider;
 import io.macgyver.core.service.ServiceRegistry;
 import io.macgyver.neorx.rest.NeoRxClient;
+import io.macgyver.neorx.rest.NeoRxClientBuilder;
 
 @Configuration
 public class CoreConfig implements EnvironmentAware {
@@ -216,12 +218,10 @@ public class CoreConfig implements EnvironmentAware {
 		logger.info("neo4j.uri: {}", url);
 
 		boolean validateCerts = false;
+		
+		return new NeoRxClientBuilder().withCertificateValidation(validateCerts).withCredentials(env.getProperty("neo4j.username"), env.getProperty("neo4j.password")).build();
+		
 
-		NeoRxClient client = new NeoRxClient(url,
-				env.getProperty("neo4j.username"),
-				env.getProperty("neo4j.password"), validateCerts);
-
-		return client;
 
 	}
 
@@ -281,7 +281,8 @@ public class CoreConfig implements EnvironmentAware {
 		IgniteConfiguration cfg = new IgniteConfiguration();
 		cfg.setPeerClassLoadingEnabled(false);
 		cfg.setGridName(MACGYVER_GRID_NAME);
-
+		cfg.setMetricsLogFrequency(0); 
+		
 		cfg.setDiscoverySpi(macIgniteTcpDiscoverySpi());
 
 	
@@ -319,5 +320,10 @@ public class CoreConfig implements EnvironmentAware {
 	@Bean
 	public ScheduledTaskManager macScheduledTaskManager() {
 		return new ScheduledTaskManager();
+	}
+	
+	@Bean
+	public TaskController macTaskController() {
+		return new TaskController();
 	}
 }

@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Charsets;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 
@@ -49,17 +50,8 @@ public class MacGyverTask extends Task {
 	@Override
 	public void execute(TaskExecutionContext context) throws RuntimeException {
 
-		try {
-			// Need this Kernel.getApplicationContext() pattern because this
-			// class is no Spring-managed, and thus autowiring does not work.
-			Kernel.getApplicationContext().getBean(TaskStateManager.class)
-					.recordTaskStateProperties(context.getTaskExecutor().getGuid(), config);
-		} catch (RuntimeException e) {
-			// do not allow a logging operation to stop the execution of the
-			// task
-			logger.warn("problem updating TaskState", e);
-		}
-
+		
+	
 		try {
 			if (logger.isDebugEnabled()) {
 				logger.debug("execute {} context={}", this, context);
@@ -111,9 +103,12 @@ public class MacGyverTask extends Task {
 	}
 
 	public String toString() {
-		return "MacGyverTask" + config.toString();
+		return MoreObjects.toStringHelper(this).add("id", getTaskId()).toString();		
 	}
 
+	public String getTaskId() {
+		return config.path("id").asText(null);
+	}
 	Map<String, Object> createArgsFromConfig() {
 		Map<String, Object> args = com.google.common.collect.Maps.newHashMap();
 		JsonNode params = config.path("parameters");
@@ -129,4 +124,6 @@ public class MacGyverTask extends Task {
 
 		return args;
 	}
+	
+	
 }

@@ -18,10 +18,13 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import org.rapidoid.u.U;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
@@ -203,12 +206,19 @@ public class JsonNodes {
 	public static List<JsonNode> arrayToList(JsonNode n, String property) {
 		return arrayToList(n.path(property));
 	}
+
 	public static List<JsonNode> arrayToList(JsonNode n) {
 		if (n.isArray()) {
 			return Lists.newArrayList(n.iterator());
 		} else {
 			return Lists.newArrayList();
 		}
+
+	}
+
+	public static ObjectNode createObjectNode(Object... vals) {
+
+		return mapper.convertValue(U.map(vals), ObjectNode.class);
 
 	}
 }

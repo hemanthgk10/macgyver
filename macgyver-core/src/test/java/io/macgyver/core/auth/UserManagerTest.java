@@ -22,6 +22,7 @@ import java.util.UUID;
 import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -64,16 +65,12 @@ public class UserManagerTest extends MacGyverIntegrationTest {
 		String username = "junit_user_" + UUID.randomUUID().toString();
 		userManager.createUser(username, Lists.newArrayList(roleA, roleA));
 
-		Assert.assertTrue(userManager.getInternalUser(username).get()
-				.getRoles().contains(roleA));
-		Assert.assertFalse(userManager.getInternalUser(username).get()
-				.getRoles().contains(roleB));
+		Assert.assertTrue(userManager.getInternalUser(username).get().getRoles().contains(roleA));
+		Assert.assertFalse(userManager.getInternalUser(username).get().getRoles().contains(roleB));
 		userManager.setRoles(username, Lists.newArrayList(roleA, roleB));
 
-		Assert.assertTrue(userManager.getInternalUser(username).get()
-				.getRoles().contains(roleA));
-		Assert.assertTrue(userManager.getInternalUser(username).get()
-				.getRoles().contains(roleB));
+		Assert.assertTrue(userManager.getInternalUser(username).get().getRoles().contains(roleA));
+		Assert.assertTrue(userManager.getInternalUser(username).get().getRoles().contains(roleB));
 	}
 
 	@Test
@@ -99,12 +96,9 @@ public class UserManagerTest extends MacGyverIntegrationTest {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testUnique() {
-		String username = "junit_"+System.currentTimeMillis();
-		neo4j.execCypher(
-				"match (x:User)-[r]-() where x.username={username} delete r",
-				"username", username);
-		neo4j.execCypher("match (x:User) where x.username={username} delete x",
-				"username", username);
+		String username = "junit_" + System.currentTimeMillis();
+		neo4j.execCypher("match (x:User)-[r]-() where x.username={username} delete r", "username", username);
+		neo4j.execCypher("match (x:User) where x.username={username} delete x", "username", username);
 
 		List<String> roles = Lists.newArrayList();
 
@@ -124,11 +118,8 @@ public class UserManagerTest extends MacGyverIntegrationTest {
 
 		userManager.addUserToGroup("MACGYVER_ADMIN", username);
 
-		Assertions.assertThat(
-				userManager.getInternalUser(username).get().getRoles())
-				.contains("GROUP_MACGYVER_ADMIN", "ROLE_NEO4J_READ",
-						"ROLE_NEO4J_WRITE", "ROLE_MACGYVER_SHELL",
-						"ROLE_MACGYVER_USER");
+		Assertions.assertThat(userManager.getInternalUser(username).get().getRoles()).contains("GROUP_MACGYVER_ADMIN",
+				"ROLE_NEO4J_READ", "ROLE_NEO4J_WRITE", "ROLE_MACGYVER_SHELL", "ROLE_MACGYVER_USER");
 
 	}
 
@@ -145,10 +136,12 @@ public class UserManagerTest extends MacGyverIntegrationTest {
 
 	@After
 	public void cleanup() {
-		neo4j.execCypher("match (m)-[r]-() where lower(m.username)=~\"junit_.*\" delete r");
-		neo4j.execCypher("match (m)-[r]-() where lower(m.name)=~\"junit_.*\" delete r");
-		neo4j.execCypher("match (m) where lower(m.username)=~\"junit_.*\" delete m");
-		neo4j.execCypher("match (m) where lower(m.name)=~\"junit.*\" delete m");
+		if (isNeo4jAvailable()) {
+			neo4j.execCypher("match (m)-[r]-() where lower(m.username)=~\"junit_.*\" delete r");
+			neo4j.execCypher("match (m)-[r]-() where lower(m.name)=~\"junit_.*\" delete r");
+			neo4j.execCypher("match (m) where lower(m.username)=~\"junit_.*\" delete m");
+			neo4j.execCypher("match (m) where lower(m.name)=~\"junit.*\" delete m");
+		}
 	}
 
 }

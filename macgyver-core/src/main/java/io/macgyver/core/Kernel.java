@@ -14,6 +14,7 @@
 package io.macgyver.core;
 
 import io.macgyver.core.eventbus.MacGyverEvent;
+import io.macgyver.neorx.rest.NeoRxClient;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -73,6 +74,10 @@ public class Kernel implements ApplicationContextAware {
 
 		}
 		return applicationContext;
+	}
+	
+	public static NeoRxClient getNeoRxClient() {
+		return Kernel.getApplicationContext().getBean(NeoRxClient.class);
 	}
 	public static ApplicationContext getApplicationContext() {
 		return Kernel.getInstance().applicationContext();

@@ -41,7 +41,7 @@ public class NeoRxTcpDiscoveryIpFinder extends TcpDiscoveryIpFinderAdapter {
 			throws IgniteSpiException {
 		Collection<InetSocketAddress> addrs = new LinkedList<>();
 		if (neo4j.checkConnection()) {
-			logger.info("reading from ignite registry");
+			logger.debug("reading from ignite registry");
 			neo4j.execCypher("match (r:IgniteRegistry) return r").subscribe(
 					x -> {
 						InetSocketAddress a = new InetSocketAddress(x.path(
