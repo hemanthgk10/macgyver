@@ -45,6 +45,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import io.macgyver.core.Bootstrap;
+import io.macgyver.core.scheduler.TaskController;
 import io.macgyver.core.web.MacGyverContextFilter;
 import io.macgyver.core.web.UIContextManager;
 import io.macgyver.core.web.mvc.CoreApiController;
@@ -219,4 +220,6 @@ public class WebConfig implements EnvironmentAware {
 	@Bean UIMigrator macUIMigrator() {
 		return new UIMigrator();
 	}
+	
+
 }

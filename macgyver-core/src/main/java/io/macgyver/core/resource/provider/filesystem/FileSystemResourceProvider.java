@@ -90,7 +90,9 @@ public class FileSystemResourceProvider extends ResourceProvider {
 	public Resource getResourceByPath(String path) throws IOException {
 		String translatedPath = addPrefix(path);
 		File f = new File(rootDir, translatedPath);
-		logger.info("looking for " + f);
+		if (logger.isDebugEnabled()) {
+			logger.debug("looking for: {}", f);
+		}
 		if (!f.exists()) {
 			throw new FileNotFoundException(f.getAbsolutePath());
 		}

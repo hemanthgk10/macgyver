@@ -1,5 +1,15 @@
 ## Changes
 
+### 0.105.0
+
+* vastly improved scheduler functionality
+* ScheduledTask nodes can now have scheduledBy=manual set which will prevent the script's cron/enabled flags from being used
+* Scanning AWS ELBs now pulls tags properly
+* added rapidoid-u
+
+### 0.104.0
+* added distributed event log
+
 ### 0.92.0
 
 * expose Neo4j through UI with role-based access controls

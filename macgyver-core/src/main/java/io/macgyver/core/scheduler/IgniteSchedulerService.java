@@ -13,16 +13,8 @@
  */
 package io.macgyver.core.scheduler;
 
-import io.macgyver.core.Kernel;
-import io.macgyver.core.resource.Resource;
-import io.macgyver.core.script.ExtensionResourceProvider;
-import io.macgyver.core.script.ScriptExecutor;
-import io.macgyver.neorx.rest.NeoRxClient;
-import it.sauronsoftware.cron4j.Scheduler;
-
 import java.io.IOException;
 import java.io.Serializable;
-import java.io.StringReader;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -36,8 +28,14 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Optional;
-import com.google.common.io.CharStreams;
 import com.google.common.io.LineProcessor;
+
+import io.macgyver.core.Kernel;
+import io.macgyver.core.scheduler.TaskStateManager.AgingTaskCleanup;
+import io.macgyver.core.scheduler.TaskStateManager.OrphanedTaskCleanup;
+import io.macgyver.core.scheduler.TaskStateManager.TaskState;
+import io.macgyver.neorx.rest.NeoRxClient;
+import it.sauronsoftware.cron4j.Scheduler;
 
 public class IgniteSchedulerService implements Service, Runnable, Serializable, DirectScriptExecutor {
 
@@ -49,6 +47,14 @@ public class IgniteSchedulerService implements Service, Runnable, Serializable, 
 
 	AtomicReference<Scheduler> schedulerRef = new AtomicReference<>();
 
+	volatile NeoRxClient neo4j;
+	
+	synchronized NeoRxClient getNeoRxClient() {
+		if (neo4j==null) {
+			neo4j = Kernel.getInstance().getApplicationContext().getBean(NeoRxClient.class);
+		}
+		return neo4j;
+	}
 	public static class CrontabLineProcessor implements LineProcessor<Optional<ObjectNode>> {
 		int i = 0;
 		String result;
@@ -59,8 +65,8 @@ public class IgniteSchedulerService implements Service, Runnable, Serializable, 
 				// only look through the first 50 lines
 				return false;
 			}
-			if (line != null && line.contains(SCHEDULE_TOKEN)) {
-				result = line.substring(line.indexOf(SCHEDULE_TOKEN) + SCHEDULE_TOKEN.length()).trim();
+			if (line != null && line.contains(ScheduledTaskManager.SCHEDULE_TOKEN)) {
+				result = line.substring(line.indexOf(ScheduledTaskManager.SCHEDULE_TOKEN) + ScheduledTaskManager.SCHEDULE_TOKEN.length()).trim();
 				return false;
 			}
 			return true;
@@ -107,7 +113,7 @@ public class IgniteSchedulerService implements Service, Runnable, Serializable, 
 		NeoRxClient client = Kernel.getApplicationContext().getBean(NeoRxClient.class);
 
 		taskCollector = new MacGyverTaskCollector(client);
-
+		TaskStateManager tsm = Kernel.getApplicationContext().getBean(TaskStateManager.class);
 		scheduledFuture = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay(this, 0, 10, TimeUnit.SECONDS);
 		Scheduler schedulerInstance = new Scheduler();
 		if (!schedulerInstance.isStarted()) {
@@ -119,8 +125,8 @@ public class IgniteSchedulerService implements Service, Runnable, Serializable, 
 			this.schedulerRef.set(schedulerInstance);
 			
 			
-			schedulerInstance.schedule("* * * * *", Kernel.getApplicationContext().getBean(TaskStateManager.class).newMarkTerminatedRunnable());
-			schedulerInstance.schedule("*/5 * * * *", Kernel.getApplicationContext().getBean(TaskStateManager.class).newPurgeRunnable());
+			schedulerInstance.schedule(OrphanedTaskCleanup.CRON, tsm.new OrphanedTaskCleanup());
+			schedulerInstance.schedule(AgingTaskCleanup.CRON,tsm.new AgingTaskCleanup());
 		}
 
 	}
@@ -128,71 +134,14 @@ public class IgniteSchedulerService implements Service, Runnable, Serializable, 
 	@Override
 	public void run() {
 		try {
-			scan();
+			Kernel.getApplicationContext().getBean(ScheduledTaskManager.class).scan();
 		} catch (IOException e) {
 			logger.warn("", e);
 		}
 	}
 
-	public void scan() throws IOException {
 
-		ExtensionResourceProvider extensionLoader = Kernel.getInstance().getApplicationContext()
-				.getBean(ExtensionResourceProvider.class);
-		long scanTime = System.currentTimeMillis();
-		NeoRxClient client = Kernel.getApplicationContext().getBean(NeoRxClient.class);
 
-		ScheduledTaskManager scheduledTaskManager = Kernel.getApplicationContext().getBean(ScheduledTaskManager.class);
-		ScriptExecutor se = new ScriptExecutor();
-		for (Resource r : extensionLoader.findResources()) {
-			if (logger.isDebugEnabled()) {
-				logger.debug("evaluating {} to see if it can be scheduled", r);
-			}
-			if (r.getPath().startsWith("scripts/scheduler/")) {
-
-				Optional<ObjectNode> schedule = extractCronExpression(r);
-				if (!schedule.isPresent()) {
-					schedule = Optional.of(new ObjectMapper().createObjectNode());
-				}
-				boolean b = schedule.get().path("enabled").asBoolean(true);
-
-				ObjectNode descriptor = schedule.get();
-
-				String cypher = "merge (s:ScheduledTask {script:{script}}) set s.scheduledBy='script', s.enabled={enabled}, s.cron={cron}, s.lastUpdateTs={ts} return s;";
-
-				client.execCypher(cypher, "script", r.getPath(), "enabled", b, "cron", descriptor.path("cron").asText(),
-						"ts", scanTime);
-
-			}
-		}
-
-		// now remove all entries scheduled via script that were not just
-		// updated
-
-		if (logger.isDebugEnabled()) {
-			logger.debug("removing old scheduled entries...");
-		}
-		String cypher = "match (s:ScheduledTask) where s.scheduledBy='script' and (s.lastUpdateTs is null or s.lastUpdateTs<{ts}) delete s";
-		client.execCypher(cypher, "ts", scanTime);
-
-	}
-
-	public static final String SCHEDULE_TOKEN = "#@Schedule";
-
-	public static Optional<ObjectNode> extractCronExpression(Resource r) {
-
-		try (StringReader sr = new StringReader(r.getContentAsString())) {
-			return CharStreams.readLines(sr, new CrontabLineProcessor());
-		} catch (IOException | RuntimeException e) {
-			try {
-				logger.warn("unable to extract cron expression: ", r.getContentAsString());
-			} catch (Exception IGNORE) {
-				logger.warn("unable to extract cron expression");
-			}
-		}
-
-		return Optional.absent();
-
-	}
 
 	/**
 	 * This should only be invoked via ignite.
@@ -210,5 +159,6 @@ public class IgniteSchedulerService implements Service, Runnable, Serializable, 
 		}
 		
 	}
+
 
 }

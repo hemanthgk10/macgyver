@@ -23,22 +23,40 @@ public class JsonNodesTest {
 
 	@Test
 	public void testNonArrayNode() {
-		
+
 		ObjectNode n = JsonNodes.mapper.createObjectNode();
-		
+
 		n.put("a", 1);
 		n.put("b", 2);
 		Assertions.assertThat(JsonNodes.arrayToList(n)).isEmpty();
 	}
-	
+
 	@Test
 	public void testArrayNode() {
-		
+
 		ArrayNode n = JsonNodes.mapper.createArrayNode();
-		
+
 		n.add("a");
 		n.add("b");
-		
+
 		Assertions.assertThat(JsonNodes.arrayToList(n)).hasSize(2);
+	}
+
+	@Test
+	public void testCreateObjectNode() {
+
+		Assertions.assertThat(JsonNodes.createObjectNode().size()).isEqualTo(0);
+		Assertions.assertThat(JsonNodes.createObjectNode("a", 1).path("a").asInt()).isEqualTo(1);
+		Assertions.assertThat(JsonNodes.createObjectNode("a", null).has("a")).isTrue();
+
+		Assertions.assertThat(JsonNodes.createObjectNode("a", "1", "b", 2).get("b").isNumber()).isTrue();
+
+		try {
+			JsonNodes.createObjectNode("a");
+			Assertions.failBecauseExceptionWasNotThrown(RuntimeException.class);
+		} catch (RuntimeException e) {
+			Assertions.assertThat(e).hasMessageStartingWith("Incorrect number of arguments");
+
+		}
 	}
 }
