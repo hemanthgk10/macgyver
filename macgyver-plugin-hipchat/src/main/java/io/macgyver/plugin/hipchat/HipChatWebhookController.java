@@ -45,7 +45,7 @@ public class HipChatWebhookController {
 	@PreAuthorize("permitAll")
 	public String receiveWebhook(@RequestBody String json, HttpServletRequest request) throws IOException {
 
-		System.out.println("<<"+json+">>");
+	
 		JsonNode n = mapper.readTree(json);
 		
 		hipChatBot.dispatch(n);
