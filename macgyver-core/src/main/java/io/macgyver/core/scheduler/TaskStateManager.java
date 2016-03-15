@@ -147,7 +147,7 @@ public class TaskStateManager implements ApplicationListener<ApplicationReadyEve
 			tmp.remove("hostname");
 			tmp.remove("processUuid");
 			tmp.remove("updateTs");
-			tmp.set("description", tmp.path("taskId"));
+			tmp.put("description", tmp.path("taskId").asText());
 			extraProps.setAll(tmp);
 		}
 		else {
