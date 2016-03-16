@@ -16,6 +16,8 @@ package io.macgyver.plugin.cloud.aws.scanner;
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.plugin.cloud.aws.AWSServiceClient;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -23,8 +25,12 @@ import org.slf4j.LoggerFactory;
 
 import com.amazonaws.regions.Region;
 import com.amazonaws.services.ec2.AmazonEC2Client;
+import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
+import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ec2.model.Reservation;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
@@ -53,71 +59,85 @@ public class EC2InstanceScanner extends AWSServiceScanner {
 
 	@Override
 	public void scan(Region region) {
-
-		
-		AmazonEC2Client client = getAWSServiceClient().createEC2Client(region);
-
-		DescribeInstancesResult result = client.describeInstances();
-
 		GraphNodeGarbageCollector gc = new GraphNodeGarbageCollector().neo4j(getNeoRxClient()).account(getAccountId()).label("AwsEc2Instance").region(region.getName());
-		result.getReservations().forEach(reservation -> {
+		
+		List<Instance> list = getAllInstances(region);
+		logger.info("scanning {} EC2 instances in {}", list.size(), region.getName());
+		list.forEach(instance -> {
 
-			reservation.getInstances().forEach(instance -> {
+			try {
+				
+				if (instance.getState().getName().equals("terminated")) {
+					// instance is terminated
+					// we may want to take the opportunity to delete it right here
+				} else {
+					JsonNode n = convertAwsObject(instance, region);
+					NeoRxClient neoRx = getNeoRxClient();
 
-				try {
+					String subnetId = n.path("aws_subnetId").asText(null);
+					String instanceArn = n.path("aws_arn").asText(null);
+					String account = n.path("aws_account").asText(null);
+					String imageId = n.path("aws_imageId").asText(null);
+
+					Preconditions.checkNotNull(neoRx);
+
+					Preconditions.checkState(!Strings.isNullOrEmpty(instanceArn), "aws_arn must not be null");
+					Preconditions.checkState(!Strings.isNullOrEmpty(account), "aws_account must not be null");
+
 					
-					if (instance.getState().getName().equals("terminated")) {
-						// instance is terminated
-						// we may want to take the opportunity to delete it right here
-					} else {
-						JsonNode n = convertAwsObject(instance, region);
-						NeoRxClient neoRx = getNeoRxClient();
+					
+					String createInstanceCypher = "merge (x:AwsEc2Instance {aws_arn:{instanceArn}}) set x+={props}, x.updateTs=timestamp() return x";
+					neoRx.execCypher(createInstanceCypher, "instanceArn", instanceArn, "props", n).forEach(gc.MERGE_ACTION);
+					
+					if (!Strings.isNullOrEmpty(imageId)) {
+						String amiArn = String.format("arn:aws:ec2:%s::image/%s", region.getName(), imageId);
 
-						String subnetId = n.path("aws_subnetId").asText(null);
-						String instanceArn = n.path("aws_arn").asText(null);
-						String account = n.path("aws_account").asText(null);
-						String imageId = n.path("aws_imageId").asText(null);
-
-						Preconditions.checkNotNull(neoRx);
-
-						Preconditions.checkState(!Strings.isNullOrEmpty(instanceArn), "aws_arn must not be null");
-						Preconditions.checkState(!Strings.isNullOrEmpty(account), "aws_account must not be null");
-
-						
-						
-						String createInstanceCypher = "merge (x:AwsEc2Instance {aws_arn:{instanceArn}}) set x+={props}, x.updateTs=timestamp() return x";
-						neoRx.execCypher(createInstanceCypher, "instanceArn", instanceArn, "props", n).forEach(gc.MERGE_ACTION);
-						
-						if (!Strings.isNullOrEmpty(imageId)) {
-							String amiArn = String.format("arn:aws:ec2:%s::image/%s", region.getName(), imageId);
-
-						String mapToImageCypher = "match (x:AwsAmi {aws_arn:{amiArn}}), "
-								+ "(y:AwsEc2Instance {aws_arn:{instanceArn}}) "
-								+ "merge (y)-[r:USES]-(x) set r.updateTs=timestamp()";
-						neoRx.execCypher(mapToImageCypher, "amiArn", amiArn, "instanceArn", instanceArn);
-						}
-						
-						if (!Strings.isNullOrEmpty(subnetId)) {
-							String subnetArn = String.format("arn:aws:ec2:%s:%s:subnet/%s", region.getName(), account,
-									subnetId);
-							String mapToSubnetCypher = "match (x:AwsSubnet {aws_arn:{subnetArn}}), "
-									+ "(y:AwsEc2Instance {aws_arn:{instanceArn}}) "
-									+ "merge (y)-[r:RESIDES_IN]->(x) set r.updateTs=timestamp()";
-							neoRx.execCypher(mapToSubnetCypher, "subnetArn", subnetArn, "instanceArn", instanceArn);
-							
-						}
+					String mapToImageCypher = "match (x:AwsAmi {aws_arn:{amiArn}}), "
+							+ "(y:AwsEc2Instance {aws_arn:{instanceArn}}) "
+							+ "merge (y)-[r:USES]-(x) set r.updateTs=timestamp()";
+					neoRx.execCypher(mapToImageCypher, "amiArn", amiArn, "instanceArn", instanceArn);
 					}
-
-				} catch (RuntimeException e) {
-					logger.warn("problem scanning EC2 instance", e);
+					
+					if (!Strings.isNullOrEmpty(subnetId)) {
+						String subnetArn = String.format("arn:aws:ec2:%s:%s:subnet/%s", region.getName(), account,
+								subnetId);
+						String mapToSubnetCypher = "match (x:AwsSubnet {aws_arn:{subnetArn}}), "
+								+ "(y:AwsEc2Instance {aws_arn:{instanceArn}}) "
+								+ "merge (y)-[r:RESIDES_IN]->(x) set r.updateTs=timestamp()";
+						neoRx.execCypher(mapToSubnetCypher, "subnetArn", subnetArn, "instanceArn", instanceArn);
+						
+					}
 				}
 
-			});
+			} catch (RuntimeException e) {
+				logger.warn("problem scanning EC2 instance", e);
+			}
 
 		});
 		
 		gc.invoke();
 		
+	}
+	
+	private List<Instance> getAllInstances(Region region) { 		
+		ObjectMapper mapper = new ObjectMapper();
+		AmazonEC2Client client = getAWSServiceClient().createEC2Client(region);
+		List<Instance> list = new ArrayList<>();
+
+		DescribeInstancesResult results = client.describeInstances(new DescribeInstancesRequest());
+		String token = mapper.valueToTree(results).path("nextToken").asText();
+		results.getReservations().forEach(reservation -> { 
+			list.addAll(reservation.getInstances());
+		});
+		
+		while (!Strings.isNullOrEmpty(token) && !token.equals("null")) { 
+			results = client.describeInstances(new DescribeInstancesRequest().withNextToken(token));
+			token = mapper.valueToTree(results).path("nextToken").asText();
+			results.getReservations().forEach(reservation -> {
+				list.addAll(reservation.getInstances());
+			});
+		}	
+		return list;		
 	}
 
 
