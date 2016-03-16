@@ -16,6 +16,7 @@ package io.macgyver.plugin.cloud.aws.scanner;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import com.amazonaws.regions.Region;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
@@ -47,11 +48,8 @@ public class ASGScanner extends AWSServiceScanner {
 	@Override
 	public void scan(Region region) {
 		GraphNodeGarbageCollector gc = newGarbageCollector().label("AwsAsg").region(region);
-
-		List<AutoScalingGroup> list = getAllAsgs(region);
-		logger.info("scanning {} ASGs in {}", list.size(), region.getName());
 		
-		list.forEach(asg -> {
+		forEachAsg(region, asg -> {
 			ObjectNode n = convertAwsObject(asg, region);
 			String asgArn = n.path("aws_arn").asText();
 			
@@ -66,21 +64,18 @@ public class ASGScanner extends AWSServiceScanner {
 		gc.invoke();
 	}
 
-	private List<AutoScalingGroup> getAllAsgs(Region region) { 
-		ObjectMapper mapper = new ObjectMapper();
+	private void forEachAsg(Region region, Consumer<AutoScalingGroup> consumer) { 
 		AmazonAutoScalingClient client = new AmazonAutoScalingClient(getAWSServiceClient().getCredentialsProvider()).withRegion(region); 
-		List<AutoScalingGroup> list = new ArrayList<>();
 		
 		DescribeAutoScalingGroupsResult results = client.describeAutoScalingGroups(new DescribeAutoScalingGroupsRequest());
-		String token = mapper.valueToTree(results).path("nextToken").asText();
-		list.addAll(results.getAutoScalingGroups());
+		String token = results.getNextToken();
+		results.getAutoScalingGroups().forEach(consumer);
 				
 		while (!Strings.isNullOrEmpty(token) && !token.equals("null")) { 
 			results = client.describeAutoScalingGroups(new DescribeAutoScalingGroupsRequest().withNextToken(token));
-			token = mapper.valueToTree(results).path("nextToken").asText();
-			list.addAll(results.getAutoScalingGroups());	
+			token = results.getNextToken();
+			results.getAutoScalingGroups().forEach(consumer);
 		}		
-		return list;
 	}
 	
 	protected void mapAsgRelationships(AutoScalingGroup asg, String asgArn, String region) { 

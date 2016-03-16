@@ -16,15 +16,18 @@ package io.macgyver.plugin.cloud.aws.scanner;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import com.amazonaws.regions.Region;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
+import com.amazonaws.services.autoscaling.model.DescribeLaunchConfigurationsRequest;
 import com.amazonaws.services.autoscaling.model.DescribeLaunchConfigurationsResult;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.plugin.cloud.aws.AWSServiceClient;
@@ -41,30 +44,36 @@ public class LaunchConfigScanner extends AWSServiceScanner {
 	}
 
 	@Override
-	public void scan(Region region) {
-
-		AmazonAutoScalingClient client = new AmazonAutoScalingClient(getAWSServiceClient().getCredentialsProvider())
-				.withRegion(region);
-		DescribeLaunchConfigurationsResult results = client.describeLaunchConfigurations();
+	public void scan(Region region) {	
 		GraphNodeGarbageCollector gc = new GraphNodeGarbageCollector().label("AwsLaunchConfig").account(getAccountId()).neo4j(getNeoRxClient()).region(region);
-		results.getLaunchConfigurations().forEach(config -> {
-			try {
-				ObjectNode n = convertAwsObject(config, region);
-				List<String> securityGroups = getSecurityGroups(config);
+				
+		forEachLaunchConfig(region, config -> {
+			ObjectNode n = convertAwsObject(config, region);
+			List<String> securityGroups = getSecurityGroups(config);
 
-				String cypher = "merge (x:AwsLaunchConfig {aws_arn:{aws_arn}}) set x+={props}, x.aws_securityGroups={sg}, x.updateTimestamp=timestamp() return x";
+			String cypher = "merge (x:AwsLaunchConfig {aws_arn:{aws_arn}}) set x+={props}, x.aws_securityGroups={sg}, x.updateTimestamp=timestamp() return x";
+		
+			Preconditions.checkNotNull(getNeoRxClient());
 
-			
-				Preconditions.checkNotNull(getNeoRxClient());
-
-				getNeoRxClient().execCypher(cypher, "aws_arn", n.path("aws_arn").asText(), "props", n, "sg", securityGroups).forEach(gc.MERGE_ACTION);
-			} catch (RuntimeException e) {
-				logger.warn("problem scanning launch configs", e);
-			}
+			getNeoRxClient().execCypher(cypher, "aws_arn", n.path("aws_arn").asText(), "props", n, "sg", securityGroups).forEach(gc.MERGE_ACTION);
 		});
 		gc.invoke();
 	}
 
+	private void forEachLaunchConfig(Region region, Consumer<LaunchConfiguration> consumer) { 
+		AmazonAutoScalingClient client = new AmazonAutoScalingClient(getAWSServiceClient().getCredentialsProvider()).withRegion(region);
+		
+		DescribeLaunchConfigurationsResult results = client.describeLaunchConfigurations(new DescribeLaunchConfigurationsRequest());	
+		String token = results.getNextToken();
+		results.getLaunchConfigurations().forEach(consumer);
+		
+		while (!Strings.isNullOrEmpty(token) && !token.equals("null")) { 
+			results = client.describeLaunchConfigurations(new DescribeLaunchConfigurationsRequest().withNextToken(token));
+			token = results.getNextToken();
+			results.getLaunchConfigurations().forEach(consumer);
+		}
+	}
+	
 	protected List<String> getSecurityGroups(LaunchConfiguration c) {
 		List<String> toReturnList = new ArrayList<>();
 		JsonNode n = new ObjectMapper().valueToTree(c);

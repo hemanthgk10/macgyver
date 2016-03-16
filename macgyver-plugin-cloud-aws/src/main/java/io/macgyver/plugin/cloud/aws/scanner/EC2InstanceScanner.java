@@ -19,6 +19,7 @@ import io.macgyver.plugin.cloud.aws.AWSServiceClient;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,9 +62,7 @@ public class EC2InstanceScanner extends AWSServiceScanner {
 	public void scan(Region region) {
 		GraphNodeGarbageCollector gc = new GraphNodeGarbageCollector().neo4j(getNeoRxClient()).account(getAccountId()).label("AwsEc2Instance").region(region.getName());
 		
-		List<Instance> list = getAllInstances(region);
-		logger.info("scanning {} EC2 instances in {}", list.size(), region.getName());
-		list.forEach(instance -> {
+		forEachInstance(region, instance -> {
 
 			try {
 				
@@ -119,26 +118,21 @@ public class EC2InstanceScanner extends AWSServiceScanner {
 		
 	}
 	
-	private List<Instance> getAllInstances(Region region) { 		
-		ObjectMapper mapper = new ObjectMapper();
+	private void forEachInstance(Region region, Consumer<Instance> consumer) { 		
 		AmazonEC2Client client = getAWSServiceClient().createEC2Client(region);
-		List<Instance> list = new ArrayList<>();
 
 		DescribeInstancesResult results = client.describeInstances(new DescribeInstancesRequest());
-		String token = mapper.valueToTree(results).path("nextToken").asText();
+		String token = results.getNextToken();
 		results.getReservations().forEach(reservation -> { 
-			list.addAll(reservation.getInstances());
+			reservation.getInstances().forEach(consumer);
 		});
 		
 		while (!Strings.isNullOrEmpty(token) && !token.equals("null")) { 
 			results = client.describeInstances(new DescribeInstancesRequest().withNextToken(token));
-			token = mapper.valueToTree(results).path("nextToken").asText();
+			token = results.getNextToken();
 			results.getReservations().forEach(reservation -> {
-				list.addAll(reservation.getInstances());
+				reservation.getInstances().forEach(consumer);
 			});
 		}	
-		return list;		
 	}
-
-
 }
