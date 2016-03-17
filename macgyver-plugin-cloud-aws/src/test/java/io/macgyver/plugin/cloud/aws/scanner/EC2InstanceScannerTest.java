@@ -23,6 +23,7 @@ import org.mockito.Mockito;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.AmazonEC2Client;
+import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Reservation;
@@ -99,7 +100,7 @@ public class EC2InstanceScannerTest extends AbstractAwsScannerTest {
 		instance.setInstanceId("i-123456");
 		res.setInstances(Lists.newArrayList(instance));
 		instance.setSubnetId("subnet-1234");
-		Mockito.when(ec2.describeInstances()).thenReturn(r);
+		Mockito.when(ec2.describeInstances(new DescribeInstancesRequest())).thenReturn(r);
 		EC2InstanceScanner scanner = new EC2InstanceScanner(c, neo4j);
 		scanner.scan("us-west-2");
 	}
