@@ -15,6 +15,8 @@ package io.macgyver.core;
 
 public class ServiceInvocationException extends MacGyverException {
 
+	private static final long serialVersionUID = 1L;
+
 	public ServiceInvocationException() {
 		super();
 	}

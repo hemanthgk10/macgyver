@@ -13,9 +13,6 @@
  */
 package io.macgyver.plugin.elb.a10;
 
-import io.macgyver.core.util.WeakRefScheduler;
-import io.macgyver.plugin.elb.ElbException;
-
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -28,13 +25,15 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.squareup.okhttp.Response;
+
+import io.macgyver.core.util.WeakRefScheduler;
+import io.macgyver.plugin.elb.ElbException;
 
 public class A10HAClientImpl implements A10HAClient, Runnable {
 
@@ -45,7 +44,6 @@ public class A10HAClientImpl implements A10HAClient, Runnable {
 	protected LoadingCache<String, A10Client> cache;
 
 	public static final int DEFAULT_NODE_CHECK_SECS = 60;
-	private boolean certVerificationEnabled = false;
 
 	private static WeakRefScheduler daemon = new WeakRefScheduler(3);
 
@@ -60,7 +58,6 @@ public class A10HAClientImpl implements A10HAClient, Runnable {
 		cache = CacheBuilder.newBuilder()
 				.expireAfterWrite(nodeCheckSecs, TimeUnit.SECONDS)
 				.build(new ClientSelector());
-		this.certVerificationEnabled = false;
 
 		int interval = Math.max(10, nodeCheckSecs - 10);
 		daemon.scheduleWithFixedDelay(this, interval, interval,
@@ -181,9 +178,13 @@ public class A10HAClientImpl implements A10HAClient, Runnable {
 				}
 
 			} catch (Exception e) {
-				logger.warn(
-						"problem determining if node is active: "
-								+ c.toString(), e);
+				if (isElbException(e)) {
+					logger.warn(
+						"problem determining if node is active "
+								+ c.toString() + " - " + e.getMessage());
+				} else {
+					logger.warn("unknown problem determining if node is active " + c.toString(), e);
+				}
 			}
 
 		}
@@ -232,8 +233,21 @@ public class A10HAClientImpl implements A10HAClient, Runnable {
 			logger.debug("performing maintenance on {}", this);
 			findActiveA10();
 		} catch (Exception e) {
-			logger.warn("", e);
+			if (!isElbException(e)) {
+				// ElbException's have already been logged
+				logger.error("", e);
+			}
 		}
+	}
+
+	private boolean isElbException(Throwable e) {
+		while (e != null) {
+			if (e instanceof ElbException) {
+				return true;
+			}
+			e = e.getCause();
+		}
+		return false;
 	}
 
 	@Override
