@@ -1,7 +1,5 @@
 include   'macgyver-core',
-    'macgyver-plugin-consul',
     'macgyver-plugin-rabbitmq',
-    'macgyver-plugin-cloud-aws-kinesis',
     'macgyver-plugin-etcd',
     'macgyver-plugin-artifactory',
     'macgyver-plugin-atlassian',
@@ -32,5 +30,6 @@ include   'macgyver-core',
     'macgyver-plugin-splunk',
     'macgyver-plugin-ssh',
     'macgyver-test',
+	'macgyver-cli',
     'macgyver-test-project'
 
