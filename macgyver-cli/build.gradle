@@ -26,8 +26,11 @@ task fatCapsule(type: FatCapsule, dependsOn: "compileJava" ) {
 	applicationClass 'io.macgyver.cli.Main'
 }
 
+task exeFatCapsule(dependsOn: "fatCapsule") << {
+	"./makeExec.sh".execute()
+}
 
-distZip.dependsOn fatCapsule
+distZip.dependsOn exeFatCapsule
 
 
 dependencies {

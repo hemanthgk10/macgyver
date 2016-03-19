@@ -50,7 +50,7 @@ public class Main {
 			logger.info("command: {}", commandName);
 
 			if (Strings.isNullOrEmpty(commandName.get())) {
-				throw new CLIParseException(new IllegalArgumentException("no command specified"));
+				throw new CLIParseException("no command specified");
 			}
 			String className = toClassName(commandName.get());
 
@@ -69,6 +69,7 @@ public class Main {
 		} catch (CLIParseException e) {
 			throw e;
 		} catch (RuntimeException | InstantiationException | IllegalAccessException e) {
+			logger.warn("",e);
 			throw new CLIParseException(e);
 		}
 	}

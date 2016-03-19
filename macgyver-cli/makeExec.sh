@@ -1,9 +1,15 @@
 #!/bin/bash
 
-cat <<EOF >macgyver
+
+MACGYVER_EXE=./build/macgyver
+cat <<EOF >${MACGYVER_EXE}
 #!/bin/sh
 
 exec java -jar \$0 "\$@"
 EOF
 
-cat ./build/libs/macgyver-cli-0.105.2-capsule.jar >>macgyver
+CAPSULE_JAR=$(find build -name '*-capsule.jar' | head -1)
+cat ${CAPSULE_JAR} >>${MACGYVER_EXE}
+chmod +x ${MACGYVER_EXE}
+
+echo binary: ${MACGYVER_EXE}
