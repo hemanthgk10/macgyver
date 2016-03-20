@@ -132,10 +132,9 @@ public class ArtifactoryClientImplTest {
 		
 		mockServer.enqueue(new MockResponse().setBody(response).addHeader("Content-type","application/json"));
 		
-		ArtifactoryClientImpl c = new ArtifactoryClientImpl(mockServer.getUrl(
-				"/artifactory").toExternalForm(), "grateful", "dead");
-		c.getBaseTarget().getOkHttpClient().interceptors()
-				.add(new OkRestLoggingInterceptor());
+		ArtifactoryClient c = new ArtifactoryClient.Builder().url(mockServer.url("/artifactory").toString()).credentials("grateful", "dead").build();
+	
+
 		
 		
 		JsonNode n = c.searchAQL().aql(aql).execute();
@@ -204,10 +203,9 @@ public class ArtifactoryClientImplTest {
 								"application/vnd.org.jfrog.artifactory.search.GavcSearchResult+json")
 						.setResponseCode(200));
 
-		ArtifactoryClientImpl c = new ArtifactoryClientImpl(mockServer.getUrl(
-				"/artifactory").toExternalForm(), "scott", "tiger");
-		c.getBaseTarget().getOkHttpClient().interceptors()
-				.add(new OkRestLoggingInterceptor());
+		ArtifactoryClient c = new ArtifactoryClient.Builder().url(mockServer.url("/artifactory")
+				.toString()).credentials( "scott", "tiger").build();
+		
 
 		JsonNode n = c.searchGAVC().artifact("myartifact").version("1.0.1")
 				.withInfo(true).withProperties(true).inRepo("lib-release")
@@ -230,11 +228,9 @@ public class ArtifactoryClientImplTest {
 								"application/vnd.org.jfrog.artifactory.search.GavcSearchResult+json")
 						.setResponseCode(200));
 
-		c = new ArtifactoryClientImpl(mockServer.getUrl("/artifactory")
-				.toExternalForm(), "scott", "tiger");
-		c.getBaseTarget().getOkHttpClient().interceptors()
-				.add(new OkRestLoggingInterceptor());
-
+		c = new ArtifactoryClient.Builder().url(mockServer.url("/artifactory")
+				.toString()).credentials( "scott", "tiger").build();
+		
 		n = c.searchGAVC().artifact("myartifact").version("1.0.1")
 				.withInfo(true).withProperties(true).inRepo("lib-release")
 				.execute();
@@ -260,10 +256,9 @@ public class ArtifactoryClientImplTest {
 								"application/vnd.org.jfrog.artifactory.search.GavcSearchResult+json")
 						.setResponseCode(200));
 
-		c = new ArtifactoryClientImpl(mockServer.getUrl("/artifactory")
-				.toExternalForm(), "scott", "tiger");
-		c.getBaseTarget().getOkHttpClient().interceptors()
-				.add(new OkRestLoggingInterceptor());
+		c = new ArtifactoryClient.Builder().url(mockServer.url("/artifactory")
+				.toString()).credentials( "scott", "tiger").build();
+	
 
 		n = c.searchGAVC().artifact("myartifact").version("1.0.1")
 				.withInfo(true).withProperties(false).inRepo("lib-release")
@@ -288,10 +283,9 @@ public class ArtifactoryClientImplTest {
 								"application/vnd.org.jfrog.artifactory.search.GavcSearchResult+json")
 						.setResponseCode(200));
 
-		c = new ArtifactoryClientImpl(mockServer.getUrl("/artifactory")
-				.toExternalForm(), "scott", "tiger");
-		c.getBaseTarget().getOkHttpClient().interceptors()
-				.add(new OkRestLoggingInterceptor());
+		c = new ArtifactoryClient.Builder().url(mockServer.url("/artifactory")
+				.toString()).credentials( "scott", "tiger").build();
+		
 
 		n = c.searchGAVC().artifact("myartifact").version("1.0.1")
 				.withInfo(false).withProperties(false).inRepo("lib-release")
@@ -363,10 +357,9 @@ public class ArtifactoryClientImplTest {
 								"application/vnd.org.jfrog.artifactory.search.MetadataSearchResult+json")
 						.setResponseCode(200));
 
-		ArtifactoryClientImpl c = new ArtifactoryClientImpl(mockServer.getUrl(
-				"/artifactory").toExternalForm(), "scott", "tiger");
-		c.getBaseTarget().getOkHttpClient().interceptors()
-				.add(new OkRestLoggingInterceptor());
+		ArtifactoryClient c = new ArtifactoryClient.Builder().url(mockServer.url(
+				"/artifactory").toString()).credentials("scott", "tiger").build();
+	
 
 		JsonNode n = c.searchProperties().property("artifactId","myartifact")
 				.withInfo(true).withProperties(true).inRepo("lib-release")

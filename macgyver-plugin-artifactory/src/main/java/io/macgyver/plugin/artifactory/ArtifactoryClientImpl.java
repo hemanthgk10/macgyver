@@ -13,10 +13,10 @@
  */
 package io.macgyver.plugin.artifactory;
 
-import io.macgyver.okrest.BasicAuthInterceptor;
-import io.macgyver.okrest.OkRestClient;
-import io.macgyver.okrest.OkRestResponse;
-import io.macgyver.okrest.OkRestTarget;
+import io.macgyver.okrest3.BasicAuthInterceptor;
+import io.macgyver.okrest3.OkRestClient;
+import io.macgyver.okrest3.OkRestResponse;
+import io.macgyver.okrest3.OkRestTarget;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -25,6 +25,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Splitter;
@@ -32,33 +33,20 @@ import com.google.common.io.ByteStreams;
 import com.google.common.io.Closer;
 import com.google.common.io.Files;
 
-public class ArtifactoryClientImpl implements ArtifactoryClient {
+public class ArtifactoryClientImpl extends ArtifactoryClient {
 
 
 	OkRestClient okRestClient;
 	OkRestTarget base;
-	String username;
-	String password;
-	public ArtifactoryClientImpl(String url, String username, String password) {
+
+	public ArtifactoryClientImpl() {
 	
-		this.username = username;
-		this.password = password;
-		
-		okRestClient = new OkRestClient();
-		
-		okRestClient.getOkHttpClient().interceptors().add(new BasicAuthInterceptor(username, password));
-		base = okRestClient.uri(url);
-		
-		
 		
 	}
 
-	String getPassword() {
-		return password;
-	}
-	String getUsername() {
-		return username;
-	}
+	
+	
+
 	@Override
 	public OkRestTarget getBaseTarget() {
 		return base;

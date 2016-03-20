@@ -13,7 +13,7 @@
  */
 package io.macgyver.plugin.artifactory;
 
-import io.macgyver.okrest.OkRestTarget;
+import io.macgyver.okrest3.OkRestTarget;
 
 import java.io.IOException;
 import java.util.List;

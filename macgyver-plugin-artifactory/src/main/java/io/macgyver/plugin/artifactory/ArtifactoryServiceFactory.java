@@ -13,11 +13,20 @@
  */
 package io.macgyver.plugin.artifactory;
 
+import java.util.Properties;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
+import org.assertj.core.util.Strings;
+
+import com.google.common.base.Preconditions;
+
+import io.macgyver.core.okhttp3.SoftPropertyConfig;
 import io.macgyver.core.service.ServiceDefinition;
+import io.macgyver.okrest3.OkHttpClientConfigurer;
+import io.macgyver.okrest3.OkRestClient;
 
-
-public class ArtifactoryServiceFactory extends io.macgyver.core.service.ServiceFactory<ArtifactoryClient>{
+public class ArtifactoryServiceFactory extends io.macgyver.core.service.ServiceFactory<ArtifactoryClient> {
 
 	public ArtifactoryServiceFactory() {
 		super("artifactory");
@@ -26,12 +35,28 @@ public class ArtifactoryServiceFactory extends io.macgyver.core.service.ServiceF
 
 	@Override
 	protected ArtifactoryClient doCreateInstance(ServiceDefinition def) {
-		
-		String username = def.getProperties().getProperty("username", "");
-		String url = def.getProperties().getProperty("url");
-		String password = def.getProperties().getProperty("password","");
-		ArtifactoryClientImpl c = new ArtifactoryClientImpl(url, username,password);
-		
+
+		Properties props = def.getProperties();
+
+		String url = props.getProperty("url");
+
+		Preconditions.checkArgument(!Strings.isNullOrEmpty(url), "url must be set");
+
+		Properties vals = new Properties();
+		vals.put("readTimeout", Integer.toString(ArtifactoryClient.READ_TIMEOUT_DEFAULT));
+		vals.put("connectTimeout", Integer.toString(ArtifactoryClient.CONNECT_TIMEOUT_DEFAULT));
+		vals.put("writeTimeout", Integer.toString(ArtifactoryClient.WRITE_TIMEOUT_DEFAULT));
+
+		vals.putAll(props);
+
+		ArtifactoryClient c = new ArtifactoryClient.Builder().url(url)
+				.withOkHttpClientConfig(SoftPropertyConfig.timeoutConfig(vals))
+				.withOkHttpClientConfig(SoftPropertyConfig.certificateVerificationConfig(vals))
+				.withOkHttpClientConfig(SoftPropertyConfig.basicAuthConfig(vals))
+
+				.build();
+
 		return c;
 	}
+
 }
