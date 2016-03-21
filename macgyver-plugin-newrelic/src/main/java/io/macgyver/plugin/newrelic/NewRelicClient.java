@@ -13,122 +13,84 @@
  */
 package io.macgyver.plugin.newrelic;
 
-import io.macgyver.core.ServiceInvocationException;
-import io.macgyver.core.jaxrs.SslTrust;
-
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.squareup.okhttp.FormEncodingBuilder;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
+
+import io.macgyver.okrest3.OkRestClient;
+import io.macgyver.okrest3.OkRestTarget;
+import okhttp3.FormBody;
+import okhttp3.Interceptor;
+import okhttp3.RequestBody;
 
 public class NewRelicClient {
 
 	public static final String DEFAULT_ENDPOINT_URL = "https://api.newrelic.com/";
-	protected String endpointUrl = DEFAULT_ENDPOINT_URL;
-	protected String apiKey;
-	private OkHttpClient client;
-	private boolean validateCertificates = false;
+
 	ObjectMapper mapper = new ObjectMapper();
 
-	public void setApiKey(String key) {
-		this.apiKey = key;
-	}
+	OkRestTarget restTarget;
 
-	public synchronized OkHttpClient getClient() {
-		if (client == null) {
-			client = newClient();
+	public class ApiKeyInterceptor implements Interceptor {
+
+		String apiKey;
+
+		public ApiKeyInterceptor(String key) {
+			this.apiKey = key;
 		}
-		return client;
+
+		@Override
+		public okhttp3.Response intercept(Chain chain) throws IOException {
+
+			okhttp3.Request request = chain.request().newBuilder().addHeader("X-Api-Key", apiKey).build();
+			return chain.proceed(request);
+		}
+
 	}
 
-	protected OkHttpClient newClient() {
+	public static class Builder {
 
-		OkHttpClient c = new OkHttpClient();
-		c.setConnectTimeout(20, TimeUnit.SECONDS);
+		String url = DEFAULT_ENDPOINT_URL;
 
-		return c;
+		String apiKey;
+
+		public Builder apiKey(String apiKey) {
+			this.apiKey = apiKey;
+			return this;
+		}
+
+		public Builder url(String url) {
+			this.url = url;
+			return this;
+		}
+
+		public NewRelicClient build() {
+
+			NewRelicClient client = new NewRelicClient();
+
+			OkRestClient.Builder b = new OkRestClient.Builder().withInterceptor(client.new ApiKeyInterceptor(apiKey));
+
+			client.restTarget = b.build().uri(url);
+			return client;
+
+		}
 	}
 
+	public OkRestTarget getRestTarget() {
+		return restTarget.path("v2");
+	}
+	
 	public ObjectNode get(String x, String... args) {
 
-		if (args.length > 0) {
-			FormEncodingBuilder b = new FormEncodingBuilder();
+		OkRestTarget localTarget = getRestTarget().path(x);
 
-			if (args.length % 2 != 0) {
-				throw new IllegalArgumentException(
-						"must be an even number of arguments");
-			}
-			for (int i = 0; i < args.length; i += 2) {
-				b = b.add(args[i], args[i + 1]);
+	
+		localTarget = localTarget.queryParam((Object[]) args).accept(org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
+				.contentType(org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED_VALUE);
 
-			}
-			return get(x, b.build());
-		} else {
-			return get(x,
-					new FormEncodingBuilder().add("__dummy__", "__dummy__")
-							.build());
-		}
+		return localTarget.get().execute(ObjectNode.class);
 
 	}
 
-	protected void throwExceptionIfNecessary(Response r) {
-		try {
-			if (r.code() >= 400) {
-				ObjectNode n = (ObjectNode) mapper.readTree(r.body().string());
-
-				throw new ServiceInvocationException(n.path("error")
-						.path("title").asText());
-			}
-		} catch (IOException e) {
-			throw new ServiceInvocationException(e);
-		}
-	}
-
-	public ObjectNode get(String x, RequestBody form) {
-
-		try {
-			Request request = new Request.Builder()
-					.url(getEndpointUrl() + "/v2/" + x)
-					.addHeader(
-							"Content-type",
-							org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-					.addHeader(
-							"Accept",
-							org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
-					.addHeader("X-Api-Key", apiKey).post(form).build();
-			Response response = getClient().newCall(request).execute();
-
-			throwExceptionIfNecessary(response);
-			ObjectNode n = (ObjectNode) mapper.readTree(response.body()
-					.string());
-
-			return n;
-		} catch (IOException e) {
-			throw new ServiceInvocationException(e);
-		}
-	}
-
-	public String getEndpointUrl() {
-		return endpointUrl;
-	}
-
-	public void setEndpointUrl(String url) {
-		this.endpointUrl = url;
-	}
-
-	public boolean getCertificateValidationEnabled() {
-		return this.validateCertificates;
-	}
-
-	public void setCertificateValidationEnabled(boolean validationEnabled) {
-		this.validateCertificates = validationEnabled;
-	}
 }

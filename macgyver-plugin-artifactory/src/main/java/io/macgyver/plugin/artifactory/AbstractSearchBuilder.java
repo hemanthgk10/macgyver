@@ -13,7 +13,7 @@
  */
 package io.macgyver.plugin.artifactory;
 
-import io.macgyver.okrest.OkRestTarget;
+import io.macgyver.okrest3.OkRestTarget;
 
 import java.io.IOException;
 import java.util.List;
@@ -85,7 +85,7 @@ public abstract class AbstractSearchBuilder<T> {
 			target = target.header("X-Result-Detail", xResultDetail);
 		}
 		if (!repoList.isEmpty()) {
-			target = target.queryParameter("repos", Joiner.on(",").skipNulls()
+			target = target.queryParam("repos", Joiner.on(",").skipNulls()
 					.join(repoList));
 		}	
 	}

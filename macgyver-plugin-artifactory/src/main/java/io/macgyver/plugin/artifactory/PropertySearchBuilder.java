@@ -15,7 +15,7 @@ package io.macgyver.plugin.artifactory;
 
 import java.io.IOException;
 
-import io.macgyver.okrest.OkRestTarget;
+import io.macgyver.okrest3.OkRestTarget;
 
 public class PropertySearchBuilder extends AbstractSearchBuilder<PropertySearchBuilder> {
 
@@ -25,7 +25,7 @@ public class PropertySearchBuilder extends AbstractSearchBuilder<PropertySearchB
 	}
 	
 	public PropertySearchBuilder property(String key, String val) {
-		target = target.queryParameter(key, val);
+		target = target.queryParam(key, val);
 		return this;
 	}
 

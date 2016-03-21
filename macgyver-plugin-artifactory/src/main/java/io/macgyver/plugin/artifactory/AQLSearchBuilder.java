@@ -14,8 +14,9 @@
 package io.macgyver.plugin.artifactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.Preconditions;
 
-import io.macgyver.okrest.OkRestTarget;
+import io.macgyver.okrest3.OkRestTarget;
 
 public class AQLSearchBuilder {
 
@@ -31,6 +32,7 @@ public class AQLSearchBuilder {
 	}
 	
 	public JsonNode execute() {
+		Preconditions.checkState(target!=null, "OkRestTarget not set");
 		return target.path("api/search/aql").addHeader("Content-type", "text/plain").post(aql).execute(JsonNode.class);
 	}
 }

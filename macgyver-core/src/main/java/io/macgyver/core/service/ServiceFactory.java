@@ -16,9 +16,12 @@ package io.macgyver.core.service;
 import io.macgyver.core.MacGyverException;
 import io.macgyver.core.ServiceNotFoundException;
 
+import okhttp3.OkHttpClient;
+
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -146,6 +149,7 @@ public abstract class ServiceFactory<T> implements ApplicationContextAware {
 		return serviceType;
 	}
 
+	
 	protected void assignProperties(Object target, Properties props,
 			boolean failOnError) {
 

@@ -16,21 +16,77 @@ package io.macgyver.plugin.artifactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import io.macgyver.okrest3.OkHttpClientConfigurer;
+import io.macgyver.okrest3.OkRestClient;
+import io.macgyver.okrest3.OkRestTarget;
 
-import io.macgyver.okrest.OkRestTarget;
 
-public interface ArtifactoryClient {
 
-	OkRestTarget getBaseTarget();
-	GAVCSearchBuilder searchGAVC();
-	PropertySearchBuilder searchProperties();
-	DateSearchBuilder searchDate();
-	AQLSearchBuilder searchAQL();
-	File fetchArtifactToDir(String path, File target) throws IOException;
-	File fetchArtifactToFile(String path, File out) throws IOException;
-	File fetchArtifactToTempFile(String path) throws IOException;
-	InputStream fetchArtifact(String path) throws IOException;
-	void delete(String path) throws IOException;
+
+public abstract class ArtifactoryClient {
+
+	public static final int READ_TIMEOUT_DEFAULT=120;
+	public static final int CONNECT_TIMEOUT_DEFAULT=20;
+	public static final int WRITE_TIMEOUT_DEFAULT=20;
+	
+	public abstract OkRestTarget getBaseTarget();
+	public abstract GAVCSearchBuilder searchGAVC();
+	public abstract PropertySearchBuilder searchProperties();
+	public abstract DateSearchBuilder searchDate();
+	public abstract AQLSearchBuilder searchAQL();
+	public abstract File fetchArtifactToDir(String path, File target) throws IOException;
+	public abstract File fetchArtifactToFile(String path, File out) throws IOException;
+	public abstract File fetchArtifactToTempFile(String path) throws IOException;
+	public abstract InputStream fetchArtifact(String path) throws IOException;
+	public abstract void delete(String path) throws IOException;
+	
+	public static class Builder {
+
+		String url;
+		String username;
+		String password;
+		OkRestClient.Builder builder = new OkRestClient.Builder();
+
+		public Builder() {
+			this.builder.withOkHttpClientConfig(it -> {
+				it.connectTimeout(20, TimeUnit.SECONDS).readTimeout(120, TimeUnit.SECONDS).writeTimeout(30,
+						TimeUnit.SECONDS);
+			});
+		}
+
+		public Builder url(String url) {
+			this.url = url;
+			return this;
+		}
+
+		public Builder withOkHttpClientConfig(OkHttpClientConfigurer c) {
+			builder = builder.withOkHttpClientConfig(c);
+			return this;
+		}
+
+		public Builder credentials(String username, String password) {
+			builder.withBasicAuth(username, password);
+			return this;
+
+		}
+
+		public Builder configure(Consumer<OkRestClient.Builder> cb) {
+			cb.accept(builder);
+			return this;
+		}
+
+		public ArtifactoryClient build() {
+
+			ArtifactoryClientImpl c = new ArtifactoryClientImpl();
+
+			c.okRestClient = builder.build();
+
+			c.base = c.okRestClient.url(url);
+
+			return c;
+		}
+	}
 }

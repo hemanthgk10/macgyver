@@ -13,7 +13,7 @@
  */
 package io.macgyver.plugin.artifactory;
 
-import io.macgyver.okrest.OkRestTarget;
+import io.macgyver.okrest3.OkRestTarget;
 
 import java.io.IOException;
 
@@ -26,22 +26,22 @@ public class GAVCSearchBuilder extends AbstractSearchBuilder<GAVCSearchBuilder> 
 	}
 
 	public GAVCSearchBuilder group(String group) {
-		target = target.queryParameter("g", group);
+		target = target.queryParam("g", group);
 		return this;
 	}
 
 	public GAVCSearchBuilder artifact(String artifact) {
-		target = target.queryParameter("a", artifact);
+		target = target.queryParam("a", artifact);
 		return this;
 	}
 
 	public GAVCSearchBuilder version(String version) {
-		target = target.queryParameter("v", version);
+		target = target.queryParam("v", version);
 		return this;
 	}
 
 	public GAVCSearchBuilder classifier(String classifier) {
-		target = target.queryParameter("c", classifier);
+		target = target.queryParam("c", classifier);
 		return this;
 	}
 
