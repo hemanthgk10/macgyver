@@ -47,7 +47,7 @@ public class DateSearchBuilder extends AbstractSearchBuilder<DateSearchBuilder> 
 	}
 
 	public <C extends DateSearchBuilder> C from(long f) {
-		target = target.queryParameter("from", "" + f);
+		target = target.queryParam("from", "" + f);
 		return (C) this;
 	}
 
@@ -60,7 +60,7 @@ public class DateSearchBuilder extends AbstractSearchBuilder<DateSearchBuilder> 
 	}
 
 	public <C extends DateSearchBuilder> C to(long f) {
-		target = target.queryParameter("to", "" + f);
+		target = target.queryParam("to", "" + f);
 		return (C) this;
 	}
 
@@ -90,7 +90,7 @@ public class DateSearchBuilder extends AbstractSearchBuilder<DateSearchBuilder> 
 
 		}
 
-		target = target.queryParameter("dateFields", s);
+		target = target.queryParam("dateFields", s);
 	}
 
 	public <C extends DateSearchBuilder> C forDateField(DateField... df) {

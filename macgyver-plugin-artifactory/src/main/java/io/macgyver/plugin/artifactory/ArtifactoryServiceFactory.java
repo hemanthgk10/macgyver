@@ -17,9 +17,10 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import org.assertj.core.util.Strings;
+
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
 import io.macgyver.core.okhttp3.SoftPropertyConfig;
 import io.macgyver.core.service.ServiceDefinition;

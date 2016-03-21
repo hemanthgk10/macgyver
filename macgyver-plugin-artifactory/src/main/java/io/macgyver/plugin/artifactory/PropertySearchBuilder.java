@@ -25,7 +25,7 @@ public class PropertySearchBuilder extends AbstractSearchBuilder<PropertySearchB
 	}
 	
 	public PropertySearchBuilder property(String key, String val) {
-		target = target.queryParameter(key, val);
+		target = target.queryParam(key, val);
 		return this;
 	}
 

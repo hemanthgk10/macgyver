@@ -26,10 +26,8 @@ public class NewRelicServiceFactory extends BasicServiceFactory<NewRelicClient>{
 	@Override
 	protected NewRelicClient doCreateInstance(ServiceDefinition def) {
 		
-		NewRelicClient c = new NewRelicClient();
-		c.setApiKey(def.getProperties().getProperty("apiKey"));
-		c.setEndpointUrl(def.getProperties().getProperty("url", NewRelicClient.DEFAULT_ENDPOINT_URL));
-		c.setCertificateValidationEnabled(Boolean.parseBoolean(def.getProperties().getProperty("certificateValidationEnabled", "true")));
+		NewRelicClient c = new NewRelicClient.Builder().url(def.getProperties().getProperty("url", NewRelicClient.DEFAULT_ENDPOINT_URL)).apiKey(def.getProperties().getProperty("apiKey")).build();
+		
 		return c;
 	}
 
