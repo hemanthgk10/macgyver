@@ -1,0 +1,54 @@
+plugins {
+  id "us.kirchmeier.capsule" version "1.0.2"
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'maven'
+apply plugin:'application'
+
+
+
+configurations {
+	all*.exclude group: 'org.codehaus.groovy', module: 'groovy'
+	all*.exclude group: 'log4j'
+	all*.exclude group: 'xml-apis'
+    all*.exclude group: 'commons-logging'
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+	mainClassName = 'io.macgyver.cli.Main'
+
+
+task fatCapsule(type: FatCapsule, dependsOn: "compileJava" ) {
+	applicationClass 'io.macgyver.cli.Main'
+}
+
+task exeFatCapsule(dependsOn: "fatCapsule") << {
+	"./makeExec.sh".execute()
+}
+
+distZip.dependsOn exeFatCapsule
+
+
+dependencies {
+
+	compile "ch.qos.logback:logback-classic:${LOGBACK_VERSION}"
+	compile "org.slf4j:jcl-over-slf4j:${SLF4J_VERSION}"
+
+
+    compile "com.google.guava:guava:${GUAVA_VERSION}"
+	compile 'net.sf.jopt-simple:jopt-simple:5.0'
+	compile 'io.macgyver.okrest:okrest:1.4.0'
+	
+	testCompile "org.mockito:mockito-all:${MOCKITO_VERSION}"
+	testCompile "com.squareup.okhttp:mockwebserver:${OKHTTP_VERSION}"
+	testCompile "junit:junit:${JUNIT_VERSION}"
+	testCompile "org.assertj:assertj-core:${ASSERTJ_VERSION}"
+
+    
+
+}
+
