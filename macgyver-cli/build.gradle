@@ -27,7 +27,7 @@ task fatCapsule(type: FatCapsule, dependsOn: "compileJava" ) {
 }
 
 task exeFatCapsule(dependsOn: "fatCapsule") << {
-	"./makeExec.sh".execute()
+	"bash ./makeExec.sh".execute()
 }
 
 distZip.dependsOn exeFatCapsule
