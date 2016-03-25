@@ -18,7 +18,6 @@ import io.macgyver.core.event.DistributedEventProviderProxy;
 import io.macgyver.core.util.JsonNodes;
 import io.macgyver.core.util.Neo4jPropertyFlattener;
 import io.macgyver.neorx.rest.NeoRxClient;
-import javafx.beans.value.ObservableValueBase;
 
 import java.util.Observable;
 

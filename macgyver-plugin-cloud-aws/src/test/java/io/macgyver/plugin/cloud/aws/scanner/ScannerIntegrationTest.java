@@ -37,6 +37,7 @@ public class ScannerIntegrationTest extends MacGyverIntegrationTest {
 	
 
 	@Test
+	@Ignore
 	public void testIt() {
 		
 		

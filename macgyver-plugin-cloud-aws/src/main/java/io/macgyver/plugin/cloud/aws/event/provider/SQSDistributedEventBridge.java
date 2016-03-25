@@ -19,7 +19,6 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.test.context.jdbc.SqlScriptsTestExecutionListener;
 
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.regions.Region;
@@ -90,6 +89,8 @@ public class SQSDistributedEventBridge {
 	
 	public void forward(ReceiveMessageResult sqs) {
 		
+		
+		
 		sqs.getMessages().forEach(m -> {
 			try {
 				if (logger.isDebugEnabled()) {
@@ -102,6 +103,8 @@ public class SQSDistributedEventBridge {
 				logger.warn("problem forwarding ",e);
 			}
 			finally {
+				
+				// note that this will lose messages if the forwarding failed...ok until we can come up with a better strategy
 				try {
 					if (logger.isDebugEnabled()) {
 						logger.debug("deleting sqs message id="+m.getMessageId()+" receiptHandle="+m.getReceiptHandle());

@@ -148,6 +148,21 @@ public class KinesisEventProvider extends AbstractEventProvider {
 	public KinesisEventProvider withRegion(Regions region) {
 		return withRegion(Region.getRegion(region));
 	}
+	
+	/**
+	 * Set the Kinesis application name.
+	 */
+	public KinesisEventProvider withApplicationName(String appName) {
+		this.applicationName = appName;
+		return this;
+	}
+	/**
+	 * Get the Kinesis application name.
+	 * @return
+	 */
+	public String getApplicationName() {
+		return applicationName;
+	}
 	public KinesisEventProvider withRegion(Region region) {
 		this.region = region;
 		return this;
