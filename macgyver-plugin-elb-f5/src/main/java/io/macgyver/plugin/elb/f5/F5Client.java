@@ -20,13 +20,19 @@ import org.jdom2.Element;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Lists;
 import com.squareup.okhttp.Response;
 
 import io.macgyver.core.service.ServiceFactory;
+import io.macgyver.okrest3.OkHttpClientConfigurer;
 import io.macgyver.okrest3.OkRestClient;
 import io.macgyver.okrest3.OkRestTarget;
+import io.macgyver.okrest3.OkRestClient.Builder;
+import io.macgyver.okrest3.OkRestClientConfigurer;
 import joptsimple.internal.Strings;
+import okhttp3.ConnectionSpec;
 import okhttp3.OkHttpClient;
+import okhttp3.TlsVersion;
 
 public class F5Client {
 
@@ -39,7 +45,11 @@ public class F5Client {
 		String username;
 		String password;
 		boolean validateCerts=true;
+		io.macgyver.okrest3.OkRestClient.Builder f5ClientBuilder;
 		
+		public Builder() {
+			 f5ClientBuilder = new OkRestClient.Builder();
+		}
 		public Builder withUrl(String url) {
 			this.url = url;
 			return this;
@@ -72,20 +82,29 @@ public class F5Client {
 			validateCerts = b;
 			return this;
 		}
-		
+		public Builder withOkRestClientConfig(OkRestClientConfigurer cfg) {
+			f5ClientBuilder = f5ClientBuilder.withOkRestClientConfig(cfg);
+			return this;
+		}
+		public Builder withOkHttpClientConfig(OkHttpClientConfigurer cfg) {
+			f5ClientBuilder = f5ClientBuilder.withOkHttpClientConfig(cfg);
+			return this;
+		}
 		public F5Client build() {
 			
 			F5Client client = new F5Client();
 			
-			io.macgyver.okrest3.OkRestClient.Builder b = new OkRestClient.Builder();
 			
 			if (!Strings.isNullOrEmpty(username) && !Strings.isNullOrEmpty(password)) {
-				b = b.withBasicAuth(username, password);
+				f5ClientBuilder = f5ClientBuilder.withBasicAuth(username, password);
 			}
 			if (!validateCerts) {
-				b = b.disableCertificateVerification();
+				f5ClientBuilder = f5ClientBuilder.disableCertificateVerification();
 			}
-			client.target = b.build().uri(url);
+
+			client.target = f5ClientBuilder.build().uri(url);
+			
+			
 			
 			return client;
 		}

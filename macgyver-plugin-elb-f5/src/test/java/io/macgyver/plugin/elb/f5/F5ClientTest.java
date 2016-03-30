@@ -17,6 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.macgyver.core.LoggingConfig;
 import io.macgyver.plugin.elb.f5.F5RemoteException;
 import io.macgyver.test.RequestUtil;
+import okhttp3.ConnectionSpec;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 
@@ -41,12 +42,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
-
+import com.google.common.collect.Lists;
 
 public class F5ClientTest {
 
 	ObjectMapper mapper = new ObjectMapper();
-	
+
 	@Rule
 	public MockWebServer mockServer = new MockWebServer();
 
@@ -63,24 +64,30 @@ public class F5ClientTest {
 		// Do not call it a mock client. It is a real client and a mock server!
 
 		// instantiate a test client that will communicate with our mock server
-		testClient = new F5Client.Builder().withUrl(mockServer.url("/foo/").toString()).withCredentials("myusername", "mypassword").build();
+		testClient = new F5Client.Builder().withUrl(mockServer.url("/foo/").toString())
+				.withCredentials("myusername", "mypassword").build();
 
-	
 	}
-	
+
 	@Test
-	public void testIt() throws IOException,InterruptedException{
+	public void testIt() throws IOException, InterruptedException {
 		mockServer.enqueue(new okhttp3.mockwebserver.MockResponse().setBody("{}"));
-		
-		
+
 		testClient.getTarget().path("/bar/baz").post("{\"foo\":\"bar\"}").execute(JsonNode.class);
-		
+
 		RecordedRequest rr = mockServer.takeRequest();
-		
+
 		Assertions.assertThat(rr.getHeader("Authorization")).isEqualTo("Basic bXl1c2VybmFtZTpteXBhc3N3b3Jk");
 		Assertions.assertThat(rr.getRequestLine()).startsWith("POST /foo/bar/baz HTTP");
-		
-		
+
+	}
+
+	@Test
+	public void testReal() throws IOException {
+		System.out.println(new F5Client.Builder().withUrl("https://sjcbigip02-inf.tlcinternal.com/mgmt/tm/").withOkHttpClientConfig(cfg -> {
+			//cfg.connectionSpecs(Lists.newArrayList(ConnectionSpec.COMPATIBLE_TLS));
+		})
+				.withCertificateVerificationEnabled(false).build().getTarget().get().execute().response().body().string());
 	}
 
 }
