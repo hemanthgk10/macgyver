@@ -84,7 +84,7 @@ public class F5ClientTest {
 
 	@Test
 	public void testReal() throws IOException {
-		System.out.println(new F5Client.Builder().withUrl("https://sjcbigip02-inf.tlcinternal.com/mgmt/tm/").withOkHttpClientConfig(cfg -> {
+		System.out.println(new F5Client.Builder().withUrl("https://f5-sjc.tlcinternal.com/mgmt/tm/").withOkHttpClientConfig(cfg -> {
 			//cfg.connectionSpecs(Lists.newArrayList(ConnectionSpec.COMPATIBLE_TLS));
 		})
 				.withCertificateVerificationEnabled(false).build().getTarget().get().execute().response().body().string());

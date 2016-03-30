@@ -92,8 +92,7 @@ public class F5Client {
 		}
 		public F5Client build() {
 			
-			F5Client client = new F5Client();
-			
+			F5Client client = new F5Client();			
 			
 			if (!Strings.isNullOrEmpty(username) && !Strings.isNullOrEmpty(password)) {
 				f5ClientBuilder = f5ClientBuilder.withBasicAuth(username, password);
@@ -103,9 +102,7 @@ public class F5Client {
 			}
 
 			client.target = f5ClientBuilder.build().uri(url);
-			
-			
-			
+				
 			return client;
 		}
 	}
