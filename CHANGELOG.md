@@ -1,5 +1,9 @@
 ## Changes
 
+### 0.107.0
+* Add Project Reactor
+* Simplified the Distributed Event Log
+
 ### 0.105.0
 
 * vastly improved scheduler functionality

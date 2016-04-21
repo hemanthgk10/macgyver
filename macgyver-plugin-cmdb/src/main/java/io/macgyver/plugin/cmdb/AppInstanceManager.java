@@ -13,14 +13,6 @@
  */
 package io.macgyver.plugin.cmdb;
 
-import io.macgyver.core.event.DistributedEvent;
-import io.macgyver.core.event.DistributedEventProviderProxy;
-import io.macgyver.core.util.JsonNodes;
-import io.macgyver.core.util.Neo4jPropertyFlattener;
-import io.macgyver.neorx.rest.NeoRxClient;
-
-import java.util.Observable;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +22,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
+import io.macgyver.core.event.DistributedEvent;
+import io.macgyver.core.event.DistributedEventSystem;
+import io.macgyver.core.util.JsonNodes;
+import io.macgyver.core.util.Neo4jPropertyFlattener;
+import io.macgyver.neorx.rest.NeoRxClient;
+
 public class AppInstanceManager {
 	Logger logger = LoggerFactory.getLogger(AppInstanceManager.class);
 
@@ -37,7 +35,7 @@ public class AppInstanceManager {
 	NeoRxClient neo4j;
 
 	@Autowired
-	DistributedEventProviderProxy devent;
+	DistributedEventSystem distributedEventSystem;
 	
 	Neo4jPropertyFlattener flattener = new Neo4jPropertyFlattener();
 	
@@ -130,7 +128,7 @@ public class AppInstanceManager {
 		DistributedEvent evt = DistributedEvent.create().topic(topic).payload(payload);
 		
 		logger.info("change: "+JsonNodes.pretty(evt.getJson()));
-		devent.publish(evt);
+		distributedEventSystem.publish(evt);
 		
 	}
 }

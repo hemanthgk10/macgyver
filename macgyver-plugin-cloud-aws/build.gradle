@@ -15,11 +15,14 @@ configurations {
 
 dependencies {
 
-	compile "com.amazonaws:aws-java-sdk:${AWS_VERSION}"
-    compile "com.amazonaws:amazon-kinesis-client:${AWS_KINESIS_CLIENT_VERSION}"
-    testCompile project(':macgyver-test')
+
     compile project(":macgyver-core")
     compile project(':macgyver-plugin-cloud')
     compile project(':macgyver-plugin-cmdb')
+	compile "com.amazonaws:aws-java-sdk:${AWS_VERSION}"
+    compile "com.amazonaws:amazon-kinesis-client:${AWS_KINESIS_CLIENT_VERSION}"
+
+    testCompile project(':macgyver-test')
+
 }
 

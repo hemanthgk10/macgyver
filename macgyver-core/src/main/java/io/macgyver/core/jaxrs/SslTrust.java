@@ -24,6 +24,8 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import org.bouncycastle.cert.X509CertificateHolder;
+
 public class SslTrust {
 
 	public static HostnameVerifier withoutHostnameVerification() {
@@ -51,7 +53,7 @@ public class SslTrust {
 				@Override
 				public X509Certificate[] getAcceptedIssuers() {
 
-					return null;
+					return new X509Certificate[0];
 				}
 
 				@Override

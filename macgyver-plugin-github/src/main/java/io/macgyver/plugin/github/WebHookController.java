@@ -13,10 +13,6 @@
  */
 package io.macgyver.plugin.github;
 
-import io.macgyver.core.event.DistributedEvent;
-import io.macgyver.core.event.DistributedEventProviderProxy;
-import io.macgyver.core.eventbus.MacGyverAsyncEventBus;
-
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -43,13 +39,17 @@ import com.google.common.base.Preconditions;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.io.ByteStreams;
 
+import io.macgyver.core.event.DistributedEvent;
+import io.macgyver.core.event.DistributedEventSystem;
+import io.macgyver.core.eventbus.MacGyverAsyncEventBus;
+
 @Controller
 public class WebHookController {
 
 	public static final int WEBHOOK_MAX_BYTES_DEFAULT=500 * 1024;
 	
 	@Autowired
-	DistributedEventProviderProxy devent;
+	DistributedEventSystem eventSystem;
 	
 	@Autowired
 	MacGyverAsyncEventBus eventBus;
@@ -96,7 +96,7 @@ public class WebHookController {
 		if (isAuthenticated(event, request)) {
 		
 			DistributedEvent de = DistributedEvent.create().topic("github.webhook").payload(event.getPayload());
-			devent.publish(de);
+			eventSystem.publish(de);
 			eventBus.post(event);
 
 			JsonNode returnNode = new ObjectMapper().createObjectNode().put(
