@@ -19,6 +19,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import reactor.bus.Event;
+
 public class DistributedEvent {
 
 	static ObjectMapper mapper = new ObjectMapper();
@@ -66,6 +68,10 @@ public class DistributedEvent {
 		return this;
 	}
 
+	public Event<JsonNode> toReactorEvent() {
+		Event<JsonNode> x = Event.wrap(getJson());
+		return x;
+	}
 	public DistributedEvent topic(String topic) {
 		json.put("topic", topic);
 		return this;

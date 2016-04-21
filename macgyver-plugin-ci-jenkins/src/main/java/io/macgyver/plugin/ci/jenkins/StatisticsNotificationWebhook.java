@@ -31,7 +31,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.macgyver.core.event.DistributedEvent;
-import io.macgyver.core.event.DistributedEventProviderProxy;
+import io.macgyver.core.event.DistributedEventSystem;
 
 /**
  * Webhook for the Jenkins Statistics Notification Plugin
@@ -46,7 +46,7 @@ import io.macgyver.core.event.DistributedEventProviderProxy;
 public class StatisticsNotificationWebhook {
 
 	@Autowired
-	DistributedEventProviderProxy devent;
+	DistributedEventSystem distributedEventSystem;
 	
 	Logger logger = LoggerFactory.getLogger(StatisticsNotificationWebhook.class);
 	ObjectMapper mapper = new ObjectMapper();
@@ -65,7 +65,7 @@ public class StatisticsNotificationWebhook {
 		
 		
 		DistributedEvent evt = DistributedEvent.create().topic("ci.jenkins.builds").payload(payload);
-		devent.publish(evt);
+		distributedEventSystem.publish(evt);
 		
 		return ResponseEntity.ok(mapper.createObjectNode().put("status", "ok"));
 	}
@@ -79,7 +79,7 @@ public class StatisticsNotificationWebhook {
 		logger.info("received queues webhook: " + mapper.writerWithDefaultPrettyPrinter().writeValueAsString(payload));
 		
 		DistributedEvent evt = DistributedEvent.create().topic("ci.jenkins.queues").payload(payload);
-		devent.publish(evt);
+		distributedEventSystem.publish(evt);
 		
 		return ResponseEntity.ok(mapper.createObjectNode().put("status", "ok"));
 	}
@@ -92,7 +92,7 @@ public class StatisticsNotificationWebhook {
 
 		logger.info("received projects webhook: " + mapper.writerWithDefaultPrettyPrinter().writeValueAsString(payload));
 		DistributedEvent evt = DistributedEvent.create().topic("ci.jenkins.projects").payload(payload);
-		devent.publish(evt);
+		distributedEventSystem.publish(evt);
 		return ResponseEntity.ok(mapper.createObjectNode().put("status", "ok"));
 	}
 

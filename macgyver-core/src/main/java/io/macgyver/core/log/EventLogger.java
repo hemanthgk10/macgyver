@@ -87,6 +87,9 @@ public abstract class EventLogger {
 
 	protected final void logEvent(Event event) {
 		
+		// Would like to flip this around so that this logging goes through the Reactor
+		// event bus and a subscriber writes it off to neo4j 
+		
 		try {
 			// log the event to the local logging system first
 			doLogEvent(event);
@@ -97,7 +100,7 @@ public abstract class EventLogger {
 		
 		try {
 			// now log to the distributed system
-			distributedEventSystem.getDistributedEventProvider().publish(convert(event));
+			distributedEventSystem.publish(convert(event));
 		} catch (Exception e) {
 			logger.warn("could not log event to distributed event system", e);
 		}

@@ -33,6 +33,7 @@ import com.amazonaws.services.ec2.model.Reservation;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 
 public class EC2InstanceScanner extends AWSServiceScanner {

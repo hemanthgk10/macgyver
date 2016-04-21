@@ -54,15 +54,12 @@ import io.macgyver.core.auth.UserManager;
 import io.macgyver.core.cluster.ClusterManager;
 import io.macgyver.core.cluster.NeoRxTcpDiscoveryIpFinder;
 import io.macgyver.core.crypto.Crypto;
-import io.macgyver.core.event.DistributedEventProviderProxy;
 import io.macgyver.core.event.DistributedEventSystem;
-import io.macgyver.core.event.provider.local.LocalEventProvider;
 import io.macgyver.core.eventbus.EventBusPostProcessor;
 import io.macgyver.core.eventbus.MacGyverAsyncEventBus;
 import io.macgyver.core.eventbus.MacGyverEventBus;
 import io.macgyver.core.log.EventLogger;
 import io.macgyver.core.log.Neo4jEventLogger;
-import io.macgyver.core.log.EventLogger.Event;
 import io.macgyver.core.resource.provider.filesystem.FileSystemResourceProvider;
 import io.macgyver.core.scheduler.ScheduledTaskManager;
 import io.macgyver.core.scheduler.TaskController;
@@ -72,6 +69,8 @@ import io.macgyver.core.script.ExtensionResourceProvider;
 import io.macgyver.core.service.ServiceRegistry;
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.neorx.rest.NeoRxClientBuilder;
+import reactor.Environment;
+import reactor.bus.EventBus;
 
 @Configuration
 public class CoreConfig implements EnvironmentAware {
@@ -296,13 +295,6 @@ public class CoreConfig implements EnvironmentAware {
 		return ignite;
 	}
 	
-	@Bean
-	public DistributedEventProviderProxy macDistributedEventProviderProxy() {		
-		DistributedEventProviderProxy proxy = new DistributedEventProviderProxy();
-
-		return proxy;
-	}
-	
 	@Bean 
 	public DistributedEventSystem macDistributedEventSystem() {
 		return new DistributedEventSystem();
@@ -325,5 +317,14 @@ public class CoreConfig implements EnvironmentAware {
 	@Bean
 	public TaskController macTaskController() {
 		return new TaskController();
+	}
+	
+	@Bean
+	public Environment macReactorEnvironment() {
+		return Environment.initializeIfEmpty();
+	}
+	@Bean
+	public EventBus macReactorEventBus() {
+		return EventBus.create(macReactorEnvironment(), Environment.THREAD_POOL);
 	}
 }
