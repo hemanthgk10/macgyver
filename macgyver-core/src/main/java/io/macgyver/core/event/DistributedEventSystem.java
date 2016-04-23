@@ -22,7 +22,7 @@ import org.springframework.context.ApplicationListener;
 import reactor.bus.Event;
 import reactor.bus.EventBus;
 
-public class DistributedEventSystem implements ApplicationListener<ApplicationReadyEvent> {
+public class DistributedEventSystem  {
 
 	Logger logger = LoggerFactory.getLogger(DistributedEventSystem.class);
 
@@ -33,17 +33,11 @@ public class DistributedEventSystem implements ApplicationListener<ApplicationRe
 
 	}
 
+	@Deprecated
 	public void publish(DistributedEvent event) {
 		
 		eventBus.notify(event.getJson(),Event.wrap(event.json));
 		
 	}
 
-
-
-	@Override
-	public void onApplicationEvent(ApplicationReadyEvent event) {
-		logger.info("onApplicationEvent(" + event + ")");
-
-	}
 }

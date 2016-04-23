@@ -15,19 +15,14 @@ package io.macgyver.core.log;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 
-import io.macgyver.core.event.DistributedEventSystem;
 import io.macgyver.neorx.rest.NeoRxClient;
 
 public class Neo4jEventLogger extends EventLogger {

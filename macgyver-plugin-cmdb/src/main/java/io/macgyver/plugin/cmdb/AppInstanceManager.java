@@ -24,6 +24,8 @@ import com.google.common.base.Strings;
 
 import io.macgyver.core.event.DistributedEvent;
 import io.macgyver.core.event.DistributedEventSystem;
+import io.macgyver.core.eventbus.MacGyverEvent;
+import io.macgyver.core.rx.MacGyverEventPublisher;
 import io.macgyver.core.util.JsonNodes;
 import io.macgyver.core.util.Neo4jPropertyFlattener;
 import io.macgyver.neorx.rest.NeoRxClient;
@@ -35,7 +37,7 @@ public class AppInstanceManager {
 	NeoRxClient neo4j;
 
 	@Autowired
-	DistributedEventSystem distributedEventSystem;
+	MacGyverEventPublisher publisher;
 	
 	Neo4jPropertyFlattener flattener = new Neo4jPropertyFlattener();
 	
@@ -125,10 +127,9 @@ public class AppInstanceManager {
 		ObjectNode payload = JsonNodes.mapper.createObjectNode();
 		payload.set("previous", currentProperties);
 		payload.set("current",newProperties);
-		DistributedEvent evt = DistributedEvent.create().topic(topic).payload(payload);
 		
-		logger.info("change: "+JsonNodes.pretty(evt.getJson()));
-		distributedEventSystem.publish(evt);
+		publisher.createEvent().topic(topic).payload(payload).publish();
+		
 		
 	}
 }

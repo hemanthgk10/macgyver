@@ -15,6 +15,7 @@ package io.macgyver.core.eventbus;
 
 import com.google.common.eventbus.EventBus;
 
+@Deprecated
 public class MacGyverEventBus extends EventBus {
 
 }

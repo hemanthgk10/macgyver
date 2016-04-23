@@ -21,6 +21,9 @@ import io.macgyver.core.MacGyverException;
 import io.macgyver.core.ServiceNotFoundException;
 import io.macgyver.core.crypto.Crypto;
 import io.macgyver.core.eventbus.MacGyverEventBus;
+import io.macgyver.core.rx.MacGyverEventPublisher;
+import reactor.bus.Event;
+import reactor.bus.EventBus;
 
 import java.io.File;
 import java.io.IOException;
@@ -65,6 +68,9 @@ public class ServiceRegistry {
 	@Autowired
 	MacGyverEventBus syncBus;
 
+	@Autowired
+	EventBus eventBus;
+	
 	@Autowired
 	Crypto crypto;
 
@@ -224,6 +230,9 @@ public class ServiceRegistry {
 		if (syncBus != null) {
 			// test for null to assist with unit testing
 			syncBus.post(event);
+		}
+		if (eventBus!=null) {
+			eventBus.notify(event,Event.wrap(event));
 		}
 	}
 

@@ -17,6 +17,7 @@ import java.util.concurrent.Executor;
 
 import com.google.common.eventbus.AsyncEventBus;
 
+@Deprecated
 public class MacGyverAsyncEventBus extends AsyncEventBus {
 
 	public MacGyverAsyncEventBus(Executor executor) {

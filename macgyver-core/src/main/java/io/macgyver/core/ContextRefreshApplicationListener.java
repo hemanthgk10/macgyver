@@ -13,7 +13,10 @@
  */
 package io.macgyver.core;
 
+import io.macgyver.core.Kernel.KernelStartedEvent;
 import io.macgyver.core.eventbus.MacGyverEventBus;
+import reactor.bus.Event;
+import reactor.bus.EventBus;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +32,9 @@ public class ContextRefreshApplicationListener implements
 	@Autowired
 	MacGyverEventBus eventBus;
 
+	@Autowired
+	EventBus reactorBus;
+	
 	Logger log = LoggerFactory.getLogger(getClass());
 
 	@Override
@@ -37,7 +43,8 @@ public class ContextRefreshApplicationListener implements
 		log.info("posting lifecycle event to EventBus: {}", event);
 
 		eventBus.post(event);
-
+		reactorBus.notify(event,Event.wrap(event));
+		
 		Optional<Throwable> e = Kernel.getInstance().getStartupError();
 
 		if (e.isPresent()) {
@@ -47,9 +54,10 @@ public class ContextRefreshApplicationListener implements
 			throw new RuntimeException(e.get());
 		}
 		
-
-		eventBus.post(new Kernel.KernelStartedEvent(Kernel.getInstance()));
+		KernelStartedEvent kse = new Kernel.KernelStartedEvent(Kernel.getInstance());
 		
+		eventBus.post(kse);
+		reactorBus.notify(event,Event.wrap(kse));
 		log.info("event post complete");
 	}
 

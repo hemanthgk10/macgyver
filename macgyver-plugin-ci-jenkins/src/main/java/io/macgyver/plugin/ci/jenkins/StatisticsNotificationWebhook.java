@@ -30,8 +30,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.macgyver.core.event.DistributedEvent;
-import io.macgyver.core.event.DistributedEventSystem;
+
+import io.macgyver.core.rx.MacGyverEventPublisher;
 
 /**
  * Webhook for the Jenkins Statistics Notification Plugin
@@ -46,7 +46,7 @@ import io.macgyver.core.event.DistributedEventSystem;
 public class StatisticsNotificationWebhook {
 
 	@Autowired
-	DistributedEventSystem distributedEventSystem;
+	MacGyverEventPublisher publisher;
 	
 	Logger logger = LoggerFactory.getLogger(StatisticsNotificationWebhook.class);
 	ObjectMapper mapper = new ObjectMapper();
@@ -61,12 +61,8 @@ public class StatisticsNotificationWebhook {
 	public ResponseEntity<JsonNode> builds(@RequestBody JsonNode payload, HttpServletRequest request)
 			throws IOException {
 
-		logger.info("received builds webhook: " + mapper.writerWithDefaultPrettyPrinter().writeValueAsString(payload));
 		
-		
-		DistributedEvent evt = DistributedEvent.create().topic("ci.jenkins.builds").payload(payload);
-		distributedEventSystem.publish(evt);
-		
+		publisher.createEvent().topic("ci.jenkins.builds").payload(payload).publish();
 		return ResponseEntity.ok(mapper.createObjectNode().put("status", "ok"));
 	}
 
@@ -76,10 +72,9 @@ public class StatisticsNotificationWebhook {
 	public ResponseEntity<JsonNode> statisticsNotificationQueues(@RequestBody JsonNode payload,
 			HttpServletRequest request) throws IOException {
 
-		logger.info("received queues webhook: " + mapper.writerWithDefaultPrettyPrinter().writeValueAsString(payload));
+
 		
-		DistributedEvent evt = DistributedEvent.create().topic("ci.jenkins.queues").payload(payload);
-		distributedEventSystem.publish(evt);
+		publisher.createEvent().topic("ci.jenkins.queues").payload(payload).publish();
 		
 		return ResponseEntity.ok(mapper.createObjectNode().put("status", "ok"));
 	}
@@ -90,9 +85,10 @@ public class StatisticsNotificationWebhook {
 	public ResponseEntity<JsonNode> statisticsNotificationProjects(@RequestBody JsonNode payload,
 			HttpServletRequest request) throws IOException {
 
-		logger.info("received projects webhook: " + mapper.writerWithDefaultPrettyPrinter().writeValueAsString(payload));
-		DistributedEvent evt = DistributedEvent.create().topic("ci.jenkins.projects").payload(payload);
-		distributedEventSystem.publish(evt);
+
+		publisher.createEvent().topic("ci.jenkins.projects").payload(payload).publish();
+
+		
 		return ResponseEntity.ok(mapper.createObjectNode().put("status", "ok"));
 	}
 

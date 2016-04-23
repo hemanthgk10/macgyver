@@ -39,9 +39,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.io.ByteStreams;
 
-import io.macgyver.core.event.DistributedEvent;
-import io.macgyver.core.event.DistributedEventSystem;
 import io.macgyver.core.eventbus.MacGyverAsyncEventBus;
+import io.macgyver.core.rx.MacGyverEventPublisher;
 
 @Controller
 public class WebHookController {
@@ -49,7 +48,7 @@ public class WebHookController {
 	public static final int WEBHOOK_MAX_BYTES_DEFAULT=500 * 1024;
 	
 	@Autowired
-	DistributedEventSystem eventSystem;
+	MacGyverEventPublisher eventPublisher;
 	
 	@Autowired
 	MacGyverAsyncEventBus eventBus;
@@ -95,8 +94,8 @@ public class WebHookController {
 	
 		if (isAuthenticated(event, request)) {
 		
-			DistributedEvent de = DistributedEvent.create().topic("github.webhook").payload(event.getPayload());
-			eventSystem.publish(de);
+			eventPublisher.createEvent().topic("github.webhook").payload(event.getPayload()).publish();
+			
 			eventBus.post(event);
 
 			JsonNode returnNode = new ObjectMapper().createObjectNode().put(

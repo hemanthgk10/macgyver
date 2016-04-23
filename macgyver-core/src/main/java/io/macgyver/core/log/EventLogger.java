@@ -20,20 +20,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.macgyver.core.event.DistributedEvent;
-import io.macgyver.core.event.DistributedEventSystem;
+import io.macgyver.core.rx.MacGyverEventPublisher;
 
 public abstract class EventLogger {
 
 	Logger logger = LoggerFactory.getLogger(EventLogger.class);
 
 	@Autowired
-	DistributedEventSystem distributedEventSystem;
-
+	MacGyverEventPublisher publisher;
+	
 	ObjectMapper mapper = new ObjectMapper();
 
 	public class Event {
@@ -79,11 +77,6 @@ public abstract class EventLogger {
 		return new Event();
 	}
 
-	DistributedEvent convert(Event e) {
-
-		return DistributedEvent.create().payload(e.data);
-
-	}
 
 	protected final void logEvent(Event event) {
 		
@@ -100,7 +93,7 @@ public abstract class EventLogger {
 		
 		try {
 			// now log to the distributed system
-			distributedEventSystem.publish(convert(event));
+			publisher.createEvent().payload(event.data).publish();
 		} catch (Exception e) {
 			logger.warn("could not log event to distributed event system", e);
 		}

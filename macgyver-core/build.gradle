@@ -35,7 +35,7 @@ dependencies {
     
 	compile "io.reactivex:rxjava-guava:1.0.3"
 	
-    compile "io.macgyver.rx-aws:rx-aws:1.0.1"
+    compile "io.macgyver.rx-aws:rx-aws:${RX_AWS_VERSION}"
     
     compile "org.springframework:spring-context-support:${SPRING_VERSION}"
     compile "org.springframework:spring-tx:${SPRING_VERSION}"

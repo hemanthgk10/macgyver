@@ -61,6 +61,7 @@ import io.macgyver.core.eventbus.MacGyverEventBus;
 import io.macgyver.core.log.EventLogger;
 import io.macgyver.core.log.Neo4jEventLogger;
 import io.macgyver.core.resource.provider.filesystem.FileSystemResourceProvider;
+import io.macgyver.core.rx.MacGyverEventPublisher;
 import io.macgyver.core.scheduler.ScheduledTaskManager;
 import io.macgyver.core.scheduler.TaskController;
 import io.macgyver.core.scheduler.TaskStateManager;
@@ -326,5 +327,9 @@ public class CoreConfig implements EnvironmentAware {
 	@Bean
 	public EventBus macReactorEventBus() {
 		return EventBus.create(macReactorEnvironment(), Environment.THREAD_POOL);
+	}
+	@Bean
+	public MacGyverEventPublisher macEventPublisher() {
+		return new MacGyverEventPublisher();
 	}
 }

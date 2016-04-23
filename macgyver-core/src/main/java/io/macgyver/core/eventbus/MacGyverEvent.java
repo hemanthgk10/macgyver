@@ -15,6 +15,7 @@ package io.macgyver.core.eventbus;
 
 import java.util.EventObject;
 
+@Deprecated
 public class MacGyverEvent extends EventObject {
 
 	public MacGyverEvent(Object source) {
