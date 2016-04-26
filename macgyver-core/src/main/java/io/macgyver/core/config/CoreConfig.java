@@ -17,7 +17,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.util.Properties;
-import java.util.concurrent.Executors;
 
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
@@ -47,6 +46,7 @@ import io.macgyver.core.CorePlugin;
 import io.macgyver.core.CoreSystemInfo;
 import io.macgyver.core.Kernel;
 import io.macgyver.core.MacGyverBeanFactoryPostProcessor;
+import io.macgyver.core.MacGyverBeanPostProcessor;
 import io.macgyver.core.PluginManager;
 import io.macgyver.core.ScriptHookManager;
 import io.macgyver.core.Startup;
@@ -54,14 +54,10 @@ import io.macgyver.core.auth.UserManager;
 import io.macgyver.core.cluster.ClusterManager;
 import io.macgyver.core.cluster.NeoRxTcpDiscoveryIpFinder;
 import io.macgyver.core.crypto.Crypto;
-import io.macgyver.core.event.DistributedEventSystem;
-import io.macgyver.core.eventbus.EventBusPostProcessor;
-import io.macgyver.core.eventbus.MacGyverAsyncEventBus;
-import io.macgyver.core.eventbus.MacGyverEventBus;
 import io.macgyver.core.log.EventLogger;
-import io.macgyver.core.log.Neo4jEventLogger;
+import io.macgyver.core.log.Neo4jEventLogWriterImpl;
+import io.macgyver.core.reactor.MacGyverEventPublisher;
 import io.macgyver.core.resource.provider.filesystem.FileSystemResourceProvider;
-import io.macgyver.core.rx.MacGyverEventPublisher;
 import io.macgyver.core.scheduler.ScheduledTaskManager;
 import io.macgyver.core.scheduler.TaskController;
 import io.macgyver.core.scheduler.TaskStateManager;
@@ -94,22 +90,10 @@ public class CoreConfig implements EnvironmentAware {
 		return new AsyncHttpClient();
 	}
 
-	@Bean(name = "macEventBus")
-	public MacGyverEventBus macEventBus() {
-		MacGyverEventBus b = new MacGyverEventBus();
-		return b;
-	}
-
-	@Bean(name = "macAsyncEventBus")
-	public MacGyverAsyncEventBus macAyncEventBus() {
-		MacGyverAsyncEventBus b = new MacGyverAsyncEventBus("macAsyncEventBus",
-				Executors.newCachedThreadPool());
-		return b;
-	}
 
 	@Bean
-	public EventBusPostProcessor macEventBusPostProcessor() {
-		return new EventBusPostProcessor();
+	public MacGyverBeanPostProcessor macSpringBeanPostProcessor() {
+		return new MacGyverBeanPostProcessor();
 	}
 
 	@Bean(name = "macKernel")
@@ -296,16 +280,16 @@ public class CoreConfig implements EnvironmentAware {
 		return ignite;
 	}
 	
-	@Bean 
-	public DistributedEventSystem macDistributedEventSystem() {
-		return new DistributedEventSystem();
-	}
-	
 	@Bean
 	public EventLogger macEventLogger() {
-		return new Neo4jEventLogger();
+		return new EventLogger();
 	}
 
+	@Bean
+	public Neo4jEventLogWriterImpl macEventLogWriter() {
+		return new Neo4jEventLogWriterImpl();
+	}
+	
 	@Bean
 	public TaskStateManager macTaskStateManager() {
 		return new TaskStateManager();

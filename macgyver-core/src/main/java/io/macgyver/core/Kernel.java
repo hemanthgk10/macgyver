@@ -13,9 +13,7 @@
  */
 package io.macgyver.core;
 
-import io.macgyver.core.eventbus.MacGyverEvent;
-import io.macgyver.neorx.rest.NeoRxClient;
-
+import java.util.EventObject;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
@@ -26,6 +24,8 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.env.StandardEnvironment;
 
 import com.google.common.base.Optional;
+
+import io.macgyver.neorx.rest.NeoRxClient;
 
 public class Kernel implements ApplicationContextAware {
 
@@ -123,17 +123,16 @@ public class Kernel implements ApplicationContextAware {
 
 	}
 
-	public static class ServerStartedEvent extends MacGyverEvent {
+	public static class ServerStartedEvent extends EventObject {
 		public ServerStartedEvent(Kernel source) {
 			super(source);
 		}
 	}
 
-	public static class KernelStartedEvent extends MacGyverEvent {
+	public static class KernelStartedEvent extends EventObject {
 
 		public KernelStartedEvent(Kernel source) {
 			super(source);
-
 		}
 
 	}

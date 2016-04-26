@@ -29,9 +29,7 @@ public class ConfigTest extends MacGyverIntegrationTest {
 		applicationContext.getBean("macLoginController");
 		applicationContext.getBean("macContextRefreshApplicationListener");
 		applicationContext.getBean("macAsyncHttpClient");
-		applicationContext.getBean("macEventBus");
-		applicationContext.getBean("macAsyncEventBus");
-		applicationContext.getBean("macEventBusPostProcessor");
+	
 		applicationContext.getBean("macKernel");
 		applicationContext.getBean("macStartup");
 		applicationContext.getBean("macBindingSupplierManager");

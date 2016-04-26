@@ -13,22 +13,13 @@
  */
 package io.macgyver.core;
 
-import io.macgyver.core.Kernel.ServerStartedEvent;
-import io.macgyver.core.eventbus.MacGyverEventBus;
-import io.macgyver.core.log.EventLogger;
-import reactor.bus.Event;
-import reactor.bus.EventBus;
-
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.web.EmbeddedServletContainerAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainer;
 import org.springframework.boot.context.event.ApplicationFailedEvent;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
@@ -41,7 +32,11 @@ import org.springframework.web.context.support.ServletRequestHandledEvent;
 
 import com.google.common.collect.Lists;
 import com.sun.akuma.JavaVMArguments;
-import com.sun.akuma.Daemon;
+
+import io.macgyver.core.Kernel.ServerStartedEvent;
+import io.macgyver.core.log.EventLogger;
+import reactor.bus.Event;
+import reactor.bus.EventBus;
 
 /**
  * Simple wrapper to start server.
@@ -117,8 +112,8 @@ public class ServerMain {
 		
 		ServerStartedEvent serverStartedEvent = new Kernel.ServerStartedEvent(Kernel.getInstance());
 		
-		Kernel.getApplicationContext().getBean(MacGyverEventBus.class)
-				.post(serverStartedEvent);
+		Kernel.getApplicationContext().getBean(EventBus.class)
+				.notify(ServerStartedEvent.class,Event.wrap(serverStartedEvent));
 		
 		Kernel.getApplicationContext().getBean(EventBus.class).notify(serverStartedEvent,Event.wrap(serverStartedEvent));
 	

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,28 +13,13 @@
  */
 package io.macgyver.core.service;
 
-import groovy.util.ConfigObject;
-import groovy.util.ConfigSlurper;
-import io.macgyver.core.Bootstrap;
-import io.macgyver.core.Kernel;
-import io.macgyver.core.MacGyverException;
-import io.macgyver.core.ServiceNotFoundException;
-import io.macgyver.core.crypto.Crypto;
-import io.macgyver.core.eventbus.MacGyverEventBus;
-import io.macgyver.core.rx.MacGyverEventPublisher;
-import reactor.bus.Event;
-import reactor.bus.EventBus;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,13 +29,20 @@ import org.springframework.context.ApplicationContext;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
+import groovy.util.ConfigObject;
+import groovy.util.ConfigSlurper;
+import io.macgyver.core.Bootstrap;
+import io.macgyver.core.Kernel;
+import io.macgyver.core.MacGyverException;
+import io.macgyver.core.ServiceNotFoundException;
+import io.macgyver.core.crypto.Crypto;
+import reactor.bus.Event;
+import reactor.bus.EventBus;
 
 public class ServiceRegistry {
 
@@ -66,13 +58,10 @@ public class ServiceRegistry {
 	ApplicationContext applicationContext;
 
 	@Autowired
-	MacGyverEventBus syncBus;
+	Crypto crypto;
 
 	@Autowired
 	EventBus eventBus;
-	
-	@Autowired
-	Crypto crypto;
 
 	@SuppressWarnings("unchecked")
 	public <T> T get(String name, Class<T> t) {
@@ -151,7 +140,7 @@ public class ServiceRegistry {
 					Properties scopedProperties = extractScopedPropertiesForService(properties, serviceName);
 
 					Set<ServiceDefinition> set = Sets.newHashSet();
-					factory.createServiceDefintions(set, serviceName, scopedProperties,serviceType.toLowerCase());
+					factory.createServiceDefintions(set, serviceName, scopedProperties, serviceType.toLowerCase());
 
 					for (ServiceDefinition def : set) {
 						registerServiceDefintion(def);
@@ -227,12 +216,9 @@ public class ServiceRegistry {
 	}
 
 	public void publish(ServiceCreatedEvent event) {
-		if (syncBus != null) {
-			// test for null to assist with unit testing
-			syncBus.post(event);
-		}
-		if (eventBus!=null) {
-			eventBus.notify(event,Event.wrap(event));
+		if (eventBus != null) {
+			// for eventBus
+			eventBus.notify(ServiceCreatedEvent.class, Event.wrap(event));
 		}
 	}
 
@@ -322,11 +308,13 @@ public class ServiceRegistry {
 		List<String> names = findServiceNames(serviceType, propertyName, propertyValue);
 		if (names.isEmpty()) {
 			throw new ServiceNotFoundException(
-					"could not locate service type:" + serviceType + " property:" + propertyName + " value: " + propertyValue);
+					"could not locate service type:" + serviceType + " property:" + propertyName + " value: "
+							+ propertyValue);
 		}
 		if (names.size() > 1) {
 			throw new ServiceNotFoundException(
-					"found ambiguous match:" + serviceType + " property:" + propertyName + " value: " + propertyValue+" matches: "+names);
+					"found ambiguous match:" + serviceType + " property:" + propertyName + " value: " + propertyValue
+							+ " matches: " + names);
 		}
 		return (T) get(names.get(0));
 	}

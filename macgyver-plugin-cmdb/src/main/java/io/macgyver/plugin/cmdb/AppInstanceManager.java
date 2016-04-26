@@ -22,13 +22,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
-import io.macgyver.core.event.DistributedEvent;
-import io.macgyver.core.event.DistributedEventSystem;
-import io.macgyver.core.eventbus.MacGyverEvent;
-import io.macgyver.core.rx.MacGyverEventPublisher;
+import io.macgyver.core.reactor.MacGyverEventPublisher;
 import io.macgyver.core.util.JsonNodes;
 import io.macgyver.core.util.Neo4jPropertyFlattener;
 import io.macgyver.neorx.rest.NeoRxClient;
+import io.macgyver.plugin.cmdb.AppInstanceMessage.AppInstanceDiscoveryMessage;
+import io.macgyver.plugin.cmdb.AppInstanceMessage.AppInstanceRevisionUpdateMessage;
+import io.macgyver.plugin.cmdb.AppInstanceMessage.AppInstanceStartMessage;
+import io.macgyver.plugin.cmdb.AppInstanceMessage.AppInstanceVersionUpdateMessage;
 
 public class AppInstanceManager {
 	Logger logger = LoggerFactory.getLogger(AppInstanceManager.class);
@@ -103,32 +104,32 @@ public class AppInstanceManager {
 	
 	public void processChanges(JsonNode currentProperties, JsonNode newProperties) {
 		if (currentProperties==null && newProperties!=null) {
-			publishChange("app.instance.discover",currentProperties,newProperties);
-			publishChange("app.instance.start",currentProperties,newProperties);
+			publishChange(AppInstanceDiscoveryMessage.class,currentProperties,newProperties);
+			publishChange(AppInstanceStartMessage.class,currentProperties,newProperties);
 		}
 	
 		if (currentProperties!=null && newProperties!=null) {
 			if (hasAttributeChanged(currentProperties, newProperties, "version")) {
 				// version change
-				publishChange("app.instance.version.update",currentProperties, newProperties);
+				publishChange(AppInstanceVersionUpdateMessage.class,currentProperties, newProperties);
 			}		
 			if (hasAttributeChanged(currentProperties,newProperties,"revision")) {
-				publishChange("app.instance.revision.update",currentProperties,newProperties);
+				publishChange(AppInstanceRevisionUpdateMessage.class,currentProperties,newProperties);
 			}
 			if (hasAttributeChanged(currentProperties,newProperties,"processId")) {
-				publishChange("app.instance.start",currentProperties,newProperties);
+				publishChange(AppInstanceStartMessage.class,currentProperties,newProperties);
 			}
 			
 		}
 
 	}
 
-	protected void publishChange(String topic, JsonNode currentProperties, JsonNode newProperties) {
+	protected void publishChange(Class<? extends AppInstanceMessage> topic, JsonNode currentProperties, JsonNode newProperties) {
 		ObjectNode payload = JsonNodes.mapper.createObjectNode();
 		payload.set("previous", currentProperties);
 		payload.set("current",newProperties);
 		
-		publisher.createEvent().topic(topic).payload(payload).publish();
+		publisher.createMessage().withMessageType(topic).withAttribute("previous",currentProperties).withAttribute("current",newProperties).publish();
 		
 		
 	}
