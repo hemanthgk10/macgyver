@@ -12,6 +12,9 @@
     <logger name="io.macgyver">
 	    <level value="DEBUG" />
     </logger>
+    <logger name="io.macgyver.neorx">
+	    <level value="INFO" />
+    </logger>
        <logger name="grails">
 	    <level value="DEBUG" />
     </logger>

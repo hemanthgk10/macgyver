@@ -28,8 +28,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.macgyver.core.event.DistributedEvent;
-import io.macgyver.core.event.DistributedEventSystem;
+import io.macgyver.core.reactor.MacGyverEventPublisher;
+import io.macgyver.plugin.ci.jenkins.JenkinsNotificationMessage.BuildNotificationMessage;
 
 /**
  * This is a webhook for the Post Completed Build Results plugin.
@@ -44,7 +44,7 @@ import io.macgyver.core.event.DistributedEventSystem;
 public class PostCompletedBuildResultWebhook {
 
 	@Autowired
-	DistributedEventSystem eventSystem;
+	MacGyverEventPublisher publisher;
 	
 	Logger logger = LoggerFactory.getLogger(PostCompletedBuildResultWebhook.class);
 	ObjectMapper mapper = new ObjectMapper();
@@ -64,8 +64,8 @@ public class PostCompletedBuildResultWebhook {
 		logger.info("url: "+url);
 		
 		ObjectNode payload = mapper.createObjectNode().put("url", url);
-		DistributedEvent evt = DistributedEvent.create().topic("ci.jenkins.post-build-completed").payload(payload);
-		eventSystem.publish(evt);
+		publisher.createMessage().withMessageType(BuildNotificationMessage.class).withMessageBody(payload).publish();
+		;
 		// we can call back to <url>/api/json to get actual information about the build
 		return ResponseEntity.ok(mapper.createObjectNode().put("status", "ok"));
 	}

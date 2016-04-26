@@ -39,9 +39,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.io.ByteStreams;
 
-import io.macgyver.core.event.DistributedEvent;
-import io.macgyver.core.event.DistributedEventSystem;
-import io.macgyver.core.eventbus.MacGyverAsyncEventBus;
+import io.macgyver.core.reactor.MacGyverEventPublisher;
+import reactor.bus.EventBus;
+import reactor.bus.selector.Selectors;
 
 @Controller
 public class WebHookController {
@@ -49,11 +49,11 @@ public class WebHookController {
 	public static final int WEBHOOK_MAX_BYTES_DEFAULT=500 * 1024;
 	
 	@Autowired
-	DistributedEventSystem eventSystem;
+	MacGyverEventPublisher eventPublisher;
 	
 	@Autowired
-	MacGyverAsyncEventBus eventBus;
-
+	EventBus eventBus;
+	
 	static org.slf4j.Logger logger = LoggerFactory
 			.getLogger(WebHookController.class);
 
@@ -72,7 +72,9 @@ public class WebHookController {
 
 	@PostConstruct
 	public void registerLogger() {
-		eventBus.register(new WebHookLogReceiver());
+		eventBus.on(Selectors.T(GitHubWebHookMessage.class),c-> {
+			logger.info("received {}",c);
+		});
 	}
 
 	@RequestMapping(value = "/api/plugin/github/webhook", method = RequestMethod.POST, consumes = "application/json")
@@ -95,10 +97,8 @@ public class WebHookController {
 	
 		if (isAuthenticated(event, request)) {
 		
-			DistributedEvent de = DistributedEvent.create().topic("github.webhook").payload(event.getPayload());
-			eventSystem.publish(de);
-			eventBus.post(event);
-
+			eventPublisher.createMessage().withMessageType(GitHubWebHookMessage.class).withMessageBody(event.getPayload()).publish();
+			
 			JsonNode returnNode = new ObjectMapper().createObjectNode().put(
 					"success", "true");
 			return new ResponseEntity<JsonNode>(returnNode, HttpStatus.OK);

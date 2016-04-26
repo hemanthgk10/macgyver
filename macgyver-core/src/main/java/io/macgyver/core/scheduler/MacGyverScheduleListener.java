@@ -24,7 +24,7 @@ import com.google.common.hash.Hashing;
 
 import io.macgyver.core.Kernel;
 import io.macgyver.core.log.EventLogger;
-import io.macgyver.core.log.Neo4jEventLogger;
+import io.macgyver.core.log.Neo4jEventLogWriterImpl;
 import it.sauronsoftware.cron4j.SchedulerListener;
 import it.sauronsoftware.cron4j.Task;
 import it.sauronsoftware.cron4j.TaskExecutor;

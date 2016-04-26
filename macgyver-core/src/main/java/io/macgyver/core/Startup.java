@@ -13,29 +13,25 @@
  */
 package io.macgyver.core;
 
+import java.io.IOException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
+
 import io.macgyver.core.auth.InternalAuthenticationProvider;
-import io.macgyver.core.eventbus.MacGyverEventBus;
 import io.macgyver.core.resource.Resource;
 import io.macgyver.core.script.ExtensionResourceProvider;
 import io.macgyver.core.script.ScriptExecutor;
 import io.macgyver.core.service.ServiceRegistry;
 
-import java.io.IOException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.ContextRefreshedEvent;
-
-import com.google.common.eventbus.Subscribe;
-
-public class Startup implements InitializingBean {
+public class Startup implements ApplicationListener<ContextRefreshedEvent> {
 
 	Logger logger = LoggerFactory.getLogger(Startup.class);
 
-	@Autowired
-	MacGyverEventBus bus;
+
 
 	@Autowired
 	Kernel kernel;
@@ -49,24 +45,9 @@ public class Startup implements InitializingBean {
 	@Autowired
 	ExtensionResourceProvider resourceLoader;
 	
-	@Subscribe
-	public void onStart(ContextRefreshedEvent event) throws IOException {
-		if (kernel.getApplicationContext() != event.getSource()) {
-			return;
-		}
-		logger.info("STARTED: {}", event);
-		
-		registry.startAfterSpringContextInitialized();
-		runInitScripts();
-		
-	}
-
-	@Override
-	public void afterPropertiesSet() throws Exception {
-		bus.register(this);
 
 
-	}
+
 
 	public void runInitScripts() throws IOException {
 		
@@ -96,6 +77,25 @@ public class Startup implements InitializingBean {
 		} else {
 			logger.info("ignoring file in init script dir: {}", resource);
 		}
+	}
+
+
+
+	@Override
+	public void onApplicationEvent(ContextRefreshedEvent event) {
+		try {
+		if (kernel.getApplicationContext() != event.getSource()) {
+			return;
+		}
+		logger.info("STARTED: {}", event);
+		
+		registry.startAfterSpringContextInitialized();
+		runInitScripts();
+		}
+		catch (IOException e) {
+			throw new MacGyverException(e);
+		}
+		
 	}
 
 	

@@ -11,22 +11,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.macgyver.core.eventbus;
+package io.macgyver.plugin.cmdb;
 
-import java.util.concurrent.Executor;
+import io.macgyver.core.reactor.MacGyverMessage;
 
-import com.google.common.eventbus.AsyncEventBus;
+public class AppInstanceMessage extends MacGyverMessage {
 
-public class MacGyverAsyncEventBus extends AsyncEventBus {
+	public static class AppInstanceDiscoveryMessage extends AppInstanceMessage {
 
-	public MacGyverAsyncEventBus(Executor executor) {
-		super(executor);
-		
 	}
 
-	public MacGyverAsyncEventBus(String identifier, Executor executor) {
-		super(identifier, executor);
+	public static class AppInstanceStartMessage extends AppInstanceMessage {
+
+	}
 	
-	}
+	public static class AppInstanceRevisionUpdateMessage extends AppInstanceMessage {
 
+	}
+	public static class AppInstanceVersionUpdateMessage extends AppInstanceMessage {
+
+	}
 }

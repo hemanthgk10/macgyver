@@ -11,10 +11,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.macgyver.core.eventbus;
+package io.macgyver.plugin.ci.jenkins;
 
-import com.google.common.eventbus.EventBus;
+import io.macgyver.core.reactor.MacGyverMessage;
 
-public class MacGyverEventBus extends EventBus {
+public class JenkinsNotificationMessage extends MacGyverMessage {
 
+	public static class ProjectNotificationMessage extends JenkinsNotificationMessage {
+
+	}
+	
+
+	public static class BuildNotificationMessage extends JenkinsNotificationMessage {
+
+	}
+
+	public static class QueueNotificationMessage extends JenkinsNotificationMessage {
+
+	}
+	
 }

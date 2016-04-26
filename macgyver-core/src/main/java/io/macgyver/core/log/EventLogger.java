@@ -20,52 +20,55 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Preconditions;
 
-import io.macgyver.core.event.DistributedEvent;
-import io.macgyver.core.event.DistributedEventSystem;
+import io.macgyver.core.reactor.MacGyverEventPublisher;
+import io.macgyver.core.reactor.MacGyverMessage;
 
-public abstract class EventLogger {
+public final class EventLogger {
 
 	Logger logger = LoggerFactory.getLogger(EventLogger.class);
 
 	@Autowired
-	DistributedEventSystem distributedEventSystem;
-
+	MacGyverEventPublisher publisher;
+	
 	ObjectMapper mapper = new ObjectMapper();
+	public static class LogMessage extends MacGyverMessage {
 
-	public class Event {
+	}
+
+	public class LogEventBuilder  {
 		ObjectNode data = mapper.createObjectNode();
 		String label = null;
 		Instant instant = null;
 
-		public Event withProperty(String key, String val) {
+		public LogEventBuilder withProperty(String key, String val) {
 			data.put(key, val);
 			return this;
 		}
 
-		public Event withMessage(String message) {
+		public LogEventBuilder withMessage(String message) {
 			return withProperty("message", message);
 		}
 
-		public Event withLabel(String label) {
+		public LogEventBuilder withLabel(String label) {
 			this.label = label;
 			return this;
 		}
 
-		public Event withTimestamp(Instant instant) {
+		public LogEventBuilder withTimestamp(Instant instant) {
 			this.instant = instant;
 			return this;
 		}
 
-		public Event withTimestamp(long timestamp) {
+		public LogEventBuilder withTimestamp(long timestamp) {
 			this.instant = Instant.ofEpochMilli(timestamp);
 			return this;
 		}
 
-		public Event withTimestamp(Date d) {
+		public LogEventBuilder withTimestamp(Date d) {
 			this.instant = d.toInstant();
 			return this;
 		}
@@ -75,36 +78,23 @@ public abstract class EventLogger {
 		}
 	}
 
-	public Event event() {
-		return new Event();
+	public LogEventBuilder event() {
+		return new LogEventBuilder();
 	}
 
-	DistributedEvent convert(Event e) {
 
-		return DistributedEvent.create().payload(e.data);
-
-	}
-
-	protected final void logEvent(Event event) {
-		
-		// Would like to flip this around so that this logging goes through the Reactor
-		// event bus and a subscriber writes it off to neo4j 
-		
-		try {
-			// log the event to the local logging system first
-			doLogEvent(event);
-		} catch (Exception e) {
-			logger.warn("could not log event", e);
-		}
+	protected final void logEvent(LogEventBuilder event) {
 		
 		
 		try {
+		
 			// now log to the distributed system
-			distributedEventSystem.publish(convert(event));
+			Preconditions.checkNotNull(publisher);
+			publisher.createMessage(LogMessage.class).withMessageBody(event.data).publish();
 		} catch (Exception e) {
 			logger.warn("could not log event to distributed event system", e);
 		}
 	}
 
-	protected abstract void doLogEvent(Event e);
+
 }

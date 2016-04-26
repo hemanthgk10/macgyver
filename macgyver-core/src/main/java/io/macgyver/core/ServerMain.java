@@ -13,19 +13,13 @@
  */
 package io.macgyver.core;
 
-import io.macgyver.core.eventbus.MacGyverEventBus;
-import io.macgyver.core.log.EventLogger;
-
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.web.EmbeddedServletContainerAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainer;
 import org.springframework.boot.context.event.ApplicationFailedEvent;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
@@ -38,7 +32,11 @@ import org.springframework.web.context.support.ServletRequestHandledEvent;
 
 import com.google.common.collect.Lists;
 import com.sun.akuma.JavaVMArguments;
-import com.sun.akuma.Daemon;
+
+import io.macgyver.core.Kernel.ServerStartedEvent;
+import io.macgyver.core.log.EventLogger;
+import reactor.bus.Event;
+import reactor.bus.EventBus;
 
 /**
  * Simple wrapper to start server.
@@ -72,7 +70,7 @@ public class ServerMain {
 			logger.info("process not daemonized; set -Dmacgyver.daemon=true to daemonize (EXPERIMENTAL)");
 		}
 
-		ApplicationListener<ApplicationEvent> x = new ApplicationListener<ApplicationEvent>() {
+		ApplicationListener<ApplicationEvent> defaultListener = new ApplicationListener<ApplicationEvent>() {
 
 			@Override
 			public void onApplicationEvent(ApplicationEvent event) {
@@ -91,23 +89,33 @@ public class ServerMain {
 					// it at info
 					logger.info("onApplicationEvent({})", event);
 				}
-				if (event instanceof ApplicationFailedEvent) {
-					logger.error("Application failed to start.  Process will exit.");
-					System.exit(99);
-
-				}
+				
 
 			}
 		};
+		
+		ApplicationListener<ApplicationFailedEvent> failedEventListener = new ApplicationListener<ApplicationFailedEvent>() {
+
+			@Override
+			public void onApplicationEvent(ApplicationFailedEvent arg0) {
+				logger.error("Application failed to start.  Process will exit.");
+				System.exit(99);			
+			}
+		};
+		
 		ConfigurableApplicationContext ctx = new SpringApplicationBuilder().sources(ServerMain.class)
-				.initializers(new SpringContextInitializer()).listeners(x).run(args);
+				.initializers(new SpringContextInitializer()).listeners(failedEventListener,defaultListener).run(args);
 
 		Environment env = ctx.getEnvironment();
 
 		logger.info("spring environment: {}", env);
-		Kernel.getApplicationContext().getBean(MacGyverEventBus.class)
-				.post(new Kernel.ServerStartedEvent(Kernel.getInstance()));
 		
+		ServerStartedEvent serverStartedEvent = new Kernel.ServerStartedEvent(Kernel.getInstance());
+		
+		Kernel.getApplicationContext().getBean(EventBus.class)
+				.notify(ServerStartedEvent.class,Event.wrap(serverStartedEvent));
+		
+		Kernel.getApplicationContext().getBean(EventBus.class).notify(serverStartedEvent,Event.wrap(serverStartedEvent));
 	
 		logger.info("\n\n\n"+  
 		Bootstrap.getBannerText()+

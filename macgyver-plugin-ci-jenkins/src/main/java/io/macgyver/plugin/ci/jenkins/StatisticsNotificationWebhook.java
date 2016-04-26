@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,8 +30,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.macgyver.core.event.DistributedEvent;
-import io.macgyver.core.event.DistributedEventSystem;
+import io.macgyver.core.reactor.MacGyverEventPublisher;
+import io.macgyver.core.reactor.MacGyverMessage;
+import io.macgyver.plugin.ci.jenkins.JenkinsNotificationMessage.BuildNotificationMessage;
+import io.macgyver.plugin.ci.jenkins.JenkinsNotificationMessage.ProjectNotificationMessage;
+import io.macgyver.plugin.ci.jenkins.JenkinsNotificationMessage.QueueNotificationMessage;
 
 /**
  * Webhook for the Jenkins Statistics Notification Plugin
@@ -46,10 +49,13 @@ import io.macgyver.core.event.DistributedEventSystem;
 public class StatisticsNotificationWebhook {
 
 	@Autowired
-	DistributedEventSystem distributedEventSystem;
-	
+	MacGyverEventPublisher publisher;
+
 	Logger logger = LoggerFactory.getLogger(StatisticsNotificationWebhook.class);
 	ObjectMapper mapper = new ObjectMapper();
+
+
+
 
 	public StatisticsNotificationWebhook() {
 		// TODO Auto-generated constructor stub
@@ -61,12 +67,7 @@ public class StatisticsNotificationWebhook {
 	public ResponseEntity<JsonNode> builds(@RequestBody JsonNode payload, HttpServletRequest request)
 			throws IOException {
 
-		logger.info("received builds webhook: " + mapper.writerWithDefaultPrettyPrinter().writeValueAsString(payload));
-		
-		
-		DistributedEvent evt = DistributedEvent.create().topic("ci.jenkins.builds").payload(payload);
-		distributedEventSystem.publish(evt);
-		
+		publisher.createMessage(BuildNotificationMessage.class).withMessageBody(payload).publish();
 		return ResponseEntity.ok(mapper.createObjectNode().put("status", "ok"));
 	}
 
@@ -76,11 +77,8 @@ public class StatisticsNotificationWebhook {
 	public ResponseEntity<JsonNode> statisticsNotificationQueues(@RequestBody JsonNode payload,
 			HttpServletRequest request) throws IOException {
 
-		logger.info("received queues webhook: " + mapper.writerWithDefaultPrettyPrinter().writeValueAsString(payload));
-		
-		DistributedEvent evt = DistributedEvent.create().topic("ci.jenkins.queues").payload(payload);
-		distributedEventSystem.publish(evt);
-		
+		publisher.createMessage(QueueNotificationMessage.class).withMessageBody(payload).publish();
+
 		return ResponseEntity.ok(mapper.createObjectNode().put("status", "ok"));
 	}
 
@@ -90,9 +88,8 @@ public class StatisticsNotificationWebhook {
 	public ResponseEntity<JsonNode> statisticsNotificationProjects(@RequestBody JsonNode payload,
 			HttpServletRequest request) throws IOException {
 
-		logger.info("received projects webhook: " + mapper.writerWithDefaultPrettyPrinter().writeValueAsString(payload));
-		DistributedEvent evt = DistributedEvent.create().topic("ci.jenkins.projects").payload(payload);
-		distributedEventSystem.publish(evt);
+		publisher.createMessage(ProjectNotificationMessage.class).withMessageBody(payload).publish();
+
 		return ResponseEntity.ok(mapper.createObjectNode().put("status", "ok"));
 	}
 

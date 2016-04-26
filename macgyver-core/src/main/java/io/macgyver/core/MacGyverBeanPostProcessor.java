@@ -11,9 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.macgyver.core.eventbus;
-
-import io.macgyver.core.ContextRefreshApplicationListener;
+package io.macgyver.core;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,16 +23,11 @@ import org.springframework.context.ApplicationContextAware;
 
 import com.google.common.eventbus.EventBus;
 
-public class EventBusPostProcessor implements BeanPostProcessor,
+public class MacGyverBeanPostProcessor implements BeanPostProcessor,
 		ApplicationContextAware {
 
 	Logger log = LoggerFactory.getLogger(getClass());
 
-	@Autowired
-	MacGyverEventBus eventBus;
-
-	@Autowired
-	MacGyverAsyncEventBus asyncBus;
 	
 	private ApplicationContext ctx;
 
@@ -49,16 +42,7 @@ public class EventBusPostProcessor implements BeanPostProcessor,
 	public Object postProcessAfterInitialization(Object bean, String beanName)
 			throws BeansException {
 
-		if (bean!=this && !(bean instanceof EventBus) && !(bean instanceof ContextRefreshApplicationListener)) {
-			Package p = bean.getClass().getPackage();
-			
-			if (p!=null) {
-				log.trace("registering spring bean {} with {}", beanName,
-						eventBus);
-				eventBus.register(bean);
-				asyncBus.register(bean);
-			}
-		}
+		// do nothing for now
 		return bean;
 	}
 

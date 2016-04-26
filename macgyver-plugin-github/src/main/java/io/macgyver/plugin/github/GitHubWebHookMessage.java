@@ -11,21 +11,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.macgyver.core.event;
+package io.macgyver.plugin.github;
 
-import org.assertj.core.api.Assertions;
-import org.junit.Test;
+import io.macgyver.core.reactor.MacGyverMessage;
 
-public class DistributedEventTest {
-
-	@Test
-	public void testIt() {
-		
-		DistributedEvent x = new DistributedEvent();
-		
-		Assertions.assertThat(x.getTimestamp()).isEqualTo(x.getJson().path("ts").asLong());
-		Assertions.assertThat(Math.abs(x.getJson().path("ts").asLong()-System.currentTimeMillis())).isLessThan(500);
-		
-	}
+public class GitHubWebHookMessage extends MacGyverMessage {
 
 }
