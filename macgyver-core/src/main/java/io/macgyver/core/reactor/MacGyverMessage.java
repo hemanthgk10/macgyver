@@ -13,6 +13,8 @@
  */
 package io.macgyver.core.reactor;
 
+import java.time.Instant;
+import java.util.Date;
 import java.util.Optional;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -27,6 +29,8 @@ public class MacGyverMessage {
 	
 	private JsonNode data = mapper.createObjectNode();
 	
+	private Instant timestamp = Instant.now();
+	
 	public MacGyverMessage() {
 		
 	}
@@ -37,8 +41,26 @@ public class MacGyverMessage {
 		return this;
 	}
 
-	public JsonNode getJsonNode() {
+	public JsonNode getData() {
 		return data;
+	}
+	public MacGyverMessage withTimestamp(long instant) {
+	
+		return withTimestamp( Instant.ofEpochMilli(instant));
+	
+	}
+	
+	public Instant getTimestamp() {
+		return timestamp;
+	}
+	public MacGyverMessage withTimestamp(Instant instant) {
+		Preconditions.checkNotNull(instant);
+		this.timestamp = instant;
+		return this;
+	}
+	public MacGyverMessage withTimestamp(Date instant) {
+		Preconditions.checkNotNull(instant);
+		return withTimestamp(instant.getTime());
 	}
 	
 	public MacGyverMessage withAttribute(String key, String val) {

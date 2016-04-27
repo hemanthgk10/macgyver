@@ -55,7 +55,7 @@ import io.macgyver.core.cluster.ClusterManager;
 import io.macgyver.core.cluster.NeoRxTcpDiscoveryIpFinder;
 import io.macgyver.core.crypto.Crypto;
 import io.macgyver.core.log.EventLogger;
-import io.macgyver.core.log.Neo4jEventLogWriterImpl;
+import io.macgyver.core.log.Neo4jEventLogWriter;
 import io.macgyver.core.reactor.MacGyverEventPublisher;
 import io.macgyver.core.resource.provider.filesystem.FileSystemResourceProvider;
 import io.macgyver.core.scheduler.ScheduledTaskManager;
@@ -286,8 +286,8 @@ public class CoreConfig implements EnvironmentAware {
 	}
 
 	@Bean
-	public Neo4jEventLogWriterImpl macEventLogWriter() {
-		return new Neo4jEventLogWriterImpl();
+	public Neo4jEventLogWriter macEventLogWriter() {
+		return new Neo4jEventLogWriter();
 	}
 	
 	@Bean

@@ -34,11 +34,11 @@ import reactor.bus.EventBus;
 import reactor.bus.selector.Selectors;
 import reactor.fn.Consumer;
 
-public class Neo4jEventLogWriterImpl implements InitializingBean {
+public class Neo4jEventLogWriter implements InitializingBean {
 
 	public static final String EVENT_LOG_LABEL = "EventLog";
 
-	Logger logger = LoggerFactory.getLogger(Neo4jEventLogWriterImpl.class);
+	Logger logger = LoggerFactory.getLogger(Neo4jEventLogWriter.class);
 
 	@Autowired
 	NeoRxClient neo4j;
@@ -46,15 +46,26 @@ public class Neo4jEventLogWriterImpl implements InitializingBean {
 	@Autowired
 	EventBus eventBus;
 
+	DateTimeFormatter utcFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX")
+	.withZone(ZoneOffset.UTC);
+	
 	protected void applyTimestamp(Instant instant, ObjectNode n) {
 		if (instant == null) {
-			instant = Instant.now();
+			
+		
+				long ts = n.path("eventTs").asLong();
+				if (ts<=0) {
+					instant = Instant.now();
+				}
+				else {
+					instant = Instant.ofEpochMilli(ts);
+				}
+			
 		}
 
 		n.put("eventTs", instant.toEpochMilli());
 
-		n.put("eventDate", DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX")
-				.withZone(ZoneOffset.UTC)
+		n.put("eventDate", utcFormatter
 				.format(instant));
 	}
 
@@ -79,16 +90,17 @@ public class Neo4jEventLogWriterImpl implements InitializingBean {
 				logger.info("writing log message: {}", logEvent);
 				if (neo4j != null) {
 					String labelClause = "";
-					String label = logEvent.getData().getJsonNode().path("label").asText();
+					String label = logEvent.getData().getLabel();
 					if (!Strings.isNullOrEmpty(label)) {
 						checkLabel(label);
 						labelClause = ":" + label;
 					}
-					JsonNode n = logEvent.getData().getJsonNode();
+					JsonNode n = logEvent.getData().getData();
 					
 					try {
 						ObjectNode props = (ObjectNode) n;
-						applyTimestamp(null, props);
+										
+						applyTimestamp(logEvent.getData().getTimestamp(), props);
 
 						String cypher = "create (x:EventLog" + labelClause + ") set x={props}";
 

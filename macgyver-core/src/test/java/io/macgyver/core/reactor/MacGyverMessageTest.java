@@ -39,7 +39,7 @@ public class MacGyverMessageTest {
 		
 		Assertions.assertThat(m).isInstanceOf(TestMessage.class);
 		
-		Assertions.assertThat(m.getJsonNode().isObject()).isTrue();
+		Assertions.assertThat(m.getData().isObject()).isTrue();
 	}
 
 

@@ -13,6 +13,7 @@
  */
 package io.macgyver.core.log;
 
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -20,14 +21,17 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.data.Offset;
 import org.junit.Test;
-import org.slf4j.event.EventRecodingLogger;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import io.macgyver.core.log.EventLogger;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import io.macgyver.core.log.EventLogger.LogMessage;
+import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.test.MacGyverIntegrationTest;
 import reactor.bus.Event;
 import reactor.bus.EventBus;
+import reactor.bus.registry.Registration;
 import reactor.bus.selector.Selectors;
 
 public class EventLoggerIntegrationTest extends MacGyverIntegrationTest {
@@ -38,6 +42,9 @@ public class EventLoggerIntegrationTest extends MacGyverIntegrationTest {
 	@Autowired
 	EventLogger eventLogger;
 
+	@Autowired
+	NeoRxClient neo4j;
+	
 	@Test
 	public void testIt() throws InterruptedException {
 	
@@ -45,17 +52,40 @@ public class EventLoggerIntegrationTest extends MacGyverIntegrationTest {
 		
 		CountDownLatch latch = new CountDownLatch(1);
 		AtomicReference<Event<LogMessage>> ref = new AtomicReference<Event<LogMessage>>(null);
-		eventBus.on(Selectors.T(LogMessage.class),(Event<LogMessage> x)->{
+		Registration reg = eventBus.on(Selectors.T(LogMessage.class),(Event<LogMessage> x)->{
 			ref.set(x);
 			latch.countDown();
 		});
 		
-		eventLogger.event().withProperty("foo", "bar").log();
+		String id = UUID.randomUUID().toString();
+		
+		((LogMessage)eventLogger.event().withAttribute("foo", "bar").withAttribute("test", id)).log();
 
 		Assertions.assertThat(latch.await(10, TimeUnit.SECONDS)).isTrue();
 		
 
-		Assertions.assertThat(ref.get().getData().getJsonNode().path("foo").asText()).isEqualTo("bar");
+		Assertions.assertThat(ref.get().getData().getData().path("foo").asText()).isEqualTo("bar");
 	
+		eventBus.getConsumerRegistry().unregister(reg);
+		
+		
+		
 	}
+	
+	@Test
+	public void testEventBuilder() {
+		
+		String id = UUID.randomUUID().toString();
+		
+		ObjectNode n = new ObjectMapper().createObjectNode().put("test2", id);
+		
+		LogMessage builder = (LogMessage) eventLogger.event().withData(n);
+		
+		Assertions.assertThat(builder.getData().path("test2").asText()).isEqualTo(id);
+		
+		Assertions.assertThat(builder.getTimestamp().toEpochMilli()).isCloseTo(System.currentTimeMillis(), Offset.offset(1000L));
+		
+		Assertions.assertThat(builder.label).isNull();
+	}
+	
 }
