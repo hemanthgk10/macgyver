@@ -49,7 +49,7 @@ public class SignatureBasedWebHookAuthenticator implements WebHookAuthenticator 
 	public java.util.Optional<Boolean> authenticate(GitHubWebHookMessage message) {
 
 		try {
-			boolean b = verifySignature(message.getWebHookRawData().get(), message.getServletRequest().get(),
+			boolean b = verifySignature(message.getWebHookRawData().get(), message.getWebHookSignature().orElse(""),
 					getSecret());
 			return Optional.of(b);
 			
@@ -59,17 +59,17 @@ public class SignatureBasedWebHookAuthenticator implements WebHookAuthenticator 
 		}
 	}
 
-	protected boolean verifySignature(byte[] bytes, HttpServletRequest request,
+	protected boolean verifySignature(byte[] bytes, String signatureHeader,
 			String secret) throws InvalidKeyException, NoSuchAlgorithmException {
-		String signature = request.getHeader(HEADER_NAME);
+		
 
 		String result = calculateSha1(bytes, secret).toLowerCase();
 
-		boolean b = result.equalsIgnoreCase(signature);
+		boolean b = result.equalsIgnoreCase(signatureHeader);
 
 		if (logger.isDebugEnabled()) {
 			logger.debug("computed HMAC: {}", result);
-			logger.debug("{}: {}", HEADER_NAME, signature);
+			logger.debug("{}: {}", HEADER_NAME, signatureHeader);
 			logger.debug("HMAC match: {}", b);
 
 		}

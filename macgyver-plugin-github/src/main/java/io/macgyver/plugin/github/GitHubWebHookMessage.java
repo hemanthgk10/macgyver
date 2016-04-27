@@ -27,7 +27,7 @@ import io.macgyver.core.reactor.MacGyverMessage;
 public class GitHubWebHookMessage extends MacGyverMessage {
 	static ObjectMapper mapper = new ObjectMapper();
 
-	HttpServletRequest request;
+
 	byte[] rawData;
 
 	String signature;
@@ -36,7 +36,7 @@ public class GitHubWebHookMessage extends MacGyverMessage {
 	
 	
 	public GitHubWebHookMessage(HttpServletRequest request) throws IOException {
-		this.request = request;
+
 		this.rawData = ByteStreams.toByteArray(request.getInputStream());
 		
 		// https://developer.github.com/webhooks/#delivery-headers
@@ -51,9 +51,7 @@ public class GitHubWebHookMessage extends MacGyverMessage {
 	
 	}
 	
-	public Optional<HttpServletRequest> getServletRequest() {
-		return Optional.ofNullable(request);
-	}
+
 	public Optional<String> getWebHookDeliveryId() {
 		return Optional.ofNullable(deliveryId);
 	}

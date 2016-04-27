@@ -185,7 +185,7 @@ public class GitHubWebHookMessageTest {
 		GitHubWebHookMessage m = new GitHubWebHookMessage(request);
 		
 		Assertions.assertThat(m.getWebHookRawData()).isNotNull();
-		Assertions.assertThat(m.getServletRequest().get()).isSameAs(request);
+
 		Assertions.assertThat(m.getData().path("sender").path("login").asText()).isEqualTo("baxterthehacker");
 	}
 }
