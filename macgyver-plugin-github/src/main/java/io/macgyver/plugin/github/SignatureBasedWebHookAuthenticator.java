@@ -16,6 +16,7 @@ package io.macgyver.plugin.github;
 import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Optional;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -24,11 +25,11 @@ import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
+
 import com.google.common.base.Preconditions;
 import com.google.common.io.BaseEncoding;
 
-public class SignatureBasedWebHookAuthenticator extends WebHookAuthenticator {
+public class SignatureBasedWebHookAuthenticator implements WebHookAuthenticator {
 
 	public static final String HEADER_NAME = "X-Hub-Signature";
 	Logger logger = LoggerFactory
@@ -45,21 +46,16 @@ public class SignatureBasedWebHookAuthenticator extends WebHookAuthenticator {
 		return secret;
 	}
 
-	public Optional<Boolean> authenticate(WebHookEvent event,
-			HttpServletRequest request) {
+	public java.util.Optional<Boolean> authenticate(GitHubWebHookMessage message) {
 
 		try {
-			boolean b = verifySignature(event.getRawData(), request,
+			boolean b = verifySignature(message.getWebHookRawData().get(), message.getServletRequest().get(),
 					getSecret());
-
-			if (b == false) {
-				return Optional.absent();
-			} else {
-				return Optional.of(true);
-			}
-		} catch (GeneralSecurityException e) {
-			logger.warn("", e);
-			return Optional.absent();
+			return Optional.of(b);
+			
+		} catch (GeneralSecurityException | RuntimeException e) {
+			logger.warn("problem authenticating request", e);
+			return Optional.empty();
 		}
 	}
 
@@ -73,8 +69,8 @@ public class SignatureBasedWebHookAuthenticator extends WebHookAuthenticator {
 
 		if (logger.isDebugEnabled()) {
 			logger.debug("computed HMAC: {}", result);
-			logger.info("{}: {}", HEADER_NAME, signature);
-			logger.info("HMAC match: {}", b);
+			logger.debug("{}: {}", HEADER_NAME, signature);
+			logger.debug("HMAC match: {}", b);
 
 		}
 

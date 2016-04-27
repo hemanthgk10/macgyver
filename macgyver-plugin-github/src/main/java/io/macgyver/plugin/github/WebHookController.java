@@ -63,12 +63,7 @@ public class WebHookController {
 	
 	int webhookMaxBytes = WEBHOOK_MAX_BYTES_DEFAULT;
 	
-	public static class WebHookLogReceiver {
-		@Subscribe
-		public void testIt(WebHookEvent evt) {
-			logger.info("received: {}", evt);
-		}
-	}
+
 
 	@PostConstruct
 	public void registerLogger() {
@@ -91,13 +86,13 @@ public class WebHookController {
 					HttpStatus.UNAUTHORIZED);	
 		}
 		
-		byte[] bytes = ByteStreams.toByteArray(request.getInputStream());
-
-		WebHookEvent event = new WebHookEvent(bytes);
-	
-		if (isAuthenticated(event, request)) {
 		
-			eventPublisher.createMessage().withMessageType(GitHubWebHookMessage.class).withMessageBody(event.getPayload()).publish();
+
+		GitHubWebHookMessage event = new GitHubWebHookMessage(request);
+	
+		if (isAuthenticated(event)) {
+		
+			eventPublisher.createMessage().withMessage(event).publish();
 			
 			JsonNode returnNode = new ObjectMapper().createObjectNode().put(
 					"success", "true");
@@ -112,21 +107,21 @@ public class WebHookController {
 
 	}
 
-	boolean isAuthenticated(WebHookEvent event, HttpServletRequest request) {
+	boolean isAuthenticated(GitHubWebHookMessage event) {
 		
-		if (authenticatorList.isEmpty()) {
+		if (authenticatorList==null || authenticatorList.isEmpty()) {
 			// if no authenticators are set up, assume we want to just trust everything
 			return true;
 		}
 		
 		for (WebHookAuthenticator auth: authenticatorList) {
 		
-			Optional<Boolean> b = auth.authenticate(event, request);
-			if (b.isPresent()) {
+			java.util.Optional<Boolean> b = auth.authenticate(event);
+			if (b.isPresent() && (! b.get().booleanValue())) {
 				return b.get();
 			}
 		}
-		return false;
+		return true;
 	}
 
 	public void addAuthenticator(WebHookAuthenticator auth) {
