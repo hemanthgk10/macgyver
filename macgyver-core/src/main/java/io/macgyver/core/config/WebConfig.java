@@ -56,7 +56,6 @@ import io.macgyver.core.web.vaadin.MacGyverUI;
 import io.macgyver.core.web.vaadin.MacGyverVaadinServlet;
 import io.macgyver.core.web.vaadin.UIMigrator;
 import io.macgyver.core.web.vaadin.ViewDecorators;
-import io.macgyver.core.web.vaadin.views.admin.AdminPlugin;
 
 
 @Configuration
@@ -126,10 +125,7 @@ public class WebConfig implements EnvironmentAware {
 		return new ViewDecorators();
 	}
 
-	@Bean
-	public AdminPlugin macAdminUIDecorator() {
-		return new AdminPlugin();
-	}
+	
 
 	@Bean
 	public EmbeddedServletContainerCustomizer macAccessLogCustomizer() {
