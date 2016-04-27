@@ -58,11 +58,11 @@ public class ReactorIntegrationTest extends MacGyverIntegrationTest {
 			latch.countDown();
 		});
 		
-		eventLogger.event().withProperty("foo", "bar").log();
+		((LogMessage)eventLogger.event().withAttribute("foo", "bar")).log();
 
 		Assertions.assertThat(latch.await(10, TimeUnit.SECONDS)).isTrue();
 		
-		Assertions.assertThat(ref.get().getData().getJsonNode().path("foo").asText()).isEqualTo("bar");
+		Assertions.assertThat(ref.get().getData().getData().path("foo").asText()).isEqualTo("bar");
 	}
 
 	@Test

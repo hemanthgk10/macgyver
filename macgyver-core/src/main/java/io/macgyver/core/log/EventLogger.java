@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Preconditions;
@@ -35,64 +36,46 @@ public final class EventLogger {
 	MacGyverEventPublisher publisher;
 	
 	ObjectMapper mapper = new ObjectMapper();
-	public static class LogMessage extends MacGyverMessage {
 
-	}
-
-	public class LogEventBuilder  {
-		ObjectNode data = mapper.createObjectNode();
-		String label = null;
-		Instant instant = null;
-
-		public LogEventBuilder withProperty(String key, String val) {
-			data.put(key, val);
-			return this;
-		}
-
-		public LogEventBuilder withMessage(String message) {
-			return withProperty("message", message);
-		}
-
-		public LogEventBuilder withLabel(String label) {
+	
+	public class LogMessage extends MacGyverMessage {
+		String label=null;
+		boolean sent=false;
+		public LogMessage withLabel(String label) {
 			this.label = label;
 			return this;
 		}
-
-		public LogEventBuilder withTimestamp(Instant instant) {
-			this.instant = instant;
-			return this;
+		public String getLabel() {
+			return label;
 		}
-
-		public LogEventBuilder withTimestamp(long timestamp) {
-			this.instant = Instant.ofEpochMilli(timestamp);
-			return this;
+		public LogMessage withMessage(String msg) {
+			return (LogMessage) withAttribute("message", msg);
 		}
-
-		public LogEventBuilder withTimestamp(Date d) {
-			this.instant = d.toInstant();
-			return this;
-		}
-
+		
 		public void log() {
 			logEvent(this);
 		}
 	}
 
-	public LogEventBuilder event() {
-		return new LogEventBuilder();
+
+
+	public LogMessage event() {
+		return new LogMessage();
 	}
 
 
-	protected final void logEvent(LogEventBuilder event) {
+	protected final void logEvent(LogMessage event) {
 		
 		
 		try {
 		
 			// now log to the distributed system
 			Preconditions.checkNotNull(publisher);
-			publisher.createMessage(LogMessage.class).withMessageBody(event.data).publish();
-		} catch (Exception e) {
-			logger.warn("could not log event to distributed event system", e);
+			Preconditions.checkState(event.sent==false,"event already published");
+			publisher.createMessage().withMessage(event).publish();
+			event.sent=true;
+		} catch (RuntimeException e) {
+			logger.warn("could not publish log event", e);
 		}
 	}
 
