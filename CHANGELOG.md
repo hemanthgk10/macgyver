@@ -1,5 +1,13 @@
 ## Changes
 
+### 1.0.2
+* Expose hook URL path in GitHubWebHookMessage
+
+### 1.0.1
+* Reactor event refactoring
+* GitHub web hook event cleanup
+* Got bored of version <1
+
 ### 0.107.0
 * Add Project Reactor
 * Simplified the Distributed Event Log

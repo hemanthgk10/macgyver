@@ -181,11 +181,13 @@ public class GitHubWebHookMessageTest {
 		request.setContentType("application/json");
 		request.addHeader("X-GitHub-Event", "push");
 		request.setContent(s.getBytes());
+		request.setRequestURI("/foo/bar/baz");
 		
 		GitHubWebHookMessage m = new GitHubWebHookMessage(request);
 		
 		Assertions.assertThat(m.getWebHookRawData()).isNotNull();
 
 		Assertions.assertThat(m.getData().path("sender").path("login").asText()).isEqualTo("baxterthehacker");
+		Assertions.assertThat(m.getWebHookRequestURI().get()).isEqualTo("/foo/bar/baz");
 	}
 }

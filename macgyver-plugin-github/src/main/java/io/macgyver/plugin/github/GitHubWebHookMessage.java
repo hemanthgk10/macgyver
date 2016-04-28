@@ -33,25 +33,30 @@ public class GitHubWebHookMessage extends MacGyverMessage {
 	String signature;
 	String deliveryId;
 	String eventType;
-	
+	String requestUri;
 	
 	public GitHubWebHookMessage(HttpServletRequest request) throws IOException {
 
+		// We capture the raw byte data because we need it to compute payload signatures. Otherwise
+		// this is useless.
 		this.rawData = ByteStreams.toByteArray(request.getInputStream());
+		withData(mapper.readTree(this.rawData));
 		
 		// https://developer.github.com/webhooks/#delivery-headers
-		
 		signature = request.getHeader("X-Hub-Signature");
 		deliveryId = request.getHeader("X-GitHub-Delivery");
 		eventType = request.getHeader("X-GitHub-Event");
 		
-		withData(mapper.readTree(this.rawData));
+		// Note that it is *not* possible to store the servlet request in this message.  This message 
+		// is likely being processed in another thread and possibly after the HttpServletRequest has gone
+		// out of scope.  All we really need is the few headers that we care about.
+		
+		requestUri = request.getRequestURI();
 		
 		
-	
+		
 	}
 	
-
 	public Optional<String> getWebHookDeliveryId() {
 		return Optional.ofNullable(deliveryId);
 	}
@@ -66,6 +71,9 @@ public class GitHubWebHookMessage extends MacGyverMessage {
 	
 	public Optional<byte []> getWebHookRawData() {
 		return Optional.ofNullable(rawData);
+	}
+	public Optional<String> getWebHookRequestURI() {
+		return Optional.ofNullable(requestUri);
 	}
 	
 	public String toString() {
