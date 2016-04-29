@@ -87,15 +87,12 @@ public class DatabaseDefinitionLoader extends AbstractCatalogLoader {
 		neo4j.execCypher(cypher, "id",name,"error",error.toString());	
 	}
 
-	public void importAll() {
+	public void doImportAll() {
 		Observable.from(providers).flatMap(new ProviderMapper()).flatMap(new HJsonJobMapper())
 				.forEach(new DatabaseDefinitionWriter());
 
 	}
 
-	@Subscribe
-	public void start(Kernel.ServerStartedEvent event) {
-		discoverResourceProviders();
-	}
+
 
 }

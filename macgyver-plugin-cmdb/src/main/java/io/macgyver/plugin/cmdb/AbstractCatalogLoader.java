@@ -105,8 +105,13 @@ public abstract class AbstractCatalogLoader {
 		}
 
 	}
-	public abstract void importAll();
+	public abstract void doImportAll();
 	
+	protected void importAll() {
+		clearResourceProviders();
+		discoverResourceProviders();
+		doImportAll();
+	}
 	
 	public final void recordParseError(String name, Resource resource, Throwable error) {
 		try {

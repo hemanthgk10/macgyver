@@ -94,8 +94,11 @@ public final class EventLogger {
 
 			// now log to the distributed system
 			Preconditions.checkNotNull(publisher);
+			Preconditions.checkNotNull(event,"event cannot be null");
 			Preconditions.checkState(event.sent == false, "event already published");
-			if (!event.getData().has("sourceHost")) {
+			JsonNode data = event.getData();
+			logger.info("logEvent data: {}",data);
+			if (!data.has("sourceHost")) {
 				event.withAttribute("sourceHost", sourceHostSupplier.get());
 			}
 			publisher.createMessage().withMessage(event).publish();

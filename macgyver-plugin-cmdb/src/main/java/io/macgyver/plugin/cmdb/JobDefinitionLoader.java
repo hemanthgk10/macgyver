@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Preconditions;
-import com.google.common.eventbus.Subscribe;
 
 import io.macgyver.core.Kernel;
 import io.macgyver.core.resource.Resource;
@@ -107,7 +106,7 @@ public class JobDefinitionLoader extends AbstractCatalogLoader {
 
 
 
-	public void importAll() {
+	public void doImportAll() {
 		Observable.from(providers).flatMap(new  ProviderMapper()).flatMap(new HJsonJobMapper())
 				.forEach(new JobDefinitionWriter());
 		
