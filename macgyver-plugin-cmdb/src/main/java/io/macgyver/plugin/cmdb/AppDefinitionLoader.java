@@ -86,10 +86,7 @@ public class AppDefinitionLoader extends AbstractCatalogLoader {
 
 	}
 
-	@Subscribe
-	public void start(Kernel.ServerStartedEvent event) {
-		discoverResourceProviders();
-	}
+
 
 	@Override
 	public void doRecordParseError(String name, Resource resource, Throwable error) {

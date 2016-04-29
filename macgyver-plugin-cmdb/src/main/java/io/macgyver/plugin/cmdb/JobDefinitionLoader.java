@@ -113,10 +113,6 @@ public class JobDefinitionLoader extends AbstractCatalogLoader {
 	}
 
 
-	@Subscribe
-	public void start(Kernel.ServerStartedEvent event) {
-		discoverResourceProviders();
-	}
 
 
 	@Override
