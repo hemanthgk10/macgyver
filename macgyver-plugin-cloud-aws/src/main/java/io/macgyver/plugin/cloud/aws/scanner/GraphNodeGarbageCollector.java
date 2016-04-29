@@ -68,7 +68,7 @@ public class GraphNodeGarbageCollector {
 		Preconditions.checkArgument(!Strings.isNullOrEmpty(account),"account not set");
 		Preconditions.checkArgument(!Strings.isNullOrEmpty(region),"region not set");
 		
-		logger.info("purging all {} nodes in aws_account={} in region={} updated before {}",label,account,region,ts);
+		logger.debug("purging all {} nodes in aws_account={} in region={} updated before {}",label,account,region,ts);
 		
 		// With neo4j 2.3 we can collapse this into a single DETACH DELETE.  However, for now, we need two operations.
 
