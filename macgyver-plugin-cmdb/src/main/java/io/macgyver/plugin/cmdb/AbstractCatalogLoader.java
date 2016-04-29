@@ -108,8 +108,6 @@ public abstract class AbstractCatalogLoader {
 	public abstract void doImportAll();
 	
 	protected void importAll() {
-		clearResourceProviders();
-		discoverResourceProviders();
 		doImportAll();
 	}
 	
