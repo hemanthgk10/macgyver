@@ -18,6 +18,7 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 
 import io.macgyver.neorx.rest.NeoRxClient;
+import io.macgyver.neorx.rest.NeoRxClientBuilder;
 import io.macgyver.plugin.cloud.aws.AWSServiceClient;
 import io.macgyver.plugin.cloud.aws.AWSServiceClientImpl;
 
@@ -50,7 +51,7 @@ public class DefaultAWSScannerGroup extends AWSScannerGroup {
 		
 		AWSServiceClientImpl c = new AWSServiceClientImpl(new DefaultAWSCredentialsProviderChain(),"000000000000");
 	
-		NeoRxClient neo4j = new NeoRxClient();
+		NeoRxClient neo4j = new NeoRxClientBuilder().build();
 		
 		AWSScannerGroup g = new DefaultAWSScannerGroup(c, neo4j);
 		

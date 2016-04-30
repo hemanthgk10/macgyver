@@ -16,6 +16,7 @@ package io.macgyver.plugin.cloud.aws;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 
 import io.macgyver.neorx.rest.NeoRxClient;
+import io.macgyver.neorx.rest.NeoRxClientBuilder;
 import io.macgyver.plugin.cloud.aws.AWSServiceClientImpl;
 import io.macgyver.plugin.cloud.aws.scanner.DefaultAWSScannerGroup;
 
@@ -25,7 +26,7 @@ public class DefaultAWSScannerTestRunner {
 	
 	public static void main(String [] args) {
 		
-		NeoRxClient neo4j = new NeoRxClient();
+		NeoRxClient neo4j = new NeoRxClientBuilder().build();
 		
 		AWSServiceClientImpl aws = new AWSServiceClientImpl(new DefaultAWSCredentialsProviderChain());
 		aws.setAccountId("000000000000"); // 12-digit
