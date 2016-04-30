@@ -14,6 +14,7 @@
 package io.macgyver.plugin.ci.jenkins;
 
 import io.macgyver.neorx.rest.NeoRxClient;
+import io.macgyver.neorx.rest.NeoRxClientBuilder;
 import io.macgyver.plugin.ci.jenkins.decorators.GitHubDecorator;
 
 import java.io.IOException;
@@ -99,7 +100,7 @@ public class JenkinsTest {
 	public void testReal() throws InterruptedException,
 			JsonProcessingException, IOException {
 
-		NeoRxClient neo4j = new NeoRxClient();
+		NeoRxClient neo4j = new NeoRxClientBuilder().build();
 
 		JenkinsClient c = new JenkinsClientBuilder()
 				.url("https://jenkins.example.com/")
