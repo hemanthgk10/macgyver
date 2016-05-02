@@ -1,5 +1,8 @@
 ## Changes
 
+### 1.0.5
+* rx-aws 1.2.0
+
 ### 1.0.2
 * Expose hook URL path in GitHubWebHookMessage
 
