@@ -41,3 +41,5 @@ macgyver-core/lte
 *.snap
 *.wal
 /macgyver-cli/macgyver
+macgyver-core/cli
+.cli-generated

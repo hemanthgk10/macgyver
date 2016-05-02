@@ -14,30 +14,39 @@
 package io.macgyver.cli.command;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 
-import com.beust.jcommander.Parameters;
-import com.google.common.collect.Lists;
+import com.beust.jcommander.Parameter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.macgyver.cli.Command;
 
-@Parameters(hidden=true)
-public class HelpCommand extends Command {
+public class ConfigCommand extends Command {
 
+	ObjectMapper mapper = new ObjectMapper();
+	
+	@Parameter(names="--get")
+	String get;
+	
+	@Parameter(names="--get-all")
+	boolean getAll;
+	
+	@Parameter(names="--set",arity=2)
+	List<String> set;
+	
 	@Override
 	public void execute() throws IOException {
 		
-		List<String> x = Lists.newArrayList(getCLI().getCommandMap().keySet());
-		
-		Collections.sort(x);
-		
-		System.out.println("usage: macgyver <command> [args...]");
-		System.out.println("");
-		x.forEach( it -> {
-			System.out.println(it);
-		});
-
+		if (getAll) {
+			System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(getConfig()));
+		}
+		else if (get!=null) {
+			System.out.println(getConfig().path(get).asText());
+		}
+		else if (set!=null) {
+			getConfig().put(set.get(0), set.get(1));
+			getCLI().getConfigManager().saveConfig();
+		}
 	}
 
 }

@@ -51,6 +51,7 @@ import io.macgyver.core.PluginManager;
 import io.macgyver.core.ScriptHookManager;
 import io.macgyver.core.Startup;
 import io.macgyver.core.auth.UserManager;
+import io.macgyver.core.cli.CLIDownloadController;
 import io.macgyver.core.cluster.ClusterManager;
 import io.macgyver.core.cluster.NeoRxTcpDiscoveryIpFinder;
 import io.macgyver.core.crypto.Crypto;
@@ -315,5 +316,9 @@ public class CoreConfig implements EnvironmentAware {
 	@Bean
 	public MacGyverEventPublisher macEventPublisher() {
 		return new MacGyverEventPublisher();
+	}
+	@Bean
+	public CLIDownloadController macCliDownloadController() {
+		return new CLIDownloadController();
 	}
 }

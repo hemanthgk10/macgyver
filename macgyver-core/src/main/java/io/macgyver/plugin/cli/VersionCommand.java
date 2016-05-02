@@ -11,37 +11,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.macgyver.cli.command;
+package io.macgyver.plugin.cli;
 
 import java.io.IOException;
 
-import io.macgyver.okrest.OkRestResponse;
-import joptsimple.OptionParser;
+import io.macgyver.cli.Command;
 
-public class AppInstancesCommand extends Command {
-
-	@Override
-	public String getCommandName() {
-		return "app-instances";
-	}
-
-	@Override
-	public String getDescription() {
-		return "view app instances";
-	}
-
-	@Override
-	protected void configure(OptionParser p) {
-		// TODO Auto-generated method stub
-
-	}
+public class VersionCommand extends Command {
 
 	@Override
 	public void execute() throws IOException {
 		
-		OkRestResponse rr = getOkRestTarget().path("/api/cmdb/app-instances").get().execute();
-		
-		System.out.println(rr.response().body().string());
+		System.out.println("version command not yet implemented");
 
 	}
 

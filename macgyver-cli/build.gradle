@@ -19,15 +19,16 @@ configurations {
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-	mainClassName = 'io.macgyver.cli.Main'
+	mainClassName = 'io.macgyver.cli.CLI'
 
 
 task fatCapsule(type: FatCapsule, dependsOn: "compileJava" ) {
-	applicationClass 'io.macgyver.cli.Main'
+	applicationClass 'io.macgyver.cli.CLI'
 }
 
-task exeFatCapsule(dependsOn: "fatCapsule") << {
-	"bash ./makeExec.sh".execute()
+task exeFatCapsule(type:Exec, dependsOn: "fatCapsule") {
+    executable "bash"
+    args "${projectDir}/makeExec.sh"
 }
 
 distZip.dependsOn exeFatCapsule
@@ -40,15 +41,13 @@ dependencies {
 
 
     compile "com.google.guava:guava:${GUAVA_VERSION}"
-	compile 'net.sf.jopt-simple:jopt-simple:5.0'
-	compile 'io.macgyver.okrest:okrest:1.4.0'
-	
+	compile 'com.beust:jcommander:1.48'
+	compile 'io.macgyver.okrest3:okrest:3.0.3'
+
 	testCompile "org.mockito:mockito-all:${MOCKITO_VERSION}"
 	testCompile "com.squareup.okhttp3:mockwebserver:${OKHTTP3_VERSION}"
 	testCompile "junit:junit:${JUNIT_VERSION}"
-	testCompile "org.assertj:assertj-core:${ASSERTJ_VERSION}"
-
-    
+	testCompile "org.assertj:assertj-core:${ASSERTJ_VERSION}" 
 
 }
 

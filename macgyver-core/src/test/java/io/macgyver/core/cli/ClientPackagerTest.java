@@ -11,20 +11,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.macgyver.cli;
+package io.macgyver.core.cli;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.zip.ZipException;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
-import io.macgyver.cli.command.LoginCommand;
+import io.macgyver.core.cli.ClientPackager;
 
-public class LoginCommandTest {
+public class ClientPackagerTest {
 
-	
 	@Test
-	public void testIt() {
+	public void testIt() throws IOException, net.lingala.zip4j.exception.ZipException{
 		
-
-
+		ClientPackager cp = new ClientPackager();
+		
+		cp.getMacGyvverCLIExecutable().delete();
+		
+		Assertions.assertThat(cp.getMacGyvverCLIExecutable()).doesNotExist();
+		
+		File f = cp.rebuild();
+		
+		Assertions.assertThat(f).exists();
+		Assertions.assertThat(f.getAbsolutePath()).contains(".cli-generated");
 	}
 }
