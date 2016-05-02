@@ -41,13 +41,13 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
-import com.squareup.okhttp.Headers;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
-import com.squareup.okhttp.ResponseBody;
+import okhttp3.Headers;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 public class Neo4jProxyServlet extends HttpServlet {
 
@@ -67,7 +67,7 @@ public class Neo4jProxyServlet extends HttpServlet {
 	@Autowired
 	NeoRxClient neorx;
 
-	OkHttpClient client;
+	
 
 	Logger logger = LoggerFactory.getLogger(Neo4jProxyServlet.class);
 
@@ -93,32 +93,6 @@ public class Neo4jProxyServlet extends HttpServlet {
 		addMutationCypherKeyword("delete");
 		addMutationCypherKeyword("remove");
 		addMutationCypherKeyword("merge");
-	}
-
-	@PostConstruct
-	public void initializeOkHttp() {
-
-		// A little hack until we expose the underlying client from NeoRx
-		Class<NeoRxClient> clientClass = NeoRxClient.class;
-		for (Field f : NeoRxClient.class.getDeclaredFields()) {
-			if (OkHttpClient.class.isAssignableFrom(f.getType())) {
-				try {
-					f.setAccessible(true);
-					OkHttpClient c = (OkHttpClient) f.get(neorx);
-					this.client = c;
-
-
-
-				} catch (IllegalAccessException e) {
-					logger.warn("",e);
-				}
-			}
-
-		}
-		if (client==null) {
-			logger.warn("OkHttpClient for proxy connection not available");
-		}
-
 	}
 
 	public void addMutationCypherKeyword(String keyword) {
@@ -171,7 +145,7 @@ public class Neo4jProxyServlet extends HttpServlet {
 
 			Request.Builder rb = buildProxyRequest(req);
 
-			Response r = client.newCall(rb.build()).execute();
+			Response r = neorx.getOkHttpClient().newCall(rb.build()).execute();
 
 			proxyResponse(r, resp);
 		} catch (UnauthorizedException e) {
