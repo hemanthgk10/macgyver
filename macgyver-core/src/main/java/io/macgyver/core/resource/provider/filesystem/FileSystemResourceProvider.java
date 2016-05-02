@@ -41,8 +41,7 @@ public class FileSystemResourceProvider extends ResourceProvider {
 
 	public boolean isApprovedPath(File f) {
 		try {
-			File approvedParent = Bootstrap.getInstance().getScriptsDir()
-					.getCanonicalFile();
+			File approvedParent = rootDir.getCanonicalFile();
 			while (f != null) {
 				f = f.getCanonicalFile();
 				if (f.equals(approvedParent)) {
