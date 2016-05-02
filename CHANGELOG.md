@@ -1,7 +1,11 @@
 ## Changes
 
+### 1.0.6
+* fix neo4j embedded browser
+
 ### 1.0.5
 * rx-aws 1.2.0
+* neorx 1.3.0 (uses OkHttp 3.2.0)
 
 ### 1.0.2
 * Expose hook URL path in GitHubWebHookMessage
