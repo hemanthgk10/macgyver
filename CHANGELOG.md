@@ -1,5 +1,8 @@
 ## Changes
 
+### 1.0.7
+* add cli
+
 ### 1.0.6
 * fix neo4j embedded browser
 
