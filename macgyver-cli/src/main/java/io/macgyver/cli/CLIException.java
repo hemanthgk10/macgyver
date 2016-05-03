@@ -13,18 +13,21 @@
  */
 package io.macgyver.cli;
 
-import org.assertj.core.api.Assertions;
-import org.junit.Test;
+public class CLIException extends RuntimeException {
 
-import io.macgyver.cli.command.LoginCommand;
-
-public class LoginCommandTest {
-
-	
-	@Test
-	public void testIt() {
-		
-
-
+	public CLIException(String message, Throwable cause) {
+		super(message, cause);
+		// TODO Auto-generated constructor stub
 	}
+
+	public CLIException(String message) {
+		super(message);
+		// TODO Auto-generated constructor stub
+	}
+
+	public CLIException(Throwable cause) {
+		super(cause);
+		// TODO Auto-generated constructor stub
+	}
+
 }

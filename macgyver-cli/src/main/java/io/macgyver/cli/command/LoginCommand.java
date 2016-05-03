@@ -13,43 +13,46 @@
  */
 package io.macgyver.cli.command;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Optional;
-import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.io.BaseEncoding;
 
-import io.macgyver.okrest.OkRestClient;
-import io.macgyver.okrest.OkRestResponse;
-import io.macgyver.okrest.OkRestTarget;
-import joptsimple.OptionParser;
+import io.macgyver.cli.Command;
+import io.macgyver.okrest3.OkRestClient;
+import io.macgyver.okrest3.OkRestResponse;
 
-public class LoginCommand extends Command {
 
-	public String getCommandName() {
-		return "login";
-	}
+@Parameters()
+public class LoginCommand  extends Command {
 
-	public String getDescription() {
-		return "obtains an api token";
-	}
+	Logger logger = LoggerFactory.getLogger(LoginCommand.class);
+	
+	
+	@Parameter(names={"--url"}, description="URL of macgyver server")
+	String urlFromCommandLine;
+
 
 	public Optional<String> getUsername() {
 
 		Optional<String> optUser = Optional.empty();
 
-		String username = java.util.Objects.toString(optionSetx.valueOf("user"), "").trim();
+		String username = null;//java.util.Objects.toString(optionSetx.valueOf("user"), "").trim();
 
 		if (!Strings.isNullOrEmpty(username)) {
 			logger.debug("username from command line is: {}", username);
 			return Optional.ofNullable(username);
 		}
 
-		username = props.getProperty("username");
+		
 		if (!Strings.isNullOrEmpty(username)) {
 			logger.debug("username from config file is: {}", username);
 			return Optional.of(username.trim());
@@ -67,38 +70,38 @@ public class LoginCommand extends Command {
 
 
 	public String readUrl() {
-		String url = super.getEndpointUrl().orElse("");
-		url = System.console().readLine("url      [%s]: ", url);
-		if (Strings.isNullOrEmpty(url)) {
-			url = super.getEndpointUrl().orElse("");
+		String url = this.urlFromCommandLine;
 		
-			
-		}	
-		props.put("endpoint-url", url);
+		if (Strings.isNullOrEmpty(url)) {
+			url = getConfig().path("url").asText();
+		}
+		String newVal = System.console().readLine("url      [%s]: ", url);
+		if (!Strings.isNullOrEmpty(newVal.trim())) {
+			url = newVal;
+		}
+		getConfig().put("url", url);
 		return url;
 	}
 	public String readUsername() {
-		String username = getUsername().orElse("");
-		username = Strings.nullToEmpty(System.console().readLine("username [%s]: ", username)).trim();		
+		String username = getConfig().path("username").asText();
 		if (Strings.isNullOrEmpty(username)) {
-			username = getUsername().orElse("");
+			username = System.getProperty("user.name","");
+		}
+		String usernameFromConsole = Strings.nullToEmpty(System.console().readLine("username [%s]: ", username)).trim();		
+		
+		if (!Strings.isNullOrEmpty(usernameFromConsole)) {
+			username = usernameFromConsole;
 		}
 		logger.info("username: " + username);
-		props.put("username", username);
-		return username;
-	}
 	
-	String localUrl;
-	@Override
-	public Optional<String> getEndpointUrl() {
-		return Optional.ofNullable(localUrl);
+		return username;
 	}
 
 	@Override
 	public void execute() throws IOException {
 
 		
-		localUrl = readUrl();
+		String localUrl = readUrl();
 		
 	
 		String username = readUsername();
@@ -107,35 +110,28 @@ public class LoginCommand extends Command {
 
 		String header = username + ":" + new String(password);
 
+
+		getConfig().put("url", localUrl);
 		
 		header = "Basic " + BaseEncoding.base64().encode(header.getBytes());
 		
 	
-		OkRestResponse rr = new OkRestClient().uri(getEndpointUrl().get()).path("/api/core/token/create").addHeader("Authorization", header).get()
+		OkRestResponse rr = new OkRestClient.Builder().build().uri(getServerUrl()).path("/api/core/token/create").addHeader("Authorization", header).get()
 				.execute();
 
 		JsonNode n = rr.getBody(JsonNode.class);
 	
 
-		Properties p = new Properties();
-		p.putAll(props);
-		p.put("username", n.path("username").asText());
-		p.put("token", n.path("token").asText());
+		getConfig().put("username", n.path("username").asText());
+		getConfig().put("token",n.path("token").asText());
 
-		File d = new File(System.getProperty("user.home"), ".macgyver");
-		if (!d.exists()) {
-			d.mkdirs();
-		}
-		File config = new File(d, "config");
-		try (FileOutputStream fos = new FileOutputStream(config)) {
-			p.store(fos, "written by login command");
-		}
+		getCLI().getConfigManager().saveConfig();
+
+		
 	}
 
-	@Override
-	protected void configure(OptionParser p) {
-		// TODO Auto-generated method stub
-
+	public String toString() {
+		return MoreObjects.toStringHelper(this).add("name", getCommandName()).toString();
 	}
 
 }

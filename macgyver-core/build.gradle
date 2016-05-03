@@ -114,6 +114,7 @@ dependencies {
 	compile 'org.hjson:hjson:1.1.2'
 
 
+    
     compile 'org.webjars:bootstrap:3.3.1'
     compile "org.webjars:jquery:2.1.1"
     compile "org.webjars:ace:1.1.3"
@@ -121,6 +122,7 @@ dependencies {
     //compile 'com.samskivert:jmustache:1.10'
     compile 'org.grails:grails-gsp-spring-boot:1.0.0'
     
+    compile project(':macgyver-cli')
     testCompile("org.springframework.boot:spring-boot-starter-test:${SPRING_BOOT_VERSION}")
     testCompile "org.springframework:spring-test:${SPRING_VERSION}"
     testCompile group: "junit", name: "junit", version: "${JUNIT_VERSION}"
@@ -128,6 +130,10 @@ dependencies {
 
 }
 
+processResources.doLast() {
+    ant.copy(tofile: "src/main/resources/cli/macgyver-cli-capsule.jar", file: "../macgyver-cli/build/libs/macgyver-cli-${project.version}-capsule.jar",overwrite:true, failonerror:false)
+    
+}
 compileJava.doLast() {
     def p = new Properties()
 
@@ -145,6 +151,11 @@ compileJava.doLast() {
         p.store(it,"revision info")
     }
     
+}
+
+
+processResources.doLast() {
+
 }
 
 task showRepos << {

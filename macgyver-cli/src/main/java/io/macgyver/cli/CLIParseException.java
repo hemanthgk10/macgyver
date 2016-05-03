@@ -13,7 +13,7 @@
  */
 package io.macgyver.cli;
 
-public class CLIParseException extends RuntimeException {
+public class CLIParseException extends CLIException {
 
 	
 	public CLIParseException(String name) {
