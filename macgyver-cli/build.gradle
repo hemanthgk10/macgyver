@@ -31,7 +31,7 @@ task exeFatCapsule(type:Exec, dependsOn: "fatCapsule") {
     args "${projectDir}/makeExec.sh"
 }
 
-tasks.compileJava << {
+tasks.jar << {
     tasks.fatCapsule.execute()
 }
 
