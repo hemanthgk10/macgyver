@@ -1,5 +1,8 @@
 ## Changes
 
+### 1.0.8
+* fix broken cli in 1.0.7
+
 ### 1.0.7
 * add cli
 
