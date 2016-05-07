@@ -1,5 +1,8 @@
 ## Changes
 
+### 1.0.9
+* be smart about how/when we update AppInstance during checkIn
+
 ### 1.0.8
 * fix broken cli in 1.0.7
 
