@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -42,105 +42,112 @@ public class AppInstanceManagerTest extends MacGyverIntegrationTest {
 		String host = "UNKNOWN";
 		String appId = "myapp";
 		String groupId = "mygroup";
-		
-		ObjectNode node = new ObjectMapper().createObjectNode().put("host", host).put("appId", appId).put("groupId", groupId);
+
+		ObjectNode node = new ObjectMapper().createObjectNode().put("host", host).put("appId", appId).put("groupId",
+				groupId);
 
 		ObjectNode v1 = manager.processCheckIn(node);
-		
+
 		Assertions.assertThat(v1.size()).isEqualTo(0);
 
 	}
-	
+
 	@Test
 	public void testLocalhostHostname() {
 		String host = "localhost";
 		String appId = "myapp";
 		String groupId = "mygroup";
-		
-		ObjectNode node = new ObjectMapper().createObjectNode().put("host", host).put("appId", appId).put("groupId", groupId);
+
+		ObjectNode node = new ObjectMapper().createObjectNode().put("host", host).put("appId", appId).put("groupId",
+				groupId);
 
 		ObjectNode v1 = manager.processCheckIn(node);
-		
+
 		Assertions.assertThat(v1.size()).isEqualTo(0);
 
 	}
-	
-	@Test
-	public void testProcessNode() { 
-		String host = "node_" + System.currentTimeMillis();
-		String appId = "myapp";
-		String groupId = "mygroup";
-		
-		ObjectNode node = new ObjectMapper().createObjectNode().put("host", host).put("appId", appId).put("groupId", groupId);
 
-		ObjectNode v1 = manager.processCheckIn(node); 
-				
-		String appIdNeo4j = v1.path("appId").asText();
-		String groupIdNeo4j = v1.path("groupId").asText();
-		String hostNeo4j = v1.path("host").asText(); 
+	ObjectMapper mapper = new ObjectMapper();
+
+	@Test
+	public void testComputeSignature() {
+		AppInstanceManager appInstanceManager = new AppInstanceManager();
+
+		Assertions
+				.assertThat(appInstanceManager
+						.computeSignature(mapper.createObjectNode().put("foo", "bar").put("abc", "def")))
+				.isEqualTo(appInstanceManager
+						.computeSignature(mapper.createObjectNode().put("abc", "def").put("foo", "bar")));
 		
-		Assertions.assertThat(appIdNeo4j).isEqualTo("myapp");
-		Assertions.assertThat(groupIdNeo4j).isEqualTo("mygroup");
-		Assertions.assertThat(hostNeo4j).isEqualTo(host);
 		
+		
+		Assertions
+		.assertThat(appInstanceManager
+				.computeSignature(mapper.createObjectNode().put("foo", "bar").put("abc", "def")))
+		.isEqualTo(appInstanceManager
+				.computeSignature((ObjectNode)mapper.createObjectNode().put("abc", "def").put("foo", "bar").set("abcdef", mapper.createObjectNode())));
+
 	}
 
-//
-//	@Test
-//	public void testMultiThead() throws IOException {
-//		ThreadPoolExecutor x = null;
-//		try {
-//			int threadCount = 5;
-//			long t0 = System.currentTimeMillis();
-//			int iterationCount = 1000;
-//			final int keySpace = 50;
-//
-//			BlockingQueue<Runnable> q = new ArrayBlockingQueue<>(iterationCount);
-//			for (int i = 0; i < iterationCount; i++) {
-//				final Runnable r = new Runnable() {
-//
-//					@Override
-//					public void run() {
-//
-//						String x = "junit_group_"
-//								+ (Math.abs(randomInt()) % keySpace);
-//						ObjectNode v = manager.getOrCreateAppInstance(x,
-//								x, x);
-//						/*
-//						 * v.setProperty("someproperty_" + (new
-//						 * Random().nextInt() % keySpace), UUID.randomUUID()
-//						 * .toString());
-//						 */
-//
-//					}
-//
-//				};
-//				q.add(r);
-//			}
-//
-//			x = new ThreadPoolExecutor(threadCount, threadCount, 5,
-//					TimeUnit.SECONDS, q);
-//
-//			x.prestartAllCoreThreads();
-//
-//			while (!q.isEmpty()) {
-//				try {
-//					Thread.sleep(10L);
-//				} catch (Exception e) {
-//				}
-//			}
-//
-//			long t1 = System.currentTimeMillis();
-//			long tdur = t1 - t0;
-//			logger.info(
-//					"processed {} getOrCreateAppInstance calls in {}ms ({}/sec) using {} threads",
-//					iterationCount, tdur,
-//					((double) iterationCount / tdur) * 1000, threadCount);
-//		} finally {
-//			if (x!=null) {
-//				x.shutdown();
-//			}
-//		}
-//	}
+
+
+	//
+	// @Test
+	// public void testMultiThead() throws IOException {
+	// ThreadPoolExecutor x = null;
+	// try {
+	// int threadCount = 5;
+	// long t0 = System.currentTimeMillis();
+	// int iterationCount = 1000;
+	// final int keySpace = 50;
+	//
+	// BlockingQueue<Runnable> q = new ArrayBlockingQueue<>(iterationCount);
+	// for (int i = 0; i < iterationCount; i++) {
+	// final Runnable r = new Runnable() {
+	//
+	// @Override
+	// public void run() {
+	//
+	// String x = "junit_group_"
+	// + (Math.abs(randomInt()) % keySpace);
+	// ObjectNode v = manager.getOrCreateAppInstance(x,
+	// x, x);
+	// /*
+	// * v.setProperty("someproperty_" + (new
+	// * Random().nextInt() % keySpace), UUID.randomUUID()
+	// * .toString());
+	// */
+	//
+	// }
+	//
+	// };
+	// q.add(r);
+	// }
+	//
+	// x = new ThreadPoolExecutor(threadCount, threadCount, 5,
+	// TimeUnit.SECONDS, q);
+	//
+	// x.prestartAllCoreThreads();
+	//
+	// while (!q.isEmpty()) {
+	// try {
+	// Thread.sleep(10L);
+	// } catch (Exception e) {
+	// }
+	// }
+	//
+	// long t1 = System.currentTimeMillis();
+	// long tdur = t1 - t0;
+	// logger.info(
+	// "processed {} getOrCreateAppInstance calls in {}ms ({}/sec) using {}
+	// threads",
+	// iterationCount, tdur,
+	// ((double) iterationCount / tdur) * 1000, threadCount);
+	// } finally {
+	// if (x!=null) {
+	// x.shutdown();
+	// }
+	// }
+	// }
 
 }

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,23 @@
  */
 package io.macgyver.plugin.cmdb;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+
+import javax.annotation.PostConstruct;
+
+import org.apache.tomcat.util.buf.CharChunk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +38,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheBuilderSpec;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
+import com.google.common.hash.HashingInputStream;
+import com.google.common.hash.HashingOutputStream;
+import com.google.common.io.ByteStreams;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import io.macgyver.core.reactor.MacGyverEventPublisher;
 import io.macgyver.core.util.JsonNodes;
@@ -39,98 +67,274 @@ public class AppInstanceManager {
 
 	@Autowired
 	MacGyverEventPublisher publisher;
-	
+
+	ObjectMapper mapper = new ObjectMapper();
+
 	Neo4jPropertyFlattener flattener = new Neo4jPropertyFlattener();
-	
+
 	CheckInProcessor processor = new BasicCheckInProcessor();
 
+	Cache<String, String> idCache = CacheBuilder.newBuilder().maximumSize(5000).expireAfterWrite(5, TimeUnit.MINUTES)
+			.build();
+
+	Cache<String,String> rateLimitCache = CacheBuilder.newBuilder().maximumSize(500).expireAfterWrite(5, TimeUnit.SECONDS).build();
+	AtomicLong checkInCount = new AtomicLong();
+	AtomicLong chckInCacheHitCount = new AtomicLong();
+
+	BlockingDeque<Runnable> queue;
+	volatile ThreadPoolExecutor executor;
+
+	public AppInstanceManager() {
+
+	}
+
+	@PostConstruct
+	void startIt() {
+		
+		ThreadFactory tf =  new ThreadFactoryBuilder().setDaemon(true).setNameFormat("AppInstanceManager-%s").build();
+		
+		queue = new LinkedBlockingDeque<>(500);
+		executor = new ThreadPoolExecutor(1, 10, 30, TimeUnit.SECONDS, queue,tf,new ThreadPoolExecutor.DiscardOldestPolicy());
+
+		try {
+
+			neo4j.execCypher("CREATE CONSTRAINT ON (a:AppInstance) ASSERT a.id IS UNIQUE");
+		}
+		catch (RuntimeException e) {
+			logger.warn("problem creating unique constraint on AppInstance",e);
+		}
+	}
+
+	public void exec(Runnable r) {
+		if (executor != null) {
+			executor.execute(r);
+		}
+	}
+
+	public void markLastContact(String id) {
+
+		String cypher = "match (a:AppInstance {id:{id}}) set a.lastContactTs=timestamp()";
+		Runnable r = new Runnable() {
+			public void run() {
+
+				neo4j.execCypher(cypher, "id", id);
+			}
+		};
+		exec(r);
+	}
+
+	protected ObjectNode shallowCopyWithValuesOnly(ObjectNode in) {
+		ObjectNode n = mapper.createObjectNode();
+		in.fields().forEachRemaining(it -> {
+			if (it.getValue().isContainerNode()) {
+
+			} else {
+				n.set(it.getKey(), it.getValue());
+			}
+		});
+		return n;
+	}
 
 	public ObjectNode processCheckIn(ObjectNode data) {
 
-		data = rx.Observable.just(data).map(new Neo4jPropertyFlattener()).toBlocking().first();
-	
 		String host = data.path("host").asText();
 		String group = data.path("groupId").asText();
 		String app = data.path("appId").asText();
 		String index = data.path("index").asText("default");
-		
-		if (host.toLowerCase().equals("unknown") || host.toLowerCase().equals("localhost")) {
-			return new ObjectMapper().createObjectNode();
-		} else {
-			if (Strings.isNullOrEmpty(group)) {
-				group = "";
-			}
-			logger.debug("host:{} group:{} app:{}", host, group, app);
-	
-			if (!Strings.isNullOrEmpty(host) && !Strings.isNullOrEmpty(app)) {	
-				ObjectNode set = new ObjectMapper().createObjectNode();
-				set.setAll(data);
-				set.put("lastContactTs", System.currentTimeMillis());
-								
-				ObjectNode p = new ObjectMapper().createObjectNode();
-				p.put("h", host);
-				p.put("gi", group);
-				p.put("ai", app);
-				p.put("q", index);
-				set.put("index", index);
-				p.set("props", set);
-				
-				String query = "match (x:AppInstance {host:{h}, appId:{ai}, index:{q}}) return x";
-				
-				JsonNode current = neo4j.execCypher(query,p).toBlocking().firstOrDefault(null);
-				
-				
-				String cypher = "merge (x:AppInstance {host:{h}, appId:{ai}, index:{q}}) set x={props} return x";
-	
-				JsonNode r = neo4j.execCypher(cypher, p).toBlocking().firstOrDefault(null);
-				processChanges(current, set);
-				if (r!=null) {
-					return (ObjectNode) r;
-				}
-			}
+
+		Optional<String> id = computeId(host, app, index);
+
+		if (!id.isPresent()) {
 			return new ObjectMapper().createObjectNode();
 		}
+		if (host.toLowerCase().equals("unknown") || host.toLowerCase().equals("localhost")) {
+			return new ObjectMapper().createObjectNode();
+		}
+		// look for a signature
+		String existingSignature = idCache.getIfPresent(id.get());
+
+		long cic = checkInCount.get();
+		long chc = chckInCacheHitCount.get();
+		
+		if (cic > 10000) {
+			logger.info("hit={} total={} ratio={}", chc, cic, chc / (double) cic);
+			checkInCount.set(0);
+			chckInCacheHitCount.set(0);
+		}
+		checkInCount.incrementAndGet();
+		boolean updateNeo4j = false;
+		String currentSignature = computeSignature(data);
+		if (existingSignature == null) {
+			idCache.put(id.get(), currentSignature);
+			updateNeo4j = true;
+		} else if (existingSignature.equals(currentSignature)) {
+	
+			chckInCacheHitCount.incrementAndGet();
+			markLastContact(id.get());
+			return new ObjectMapper().createObjectNode();
+		} else {
+			updateNeo4j = true;
+			idCache.put(id.get(), currentSignature);
+		}
+		data = shallowCopyWithValuesOnly(data);
+		if (Strings.isNullOrEmpty(group)) {
+			group = "";
+		}
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("host:{} group:{} app:{}", host, group, app);
+		}
+		if (updateNeo4j) {
+
+			ObjectNode set = new ObjectMapper().createObjectNode();
+			set.setAll(data);
+			set.put("lastContactTs", System.currentTimeMillis());
+			set.put("index", index);
+			set.put("id", id.get());
+			ObjectNode p = new ObjectMapper().createObjectNode();
+			p.put("h", host);
+
+			p.put("ai", app);
+			p.put("q", index);
+			p.put("id", id.get());
+			p.set("props", set);
+
+			String query = "match (x:AppInstance {id:{id}}) return x";
+
+			JsonNode existing = neo4j.execCypher(query, "id", id.get()).toBlocking().firstOrDefault(null);
+
+			if (existing == null) {
+				// there is no value in neo4j
+
+				// delete any old stuff
+
+				Runnable r = new Runnable() {
+					public void run() {
+						neo4j.execCypher("match (a:AppInstance {host:{h},appId:{ai},index:{q}}) detach delete a", p);
+
+						neo4j.execCypher("merge (a:AppInstance {id:{id}}) set a={props} return a", p);
+
+						idCache.put(id.get(), currentSignature);
+						processChanges(null, set);
+					}
+				};
+
+				if (rateLimitCache.getIfPresent(id.get())==null) {
+					rateLimitCache.put(id.get(), "");
+					exec(r);
+				}
+
+			} else {
+
+				Runnable r = new Runnable() {
+					public void run() {
+						String cypher = "merge (x:AppInstance {id:{id}}) set x={props} return x";
+
+						JsonNode r = neo4j.execCypher(cypher, p).toBlocking().firstOrDefault(null);
+				
+						processChanges(existing, r);
+					}
+				};
+				
+				if (rateLimitCache.getIfPresent(id.get())==null) {
+					rateLimitCache.put(id.get(), "");
+					exec(r);
+				}
+		
+				
+				return new ObjectMapper().createObjectNode();
+			}
+		}
+		return new ObjectMapper().createObjectNode();
+
 	}
+
 	public CheckInProcessor getCheckInProcessor() {
 		return processor;
 	}
+
 	public void setCheckInProcessor(CheckInProcessor p) {
 		this.processor = p;
 	}
-	
+
 	boolean hasAttributeChanged(JsonNode a, JsonNode b, String attribute) {
-		return a!=null && b!=null && (!a.path(attribute).asText().equals(b.path(attribute).asText()));
+		return a != null && b != null && (!a.path(attribute).asText().equals(b.path(attribute).asText()));
 	}
-	
+
 	public void processChanges(JsonNode currentProperties, JsonNode newProperties) {
-		if (currentProperties==null && newProperties!=null) {
-			publishChange(AppInstanceDiscoveryMessage.class,currentProperties,newProperties);
-			publishChange(AppInstanceStartMessage.class,currentProperties,newProperties);
+		if (currentProperties == null && newProperties != null) {
+			publishChange(AppInstanceDiscoveryMessage.class, currentProperties, newProperties);
+			publishChange(AppInstanceStartMessage.class, currentProperties, newProperties);
 		}
-	
-		if (currentProperties!=null && newProperties!=null) {
+
+		if (currentProperties != null && newProperties != null) {
 			if (hasAttributeChanged(currentProperties, newProperties, "version")) {
 				// version change
-				publishChange(AppInstanceVersionUpdateMessage.class,currentProperties, newProperties);
-			}		
-			if (hasAttributeChanged(currentProperties,newProperties,"revision")) {
-				publishChange(AppInstanceRevisionUpdateMessage.class,currentProperties,newProperties);
+				publishChange(AppInstanceVersionUpdateMessage.class, currentProperties, newProperties);
 			}
-			if (hasAttributeChanged(currentProperties,newProperties,"processId")) {
-				publishChange(AppInstanceStartMessage.class,currentProperties,newProperties);
+			if (hasAttributeChanged(currentProperties, newProperties, "revision")) {
+				publishChange(AppInstanceRevisionUpdateMessage.class, currentProperties, newProperties);
 			}
-			
+			if (hasAttributeChanged(currentProperties, newProperties, "processId")) {
+				publishChange(AppInstanceStartMessage.class, currentProperties, newProperties);
+			}
+
 		}
 
 	}
 
-	protected void publishChange(Class<? extends AppInstanceMessage> topic, JsonNode currentProperties, JsonNode newProperties) {
+	protected void publishChange(Class<? extends AppInstanceMessage> topic, JsonNode currentProperties,
+			JsonNode newProperties) {
 		ObjectNode payload = JsonNodes.mapper.createObjectNode();
 		payload.set("previous", currentProperties);
-		payload.set("current",newProperties);
-		
-		publisher.createMessage().withMessageType(topic).withAttribute("previous",currentProperties).withAttribute("current",newProperties).publish();
-		
-		
+		payload.set("current", newProperties);
+
+		publisher.createMessage().withMessageType(topic).withAttribute("previous", currentProperties)
+				.withAttribute("current", newProperties).publish();
+
+	}
+
+	public Optional<String> computeId(String host, String app, String index) {
+		if (Strings.isNullOrEmpty(host)) {
+			return Optional.empty();
+		}
+		if (Strings.isNullOrEmpty(app)) {
+			return Optional.empty();
+		}
+		if (Strings.isNullOrEmpty(index)) {
+			index = "default";
+		}
+		return Optional
+				.of(Hashing.sha1().hashString(host + "-" + app + "-" + index, Charset.forName("UTF8")).toString());
+	}
+
+	public String computeSignature(ObjectNode n) {
+		return computeSignature(n, ImmutableSet.of());
+	}
+
+	public String computeSignature(ObjectNode n, Set<String> exclusions) {
+		List<String> list = Lists.newArrayList(n.fieldNames());
+		Collections.sort(list);
+
+		HashingOutputStream hos = new HashingOutputStream(Hashing.sha1(), ByteStreams.nullOutputStream());
+
+		list.forEach(it -> {
+
+			if (exclusions != null && !exclusions.contains(it)) {
+				JsonNode val = n.get(it);
+				if (val.isObject() || val.isArray()) {
+					// skipping
+				} else {
+					try {
+						hos.write(it.getBytes());
+						hos.write(val.toString().getBytes());
+					} catch (IOException e) {
+					}
+				}
+			}
+		});
+
+		return hos.hash().toString();
+
 	}
 }
