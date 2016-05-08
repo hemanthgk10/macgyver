@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.macgyver.plugin.cmdb;
+package io.macgyver.plugin.cmdb.catalog;
 
 import javax.inject.Inject;
 
@@ -21,7 +21,7 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import io.macgyver.neorx.rest.NeoRxClient;
-import io.macgyver.plugin.cmdb.JobDefinitionLoader;
+import io.macgyver.plugin.cmdb.catalog.JobDefinitionLoader;
 import io.macgyver.plugin.git.GitResourceProvider;
 import io.macgyver.test.MacGyverIntegrationTest;
 
@@ -33,22 +33,21 @@ public class JobCatalogLoaderIntegrationTest extends MacGyverIntegrationTest {
 	@Test
 	public void testIt() {
 
-		neo4j.execCypher("match (a:JobDefinition) where a.name=~'macgyver-test-.*' delete a");
+		neo4j.execCypher("match (a:JobDefinition) where a.name=~'junit-test-.*' detach delete a");
 		
 		GitResourceProvider r = new GitResourceProvider("https://github.com/if6was9/macgyver-resource-test.git");
 
 		
-		JobDefinitionLoader l = new JobDefinitionLoader();
+		JobDefinitionLoader l = new JobDefinitionLoader().withResourceProvider(r).withNeoRxClient(neo4j);
 		
-		l.addResourceProvider(r);
-		l.neo4j = neo4j;
+
 		l.importAll();
 		
-		JsonNode n = neo4j.execCypher("match (j:JobDefinition) where j.id='macgyver-test-job-1' return j").first().toBlocking().first();
+		JsonNode n = neo4j.execCypher("match (j:JobDefinition) where j.id='junit-test-job-1' return j").first().toBlocking().first();
 		
 		Assertions.assertThat(n.path("description").asText()).isEqualTo("test job");
 		
-		neo4j.execCypher("match (a:JobDefinition) where a.name=~'macgyver-test-.*' delete a");
+		neo4j.execCypher("match (a:JobDefinition) where a.name=~'junit-test-.*' detach delete a");
 
 	}
 

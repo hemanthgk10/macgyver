@@ -20,44 +20,45 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
+import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
 
-import org.apache.tomcat.util.buf.CharChunk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheBuilderSpec;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
-import com.google.common.hash.HashingInputStream;
 import com.google.common.hash.HashingOutputStream;
 import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+import io.macgyver.core.metrics.MetricsUtil;
 import io.macgyver.core.reactor.MacGyverEventPublisher;
 import io.macgyver.core.util.JsonNodes;
 import io.macgyver.core.util.Neo4jPropertyFlattener;
 import io.macgyver.neorx.rest.NeoRxClient;
-import io.macgyver.plugin.cmdb.AppInstanceMessage.AppInstanceDiscoveryMessage;
-import io.macgyver.plugin.cmdb.AppInstanceMessage.AppInstanceRevisionUpdateMessage;
-import io.macgyver.plugin.cmdb.AppInstanceMessage.AppInstanceStartMessage;
-import io.macgyver.plugin.cmdb.AppInstanceMessage.AppInstanceVersionUpdateMessage;
+import io.macgyver.plugin.cmdb.AppInstanceMessage.Discovery;
+import io.macgyver.plugin.cmdb.AppInstanceMessage.RevisionChange;
+import io.macgyver.plugin.cmdb.AppInstanceMessage.StartupComplete;
+import io.macgyver.plugin.cmdb.AppInstanceMessage.VersionChange;
 
 public class AppInstanceManager {
 	Logger logger = LoggerFactory.getLogger(AppInstanceManager.class);
@@ -65,6 +66,13 @@ public class AppInstanceManager {
 	@Autowired
 	NeoRxClient neo4j;
 
+	List<Function<ObjectNode,ObjectNode>> transformers = new CopyOnWriteArrayList<>();
+	
+
+	
+	@Autowired
+	MetricRegistry metricRegistry;
+	
 	@Autowired
 	MacGyverEventPublisher publisher;
 
@@ -72,30 +80,40 @@ public class AppInstanceManager {
 
 	Neo4jPropertyFlattener flattener = new Neo4jPropertyFlattener();
 
-	CheckInProcessor processor = new BasicCheckInProcessor();
-
 	Cache<String, String> idCache = CacheBuilder.newBuilder().maximumSize(5000).expireAfterWrite(5, TimeUnit.MINUTES)
 			.build();
 
 	Cache<String,String> rateLimitCache = CacheBuilder.newBuilder().maximumSize(500).expireAfterWrite(5, TimeUnit.SECONDS).build();
-	AtomicLong checkInCount = new AtomicLong();
-	AtomicLong chckInCacheHitCount = new AtomicLong();
 
 	BlockingDeque<Runnable> queue;
 	volatile ThreadPoolExecutor executor;
 
+	Meter checkInMeter;
+	Meter checkInCacheHitMeter;
+	
 	public AppInstanceManager() {
 
 	}
 
+
+	private void registerMetrics() {
+	
+		
+		MetricsUtil.monitorExecutor(metricRegistry, executor, "AppInstanceManager");
+		
+		checkInMeter = metricRegistry.meter(MetricRegistry.name("AppInstanceManager", "checkIn"));
+		checkInCacheHitMeter = metricRegistry.meter(MetricRegistry.name("AppInstanceManager", "checkInCacheHit"));
+		
+	}
 	@PostConstruct
 	void startIt() {
 		
 		ThreadFactory tf =  new ThreadFactoryBuilder().setDaemon(true).setNameFormat("AppInstanceManager-%s").build();
 		
 		queue = new LinkedBlockingDeque<>(500);
-		executor = new ThreadPoolExecutor(1, 10, 30, TimeUnit.SECONDS, queue,tf,new ThreadPoolExecutor.DiscardOldestPolicy());
+		executor = new ThreadPoolExecutor(1,10, 30, TimeUnit.SECONDS, queue,tf,new ThreadPoolExecutor.DiscardOldestPolicy());
 
+		registerMetrics();
 		try {
 
 			neo4j.execCypher("CREATE CONSTRAINT ON (a:AppInstance) ASSERT a.id IS UNIQUE");
@@ -135,8 +153,20 @@ public class AppInstanceManager {
 		return n;
 	}
 
+
+	
+	public List<Function<ObjectNode, ObjectNode>> getTransformFunctions() {
+		return transformers;
+	}
+	protected ObjectNode transform(ObjectNode data) {
+		for (Function<ObjectNode,ObjectNode> fn: transformers) {
+			data = fn.apply(data);
+		}
+		return data;
+	}
 	public ObjectNode processCheckIn(ObjectNode data) {
 
+		data = transform(data);
 		String host = data.path("host").asText();
 		String group = data.path("groupId").asText();
 		String app = data.path("appId").asText();
@@ -153,15 +183,9 @@ public class AppInstanceManager {
 		// look for a signature
 		String existingSignature = idCache.getIfPresent(id.get());
 
-		long cic = checkInCount.get();
-		long chc = chckInCacheHitCount.get();
 		
-		if (cic > 10000) {
-			logger.info("hit={} total={} ratio={}", chc, cic, chc / (double) cic);
-			checkInCount.set(0);
-			chckInCacheHitCount.set(0);
-		}
-		checkInCount.incrementAndGet();
+		checkInMeter.mark();
+	
 		boolean updateNeo4j = false;
 		String currentSignature = computeSignature(data);
 		if (existingSignature == null) {
@@ -169,7 +193,7 @@ public class AppInstanceManager {
 			updateNeo4j = true;
 		} else if (existingSignature.equals(currentSignature)) {
 	
-			chckInCacheHitCount.incrementAndGet();
+			checkInCacheHitMeter.mark();
 			markLastContact(id.get());
 			return new ObjectMapper().createObjectNode();
 		} else {
@@ -249,13 +273,6 @@ public class AppInstanceManager {
 
 	}
 
-	public CheckInProcessor getCheckInProcessor() {
-		return processor;
-	}
-
-	public void setCheckInProcessor(CheckInProcessor p) {
-		this.processor = p;
-	}
 
 	boolean hasAttributeChanged(JsonNode a, JsonNode b, String attribute) {
 		return a != null && b != null && (!a.path(attribute).asText().equals(b.path(attribute).asText()));
@@ -263,20 +280,20 @@ public class AppInstanceManager {
 
 	public void processChanges(JsonNode currentProperties, JsonNode newProperties) {
 		if (currentProperties == null && newProperties != null) {
-			publishChange(AppInstanceDiscoveryMessage.class, currentProperties, newProperties);
-			publishChange(AppInstanceStartMessage.class, currentProperties, newProperties);
+			publishChange(Discovery.class, currentProperties, newProperties);
+			publishChange(StartupComplete.class, currentProperties, newProperties);
 		}
 
 		if (currentProperties != null && newProperties != null) {
 			if (hasAttributeChanged(currentProperties, newProperties, "version")) {
 				// version change
-				publishChange(AppInstanceVersionUpdateMessage.class, currentProperties, newProperties);
+				publishChange(VersionChange.class, currentProperties, newProperties);
 			}
 			if (hasAttributeChanged(currentProperties, newProperties, "revision")) {
-				publishChange(AppInstanceRevisionUpdateMessage.class, currentProperties, newProperties);
+				publishChange(RevisionChange.class, currentProperties, newProperties);
 			}
 			if (hasAttributeChanged(currentProperties, newProperties, "processId")) {
-				publishChange(AppInstanceStartMessage.class, currentProperties, newProperties);
+				publishChange(StartupComplete.class, currentProperties, newProperties);
 			}
 
 		}
@@ -294,7 +311,7 @@ public class AppInstanceManager {
 
 	}
 
-	public Optional<String> computeId(String host, String app, String index) {
+	public static Optional<String> computeId(String host, String app, String index) {
 		if (Strings.isNullOrEmpty(host)) {
 			return Optional.empty();
 		}
@@ -337,4 +354,6 @@ public class AppInstanceManager {
 		return hos.hash().toString();
 
 	}
+	
+
 }

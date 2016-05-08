@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.macgyver.plugin.cmdb;
+package io.macgyver.plugin.cmdb.catalog;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -39,59 +39,61 @@ import io.macgyver.neorx.rest.NeoRxClient;
 
 @Controller
 @PreAuthorize("hasAnyRole('ROLE_MACGYVER_USER', 'ROLE_MACGYVER_ADMIN')")
-public class AppDefinitionController {
 
-	Logger logger = LoggerFactory.getLogger(AppDefinitionController.class);
+public class StreamDefinitionController {
+
+	Logger logger = LoggerFactory.getLogger(StreamDefinitionController.class);
 	ObjectMapper mapepr = new ObjectMapper();
 
 	@Inject
 	NeoRxClient neo4j;
 
-	@RequestMapping(value = "/api/cmdb/app-definitions", method = { RequestMethod.GET })
-	public ResponseEntity<JsonNode> apiServices(HttpServletRequest request) {
+	@RequestMapping(value = "/api/cmdb/stream-definitions", method = { RequestMethod.GET })
+	public ResponseEntity<JsonNode> getStreamDefinitions(HttpServletRequest request) {
 
 		ObjectNode response = mapepr.createObjectNode();
 
 		ArrayNode arr = mapepr.createArrayNode();
-		neo4j.execCypher("match (a:AppDefinition) return a").forEach(it -> {
+		neo4j.execCypher("match (a:StreamDefinition) return a").forEach(it -> {
 			arr.add(it);
 		});
 		response.set("results", arr);
 		return ResponseEntity.ok(response);
 	}
 
-	@RequestMapping(value = "/api/cmdb/app-definitions/{id}", method = { RequestMethod.GET })
-	public ResponseEntity<JsonNode> apiSingleApp(HttpServletRequest request, @PathVariable("id") String id) {
+	@RequestMapping(value = "/api/cmdb/stream-definitions/{id}", method = { RequestMethod.GET })
+	public ResponseEntity<JsonNode> getStreamDefinitions(HttpServletRequest request, @PathVariable("id") String jobId) {
 
 		try {
 			return ResponseEntity
-					.ok(neo4j.execCypher("match (a:AppDefinition {appId:{appId}}) return a order by a.appId", "appId", id)
+					.ok(neo4j.execCypher("match (a:StreamDefinition {id:{id}}) return a", "id", jobId)
 							.toBlocking().first());
 		} catch (NoSuchElementException e) {
-			return ResponseEntity.status(404).body(mapepr.createObjectNode().put("status", 404).put("message", String.format("not found: %s",id)));
+			return ResponseEntity.status(404).body(mapepr.createObjectNode().put("status", 404).put("message", String.format("stream not found: %s",jobId)));
 		}
 	}
 
-	@RequestMapping(value = "/cmdb/app-definitions", method = { RequestMethod.GET })
-	public ModelAndView apps(HttpServletRequest request) {
+	@RequestMapping(value = "/cmdb/stream-definitions", method = { RequestMethod.GET })
+	public ModelAndView streams(HttpServletRequest request) {
 
+	
 		
-		List<JsonNode> results = neo4j.execCypher("match (a:AppDefinition) return a order by a.appId").toList().toBlocking().first();
+		List<JsonNode> list = neo4j.execCypher("match (j:StreamDefinition) return j").toList().toBlocking().first();
 		
 		
-		ModelAndView m = new ModelAndView("/cmdb/app-definitions").addObject("results",results);
+		
+		ModelAndView m = new ModelAndView("/cmdb/stream-definitions").addObject("results",list);
 		return m;
 	}
-	
-	@RequestMapping(value = "/cmdb/app-definitions/{appId}", method = { RequestMethod.GET })
-	public ModelAndView apps(HttpServletRequest request, @PathVariable("appId") String appId) {
+	@RequestMapping(value = "/cmdb/stream-definitions/{id}", method = { RequestMethod.GET })
+	public ModelAndView streams(HttpServletRequest request, @PathVariable("id") String id) {
 
-		logger.info("loading app def: {}",appId);
-		JsonNode service = neo4j.execCypher("match (a:AppDefinition {appId:{appId}}) return a", "appId", appId)
+		logger.info("loading stream def: {}",id);
+		JsonNode service = neo4j.execCypher("match (j:StreamDefinition {id:{id}}) return j", "id", id)
 		.toBlocking().first();
 		
 		
-		ModelAndView m = new ModelAndView("/cmdb/app-definition").addObject("app",service);
+		ModelAndView m = new ModelAndView("/cmdb/stream-definition").addObject("results",service);
 		return m;
 	}
 }

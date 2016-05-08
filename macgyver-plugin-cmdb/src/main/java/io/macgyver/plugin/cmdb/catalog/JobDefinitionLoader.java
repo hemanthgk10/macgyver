@@ -11,35 +11,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.macgyver.plugin.cmdb;
+package io.macgyver.plugin.cmdb.catalog;
 
-import io.macgyver.core.Plugin;
-import io.macgyver.core.web.vaadin.MacGyverUI;
-import io.macgyver.neorx.rest.NeoRxClient;
-import io.macgyver.plugin.cmdb.ui.ComputeInstancesView;
+import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
-public class CmdbPlugin extends Plugin {
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Preconditions;
 
-	Logger logger = LoggerFactory.getLogger(CmdbPlugin.class);
+import io.macgyver.core.Kernel;
+import io.macgyver.core.resource.Resource;
+import io.macgyver.core.util.HJson;
+import rx.Observable;
+import rx.functions.Action1;
+import rx.functions.Func1;
 
-	@Autowired
-	NeoRxClient neo4j;
+public class JobDefinitionLoader extends AbstractCatalogLoader {
 
 
-
-	@Override
-	public void registerViews(MacGyverUI ui) {
-		logger.info("registerViews: {}", ui);
-
-		ui.registerView(AppInstancesView.class);
-		
-		ui.registerView(ComputeInstancesView.class);
+	public JobDefinitionLoader() {
+		withDirName("jobs").withNodeLabel("JobDefinition");
 	}
-
 
 
 }

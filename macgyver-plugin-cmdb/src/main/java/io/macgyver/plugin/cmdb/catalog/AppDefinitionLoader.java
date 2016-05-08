@@ -11,18 +11,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.macgyver.plugin.cmdb;
+package io.macgyver.plugin.cmdb.catalog;
 
-import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletRequest;
+public class AppDefinitionLoader extends AbstractCatalogLoader {
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+	public static final String APP_DEFINITION_LABEL="AppDefinition";
+	public static final String APP_DEFINITION_ID="appId";
 
-public interface CheckInProcessor {
+	Logger logger = LoggerFactory.getLogger(AppDefinitionLoader.class);
 
-	public boolean checkAuth(HttpServletRequest r);
-	public void decorate(ObjectNode data);
-	
-	public ObjectNode process(HttpServletRequest r) throws IOException;
+
+	public AppDefinitionLoader() {
+		withAlternateNodeKey(APP_DEFINITION_ID).withNodeLabel(APP_DEFINITION_LABEL).withDirName("apps");
+	}
 }

@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.macgyver.plugin.cmdb;
+package io.macgyver.plugin.cmdb.catalog;
 
 import javax.inject.Inject;
 
@@ -21,11 +21,11 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import io.macgyver.neorx.rest.NeoRxClient;
-import io.macgyver.plugin.cmdb.AppDefinitionLoader;
+import io.macgyver.plugin.cmdb.catalog.AppDefinitionLoader;
 import io.macgyver.plugin.git.GitResourceProvider;
 import io.macgyver.test.MacGyverIntegrationTest;
 
-public class AppCatalogLoaderIntegrationTest extends MacGyverIntegrationTest {
+public class QueueDefinitionLoaderIntegrationTest extends MacGyverIntegrationTest {
 
 	@Inject
 	NeoRxClient neo4j;
@@ -36,26 +36,27 @@ public class AppCatalogLoaderIntegrationTest extends MacGyverIntegrationTest {
 	@Test
 	public void testIt() {
 
-		neo4j.execCypher("match (a:AppDefinition) where a.appId=~'macgyver-test.*' delete a");
+		neo4j.execCypher("match (a:QueueDefinition) where a.id=~'junit-test.*' delete a");
 		
 		GitResourceProvider r = new GitResourceProvider("https://github.com/if6was9/macgyver-resource-test.git");
 
 		
-		AppDefinitionLoader l = new AppDefinitionLoader();
-
-		l.addResourceProvider(r);
-		l.neo4j = neo4j;
-		l.importAll();
+		QueueDefinitionLoader l = new QueueDefinitionLoader().withResourceProvider(r).withNeoRxClient(neo4j);
 		
-		JsonNode n = neo4j.execCypher("match (a:AppDefinition) where a.appId='macgyver-test-app-1' return a").toBlocking().first();
+		l.importAll();
+
+	
+		JsonNode n = neo4j.execCypher("match (a:QueueDefinition) where a.id='junit-test-queue-1' return a").toBlocking().first();
 		
 		Assertions.assertThat(n.path("foo").asText()).isEqualTo("bar");
+		
+		
+		Assertions.assertThat(neo4j.execCypher("match (a:QueueDefinition) where a.id='junit-test-parse-error' return a").toBlocking().first().path("error").asText()).contains("ParseException");
 	}
+	
+	
 
-	@Test
-	public void testBean() {
-		Assertions.assertThat(applicationContext.getBean("macServiceCatalogLoader")).isInstanceOf(AppDefinitionLoader.class);
-	}
+
 	
 
 }

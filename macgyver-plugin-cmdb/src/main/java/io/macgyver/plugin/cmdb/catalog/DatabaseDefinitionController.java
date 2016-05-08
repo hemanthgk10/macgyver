@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.macgyver.plugin.cmdb;
+package io.macgyver.plugin.cmdb.catalog;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -93,7 +93,7 @@ public class DatabaseDefinitionController {
 		.toBlocking().first();
 		
 		
-		ModelAndView m = new ModelAndView("/cmdb/database-definition").addObject("database",service);
+		ModelAndView m = new ModelAndView("/cmdb/database-definition").addObject("results",service);
 		return m;
 	}
 }

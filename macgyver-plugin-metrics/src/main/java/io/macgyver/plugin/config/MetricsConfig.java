@@ -33,22 +33,6 @@ import com.codahale.metrics.Slf4jReporter.LoggingLevel;
 		LeftronicServiceFactory.class })
 public class MetricsConfig {
 
-	@Bean(name = "macMetricRegistry")
-	public MetricRegistry macMetricRegistry() {
-		MetricRegistry registry = SharedMetricRegistries
-				.getOrCreate("macMetricRegistry");
 
-		Slf4jReporter r = Slf4jReporter.forRegistry(registry)
-				.withLoggingLevel(LoggingLevel.DEBUG)
-				.convertDurationsTo(TimeUnit.MILLISECONDS)
-				.convertRatesTo(TimeUnit.SECONDS)
-				.outputTo(LoggerFactory.getLogger("io.macgyver.metrics"))
-				.build();
-
-		r.start(60, TimeUnit.SECONDS);
-
-		
-		return registry;
-	}
 
 }

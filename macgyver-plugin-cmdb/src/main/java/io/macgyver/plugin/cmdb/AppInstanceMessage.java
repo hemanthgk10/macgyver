@@ -17,18 +17,50 @@ import io.macgyver.core.reactor.MacGyverMessage;
 
 public class AppInstanceMessage extends MacGyverMessage {
 
-	public static class AppInstanceDiscoveryMessage extends AppInstanceMessage {
+	public static class Discovery extends AppInstanceMessage {
 
 	}
 
-	public static class AppInstanceStartMessage extends AppInstanceMessage {
+
+	public static class DeploymentInitiated extends AppInstanceMessage {
+		
+	}
+	public static class DeploymentFailure extends AppInstanceMessage {
+		
+	}
+	public static class DeploymentComplete extends AppInstanceMessage {
 
 	}
 	
-	public static class AppInstanceRevisionUpdateMessage extends AppInstanceMessage {
+	public static class ShutdownInitiated extends AppInstanceMessage {
+		
+	}
+	
+	public static class ShutdownComplete extends AppInstanceMessage {
+		
+	}
+	
+	public static class StartupInitiated extends AppInstanceMessage {
+		
+	}
+	
+	public static class StartupFailure extends AppInstanceMessage {
 
 	}
-	public static class AppInstanceVersionUpdateMessage extends AppInstanceMessage {
+	
+	public static class StartupComplete extends AppInstanceMessage {
+
+	}
+	
+	public static class RevisionChange extends AppInstanceMessage {
+
+	}
+	
+	public static class VersionChange extends AppInstanceMessage {
+
+	}
+	
+	public static class Monitor extends AppInstanceMessage {
 
 	}
 }

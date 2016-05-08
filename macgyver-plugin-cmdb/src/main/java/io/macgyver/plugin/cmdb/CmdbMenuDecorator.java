@@ -26,8 +26,11 @@ public class CmdbMenuDecorator implements UIContextDecorator {
 	public void call(UIContext ctx) {
 		ctx.getOrCreateMenuItem("inventory").label("Inventory").style("fa fa-list");
 		ctx.getOrCreateMenuItem("inventory","app-instances").label("App Instances").url("/cmdb/app-instances");
-        ctx.getOrCreateMenuItem("inventory","app-catalog").label("App Catalog").url("/cmdb/app-definitions");
-        ctx.getOrCreateMenuItem("inventory","job-catalog").label("Job Catalog").url("/cmdb/job-definitions");
+        ctx.getOrCreateMenuItem("inventory","app-catalog").label("Catalog - Apps").url("/cmdb/app-definitions");
+        ctx.getOrCreateMenuItem("inventory","database-catalog").label("Catalog - DB").url("/cmdb/database-definitions");
+        ctx.getOrCreateMenuItem("inventory","job-catalog").label("Catalog - Jobs").url("/cmdb/job-definitions");
+        ctx.getOrCreateMenuItem("inventory","stream-catalog").label("Catalog - Streams").url("/cmdb/stream-definitions");
+        ctx.getOrCreateMenuItem("inventory","queue-catalog").label("Catalog - Queues").url("/cmdb/queue-definitions");
 	}
 
 }

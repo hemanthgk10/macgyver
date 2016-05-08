@@ -13,20 +13,24 @@
  */
 package io.macgyver.plugin.config;
 
-import io.macgyver.plugin.cmdb.AppDefinitionController;
-import io.macgyver.plugin.cmdb.AppDefinitionLoader;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+
 import io.macgyver.plugin.cmdb.AppInstanceController;
 import io.macgyver.plugin.cmdb.AppInstanceManager;
 import io.macgyver.plugin.cmdb.CmdbApiController;
 import io.macgyver.plugin.cmdb.CmdbMenuDecorator;
-import io.macgyver.plugin.cmdb.CmdbPlugin;
-import io.macgyver.plugin.cmdb.DatabaseDefinitionController;
-import io.macgyver.plugin.cmdb.DatabaseDefinitionLoader;
-import io.macgyver.plugin.cmdb.JobDefinitionController;
-import io.macgyver.plugin.cmdb.JobDefinitionLoader;
-
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import io.macgyver.plugin.cmdb.catalog.AppDefinitionController;
+import io.macgyver.plugin.cmdb.catalog.AppDefinitionLoader;
+import io.macgyver.plugin.cmdb.catalog.DatabaseDefinitionController;
+import io.macgyver.plugin.cmdb.catalog.DatabaseDefinitionLoader;
+import io.macgyver.plugin.cmdb.catalog.JobDefinitionController;
+import io.macgyver.plugin.cmdb.catalog.JobDefinitionLoader;
+import io.macgyver.plugin.cmdb.catalog.QueueDefinitionController;
+import io.macgyver.plugin.cmdb.catalog.QueueDefinitionLoader;
+import io.macgyver.plugin.cmdb.catalog.StreamDefinitionController;
+import io.macgyver.plugin.cmdb.catalog.StreamDefinitionLoader;
 
 @Configuration
 public class CmdbConfig {
@@ -44,10 +48,6 @@ public class CmdbConfig {
 	}
 
 	
-	@Bean
-	public CmdbPlugin macCmdbUIManager() {
-		return new CmdbPlugin();
-	}
 	
 	@Bean
 	public AppInstanceController macAppInstanceController() {
@@ -85,4 +85,28 @@ public class CmdbConfig {
 	public DatabaseDefinitionController macDatabaseDefinitionController() {
 		return new DatabaseDefinitionController();
 	}
+	
+	@Bean
+	public QueueDefinitionController macQueueDefinitionController() {
+		return new QueueDefinitionController();
+	}
+	@Bean
+	public QueueDefinitionLoader macQueueDefinitionLoader() {
+		return new QueueDefinitionLoader();
+	}
+	
+	@Bean
+	public StreamDefinitionController macStreamDefinitionController() {
+		return new StreamDefinitionController();
+	}
+	@Bean
+	public StreamDefinitionLoader macStreamDefinitionLoader() {
+		return new StreamDefinitionLoader();
+	}
+	
+	@Bean
+	public io.macgyver.plugin.cmdb.AppEventApiController appEventApiController() {
+		return new io.macgyver.plugin.cmdb.AppEventApiController();
+	}
+
 }

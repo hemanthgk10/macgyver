@@ -88,6 +88,7 @@ public class MacGyverEventPublisher {
 		this.eventBus = bus;
 	}
 
+	
 	protected void publishObject(Object object) {
 		if (eventBus != null) {
 			eventBus.notify(object, Event.wrap(object));
@@ -96,6 +97,13 @@ public class MacGyverEventPublisher {
 		}
 	}
 
+	public EventBus getEventBus() {
+		return eventBus;
+	}
+	public void publish(MacGyverMessage message) {
+		publishObject(message);
+	}
+	
 	public MessageBuilder createMessage(Class<? extends MacGyverMessage> clazz) {
 		MessageBuilder mb = new MessageBuilder();
 		mb = mb.withMessageType(clazz);

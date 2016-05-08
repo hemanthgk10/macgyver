@@ -17,6 +17,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
@@ -29,12 +30,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.actuate.metrics.reader.MetricRegistryMetricReader;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.jmx.export.MBeanExporter;
 
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.SharedMetricRegistries;
+import com.codahale.metrics.Slf4jReporter;
+import com.codahale.metrics.Slf4jReporter.LoggingLevel;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.ning.http.client.AsyncHttpClient;
@@ -57,6 +63,7 @@ import io.macgyver.core.cluster.NeoRxTcpDiscoveryIpFinder;
 import io.macgyver.core.crypto.Crypto;
 import io.macgyver.core.log.EventLogger;
 import io.macgyver.core.log.Neo4jEventLogWriter;
+import io.macgyver.core.metrics.MacGyverMetricRegistry;
 import io.macgyver.core.reactor.MacGyverEventPublisher;
 import io.macgyver.core.resource.provider.filesystem.FileSystemResourceProvider;
 import io.macgyver.core.scheduler.ScheduledTaskManager;
@@ -320,5 +327,25 @@ public class CoreConfig implements EnvironmentAware {
 	@Bean
 	public CLIDownloadController macCliDownloadController() {
 		return new CLIDownloadController();
+	}
+	
+	@Bean(name = "macMetricRegistry")
+	public MacGyverMetricRegistry macMetricRegistry() {
+		
+		MacGyverMetricRegistry registry = new MacGyverMetricRegistry();
+		SharedMetricRegistries.add("macMetricRegistry", registry);
+	
+
+		Slf4jReporter r = Slf4jReporter.forRegistry(registry)
+				.withLoggingLevel(LoggingLevel.DEBUG)
+				.convertDurationsTo(TimeUnit.MILLISECONDS)
+				.convertRatesTo(TimeUnit.SECONDS)
+				.outputTo(LoggerFactory.getLogger("io.macgyver.metrics"))
+				.build();
+
+		r.start(60, TimeUnit.SECONDS);
+
+		
+		return registry;
 	}
 }
