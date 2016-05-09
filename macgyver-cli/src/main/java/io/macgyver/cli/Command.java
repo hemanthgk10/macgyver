@@ -41,10 +41,26 @@ public abstract class Command {
 	CLI cli;
 	
 	public String getCommandName() {
-		List<String> x = Splitter.on(".").splitToList(getClass().getName());
-		String n = x.get(x.size()-1).replace("Command", "").toLowerCase();
-		
-		return n;
+		List<String> list = Splitter.on(".").splitToList(getClass().getName());
+		String name = list.get(list.size() - 1);
+
+
+		if (name.endsWith("Command")) {
+			name = name.substring(0, name.length() - "Command".length());
+		}
+
+		StringBuffer sb = new StringBuffer();
+
+		for (int i = 0; i < name.length(); i++) {
+			char c = name.charAt(i);
+
+			if (i > 0 && Character.isUpperCase(c)) {
+				sb.append("-");
+			}
+			sb.append(Character.toLowerCase(c));
+		}
+
+		return sb.toString();
 		
 	}
 	

@@ -1,5 +1,12 @@
 ## Changes
 
+### 1.1.1
+* simple CLI enhancement
+
+### 1.1.0
+* refactor check-in processing
+* refactor service catalog
+
 ### 1.0.9
 * be smart about how/when we update AppInstance during checkIn
 
