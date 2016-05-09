@@ -56,7 +56,7 @@ public class ScriptExecutor implements ApplicationContextAware {
 
 	public ExtensionResourceProvider getExtensionResourceLoader() {
 
-		return Kernel.getInstance().getApplicationContext()
+		return Kernel.getApplicationContext()
 				.getBean(ExtensionResourceProvider.class);
 	}
 
@@ -75,14 +75,14 @@ public class ScriptExecutor implements ApplicationContextAware {
 	public void collectBindings(Bindings b, Optional<String> lang) {
 
 		b.put("kernel", Kernel.getInstance());
-		b.put("ctx", Kernel.getInstance().getApplicationContext());
+		b.put("ctx", Kernel.getApplicationContext());
 		b.put("log", LoggerFactory.getLogger("io.macgyver.script"));
-		b.put("beans", new SpringMapAdapter(Kernel.getInstance()
+		b.put("beans", new SpringMapAdapter(Kernel
 				.getApplicationContext()));
 		b.put("services",
-				Kernel.getInstance().getApplicationContext()
+				Kernel.getApplicationContext()
 						.getBean(ServiceRegistry.class).mapAdapter());
-		BindingSupplierManager bsm = Kernel.getInstance()
+		BindingSupplierManager bsm = Kernel
 				.getApplicationContext().getBean(BindingSupplierManager.class);
 		Map<String, Object> m = bsm.collect(lang);
 		b.putAll(m);
@@ -181,9 +181,6 @@ public class ScriptExecutor implements ApplicationContextAware {
 						"could not create ScriptEngine for extension: "
 								+ getExtension(f));
 			}
-
-			ApplicationContext ctx = Kernel.getInstance()
-					.getApplicationContext();
 
 			Reader fr = new InputStreamReader(f.openInputStream());
 			closer.register(fr);
