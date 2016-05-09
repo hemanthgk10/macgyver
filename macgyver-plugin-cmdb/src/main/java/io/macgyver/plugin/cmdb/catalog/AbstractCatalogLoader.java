@@ -44,6 +44,7 @@ import io.macgyver.core.resource.ResourceMatcher;
 import io.macgyver.core.resource.ResourceProvider;
 import io.macgyver.core.service.ServiceRegistry;
 import io.macgyver.core.util.HJson;
+import io.macgyver.core.util.Neo4jUtil;
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.plugin.cmdb.catalog.AbstractCatalogLoader.EntitiyDefinitionWriter;
 import io.macgyver.plugin.cmdb.catalog.AbstractCatalogLoader.ProviderMapper;
@@ -79,7 +80,7 @@ public abstract class AbstractCatalogLoader {
 
 	List<Func1<ObjectNode, Observable<ObjectNode>>> transformers = new CopyOnWriteArrayList<>();
 
-	public  <T extends AbstractCatalogLoader> T withNodeLabel(String label) {
+	public <T extends AbstractCatalogLoader> T withNodeLabel(String label) {
 		this.neo4jLabel = label;
 		return (T) this;
 	}
@@ -88,12 +89,12 @@ public abstract class AbstractCatalogLoader {
 		return neo4jLabel;
 	}
 
-	public  <T extends AbstractCatalogLoader> T withDirName(String dirName) {
+	public <T extends AbstractCatalogLoader> T withDirName(String dirName) {
 		jobPattern = Pattern.compile(".*" + dirName + ".*?\\/((\\S+)\\.[h]*json)");
 		return (T) this;
 	}
 
-	public  <T extends AbstractCatalogLoader> T withNeoRxClient(NeoRxClient x) {
+	public <T extends AbstractCatalogLoader> T withNeoRxClient(NeoRxClient x) {
 		this.neo4j = x;
 		return (T) this;
 	}
@@ -102,7 +103,8 @@ public abstract class AbstractCatalogLoader {
 		this.publisher = publisher;
 		return (T) this;
 	}
-	public  <T extends AbstractCatalogLoader> T withAlternateNodeKey(String alternateKey) {
+
+	public <T extends AbstractCatalogLoader> T withAlternateNodeKey(String alternateKey) {
 		this.alternateKey = alternateKey;
 		return (T) this;
 	}
@@ -111,12 +113,12 @@ public abstract class AbstractCatalogLoader {
 		transformers.clear();
 	}
 
-	public  <T extends AbstractCatalogLoader> T addTransform(Func1<ObjectNode, Observable<ObjectNode>> x) {
+	public <T extends AbstractCatalogLoader> T addTransform(Func1<ObjectNode, Observable<ObjectNode>> x) {
 		transformers.add(x);
 		return (T) this;
 	}
 
-	public  <T extends AbstractCatalogLoader> T withResourceProvider(ResourceProvider p) {
+	public <T extends AbstractCatalogLoader> T withResourceProvider(ResourceProvider p) {
 		providers.add(p);
 		return (T) this;
 	}
@@ -209,8 +211,7 @@ public abstract class AbstractCatalogLoader {
 				logger.info("deleting {} id={}", neo4jLabel, id);
 				String c = "match (x:" + neo4jLabel + " {id:{id}}) detach delete x";
 				neo4j.execCypher(c, "id", id);
-				
-				
+
 			});
 
 		}
@@ -241,20 +242,22 @@ public abstract class AbstractCatalogLoader {
 	}
 
 	protected void publish(ServiceCatalogMessage m) {
-		if (publisher==null) {
-			logger.warn("publisher not set. {} will not be sent",m);
-		}
-		else {
+		if (publisher == null) {
+			logger.warn("publisher not set. {} will not be sent", m);
+		} else {
 			publisher.publish(m);
 		}
 	}
+
 	public void doRecordParseError(Resource resource, Throwable e) {
 		String resourceName = extractNameFromResource(resource);
 
 		String cypher = "merge (j:" + neo4jLabel + " { id :{id}}) set j.error={error},j.updateTs=timestamp() return j";
-		JsonNode n = neo4j.execCypher(cypher, "id", resourceName, "error", e.toString()).toBlocking().firstOrDefault(MissingNode.getInstance());
-		
-		ServiceCatalogMessage.ErrorMessage m = new ServiceCatalogMessage.ErrorMessage().withErrorMessage(e.toString()).withEntryType(getEntryType()).withId(resourceName);
+		JsonNode n = neo4j.execCypher(cypher, "id", resourceName, "error", e.toString()).toBlocking()
+				.firstOrDefault(MissingNode.getInstance());
+
+		ServiceCatalogMessage.ErrorMessage m = new ServiceCatalogMessage.ErrorMessage().withErrorMessage(e.toString())
+				.withEntryType(getEntryType()).withId(resourceName);
 		publish(m);
 	}
 
@@ -269,13 +272,7 @@ public abstract class AbstractCatalogLoader {
 				Preconditions.checkState(neo4j != null, "neo4j not set");
 				Preconditions.checkState(!Strings.isNullOrEmpty(neo4jLabel), "neo4j label must be set");
 
-				ObjectNode copy = n.deepCopy();
-				Lists.newArrayList(copy.fieldNames()).forEach(it -> {
-					JsonNode child = copy.get(it);
-					if (!child.isValueNode()) {
-						copy.remove(it);
-					}
-				});
+				ObjectNode copy = Neo4jUtil.scrubNonCompliantNeo4jAttributes(n);
 
 				if (!Strings.isNullOrEmpty(alternateKey)) {
 					copy.put(alternateKey, id);
@@ -296,9 +293,11 @@ public abstract class AbstractCatalogLoader {
 				}
 
 				if (oldHashVal.equals(copy.path("entryHash"))) {
-					logger.debug("no change detected in: entryType={} id={}", copy.path("entryType").asText(), copy.path("id").asText());
+					logger.debug("no change detected in: entryType={} id={}", copy.path("entryType").asText(),
+							copy.path("id").asText());
 				} else {
-					logger.info("change detected in: entryType={} id={}", copy.path("entryType").asText(), copy.path("id").asText());
+					logger.info("change detected in: entryType={} id={}", copy.path("entryType").asText(),
+							copy.path("id").asText());
 					String cypher = "match (j:" + neo4jLabel + " {id:{id}})  return j";
 					ObjectNode defData = (ObjectNode) neo4j.execCypher(cypher, "id", n.get("id").asText()).toBlocking()
 							.first();
@@ -307,7 +306,6 @@ public abstract class AbstractCatalogLoader {
 							.withCatalogEntry(defData).withCatalogEntrySource(n);
 
 					publish(m);
-				
 
 				}
 			} catch (RuntimeException e) {

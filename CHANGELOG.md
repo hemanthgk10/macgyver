@@ -1,5 +1,8 @@
 ## Changes
 
+### 1.1.2
+* allow ArrayNode types into neo4j while still blocking ObjectNode
+
 ### 1.1.1
 * simple CLI enhancement
 
