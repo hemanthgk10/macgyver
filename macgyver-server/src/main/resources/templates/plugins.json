@@ -1,0 +1,100 @@
+{
+  "version" : "1.1.2",
+  "plugins" : [ {
+    "name" : "macgyver-core",
+    "enabled" : true
+  }, {
+    "name" : "macgyver-plugin-rabbitmq",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-etcd",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-artifactory",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-atlassian",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-ci",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-ci-jenkins",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-clojure",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-cloud",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-cloud-aws",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-cloud-vsphere",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-cloud-cloudstack",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-cmdb",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-elb",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-elb-f5",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-elb-a10",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-email",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-git",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-github",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-hipchat",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-jdbc",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-jruby",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-jython",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-ldap",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-metrics",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-mongodb",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-newrelic",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-pagerduty",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-redis",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-snmp",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-splunk",
+    "enabled" : false
+  }, {
+    "name" : "macgyver-plugin-ssh",
+    "enabled" : false
+  } ]
+}

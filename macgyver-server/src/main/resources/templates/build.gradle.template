@@ -1,0 +1,23 @@
+apply plugin: 'java'
+
+dependencies {
+<%
+	dependencies.each { it -> 
+%>
+compile "${it}"
+<%
+  }
+%>
+
+}
+
+repositories { 
+	mavenLocal()
+	jcenter()
+	mavenCentral() 
+}
+
+task fetch(type: Copy) {
+  from sourceSets.main.runtimeClasspath
+  into 'jars/'
+}

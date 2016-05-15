@@ -1,0 +1,15 @@
+#!/bin/bash
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd $SCRIPT_DIR/..
+
+ps -ef | grep 'io.macgyver.core.ServerMain' | grep java | grep -v grep | awk '{ print $2 }' | xargs kill
+
+sleep 5
+
+mkdir -p ${SCRIPT_DIR}/../logs
+mkdir -p ${SCRIPT_DIR}/../config
+nohup java -cp 'lib/*' io.macgyver.core.ServerMain >${SCRIPT_DIR}/../logs/server.out 2>&1 &
+
+SERVER_PID=$!
+

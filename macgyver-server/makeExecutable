@@ -1,0 +1,29 @@
+#!/bin/bash
+
+
+mkexec() {
+    echo $JAR_FILE
+    cp ${JAR_FILE} ${JAR_FILE}.tmp
+    cat <<EOF >${JAR_FILE}
+#!/bin/sh
+MYSELF=\`which "\$0" 2>/dev/null\`
+[ \$? -gt 0 -a -f "\$0" ] && MYSELF="./\$0"
+java=java
+if test -n "\$JAVA_HOME"; then
+    java="\$JAVA_HOME/bin/java"
+fi
+exec "\$java" \$java_args -jar \$MYSELF "\$@"
+exit 1 
+EOF
+
+cat ${JAR_FILE}.tmp >>${JAR_FILE}
+chmod +x ${JAR_FILE}
+}
+
+
+for JAR_FILE in $(find build/libs -name '*.jar' | grep -v sources | grep -v javadoc); do 
+
+    mkexec $JAR_FILE
+    
+done
+    

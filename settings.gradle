@@ -32,5 +32,6 @@ include   'macgyver-core',
     'macgyver-plugin-ssh',
     'macgyver-test',
 	'macgyver-cli',
-    'macgyver-test-project'
+    'macgyver-test-project',
+    'macgyver-server'
 
