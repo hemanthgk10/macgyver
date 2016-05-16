@@ -26,16 +26,21 @@ import java.io.PrintWriter;
 import java.util.zip.ZipException;
 
 import org.apache.mina.filter.buffer.BufferedWriteFilter;
+import org.crsh.console.jline.internal.InputStreamReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
 import com.google.common.io.ByteStreams;
+import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
 import com.google.common.reflect.ClassPath;
 
 import io.macgyver.cli.CLI;
+import io.macgyver.core.Bootstrap;
+import io.macgyver.core.Kernel;
+import io.macgyver.core.resource.Resource;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.model.ZipParameters;
 
@@ -126,8 +131,13 @@ public class ClientPackager {
 
 		PrintWriter bw = new PrintWriter(new FileWriter(executable));
 
-		bw.println("#!/bin/bash");
-		bw.println("exec java -Dcli.exe=\"$0\" -Dcli.launch=true -jar $0 \"$@\"");
+		org.springframework.core.io.Resource resource = Kernel.getApplicationContext().getResource("classpath:cli/cli-jar-header.sh");
+		try (InputStreamReader isr = new InputStreamReader(resource.getInputStream())) {
+			String script = CharStreams.toString(isr);
+			bw.println(script);
+		}
+	//	bw.println("#!/bin/bash");
+	//	bw.println("exec java -Dcli.exe=\"$0\" -Dcli.launch=true -jar $0 \"$@\"");
 
 		bw.close();
 

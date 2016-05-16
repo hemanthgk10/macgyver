@@ -18,11 +18,19 @@
               </div>
             </div>
             <div class="box-body">
-              <a href="/cli/download">Download MacGyver CLI</a>
-              <p/>
-              <p>
-                  After downloading you should install it somewhere in your PATH and make it executable.
-              </p>
+            The easiest way to install the macgyver CLI is to run the following command:
+            <p/>
+            <p>
+            curl -s <%=curlBashUrl%> | bash
+            </p>
+            
+    		<p>
+    		Alternately you can <a href="/cli/download">download the CLI</a> manually.  After you have downloaded
+    		the executable, you should make it executable and place it in your PATH.
+    	
+   
+        	</p>
+             
             </div><!-- /.box-body -->
            
           </div><!-- /.box -->
