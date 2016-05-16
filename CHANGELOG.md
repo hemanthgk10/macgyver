@@ -1,5 +1,9 @@
 ## Changes
 
+### 1.1.3
+* Add quickstart functionality to bootstrap macgyver
+* curl | bash support for CLI install
+
 ### 1.1.2
 * allow ArrayNode types into neo4j while still blocking ObjectNode
 
