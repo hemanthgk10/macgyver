@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.metrics.reader.MetricRegistryMetricReader;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Bean;
@@ -75,13 +76,20 @@ import io.macgyver.core.service.ServiceRegistry;
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.neorx.rest.NeoRxClientBuilder;
 import reactor.Environment;
+import reactor.bus.Event;
 import reactor.bus.EventBus;
+import reactor.bus.filter.PassThroughFilter;
+import reactor.bus.registry.Registries;
+import reactor.bus.registry.Registry;
+import reactor.bus.routing.ConsumerFilteringRouter;
+import reactor.bus.routing.Router;
+import reactor.core.dispatch.ThreadPoolExecutorDispatcher;
+import reactor.fn.Consumer;
 
 @Configuration
 public class CoreConfig implements EnvironmentAware {
 
-
-	public static final String MACGYVER_GRID_NAME="macgyver";
+	public static final String MACGYVER_GRID_NAME = "macgyver";
 
 	@Autowired
 	org.springframework.core.env.Environment env;
@@ -297,44 +305,74 @@ public class CoreConfig implements EnvironmentAware {
 	public Neo4jEventLogWriter macEventLogWriter() {
 		return new Neo4jEventLogWriter();
 	}
-	
+
 	@Bean
 	public TaskStateManager macTaskStateManager() {
 		return new TaskStateManager();
 	}
+
 	@Bean
 	public ScheduledTaskManager macScheduledTaskManager() {
 		return new ScheduledTaskManager();
 	}
-	
+
 	@Bean
 	public TaskController macTaskController() {
 		return new TaskController();
 	}
-	
+
 	@Bean
 	public Environment macReactorEnvironment() {
 		return Environment.initializeIfEmpty();
 	}
+
+	
+	
+	@Value("${REACTOR_THREAD_POOL_DISPATCHER_THREAD_COUNT:10}")
+	int reactorThreadCount;
+	
+	@Value("${REACTOR_THREAD_POOL_DISPATCHER_BACKLOG:2048}")
+	int reactorBacklog;
+	
+	@Bean
+	public ThreadPoolExecutorDispatcher macReactorThreadPoolDispatcher() {
+		
+		logger.info("REACTOR_THREAD_POOL_DISPATCHER_THREAD_COUNT : {}",reactorThreadCount);
+		logger.info("REACTOR_THREAD_POOL_DISPATCHER_BACKLOG      : {}",reactorBacklog);
+		ThreadPoolExecutorDispatcher threadPoolDispatcher = new ThreadPoolExecutorDispatcher(reactorThreadCount, reactorBacklog);
+		return threadPoolDispatcher;
+	}
 	@Bean
 	public EventBus macReactorEventBus() {
-		return EventBus.create(macReactorEnvironment(), Environment.THREAD_POOL);
+
+		boolean useCache = false;
+		boolean cacheNotFound = false;
+
+		Registry<Object, Consumer<? extends Event<?>>> registry = Registries.create(useCache, cacheNotFound, null);
+		
+		Router router = new ConsumerFilteringRouter(
+				new PassThroughFilter());
+		
+		EventBus bus = new EventBus(registry, macReactorThreadPoolDispatcher(), router, null, null);
+
+		return bus;
 	}
+
 	@Bean
 	public MacGyverEventPublisher macEventPublisher() {
 		return new MacGyverEventPublisher();
 	}
+
 	@Bean
 	public CLIDownloadController macCliDownloadController() {
 		return new CLIDownloadController();
 	}
-	
+
 	@Bean(name = "macMetricRegistry")
 	public MacGyverMetricRegistry macMetricRegistry() {
-		
+
 		MacGyverMetricRegistry registry = new MacGyverMetricRegistry();
 		SharedMetricRegistries.add("macMetricRegistry", registry);
-	
 
 		Slf4jReporter r = Slf4jReporter.forRegistry(registry)
 				.withLoggingLevel(LoggingLevel.DEBUG)
