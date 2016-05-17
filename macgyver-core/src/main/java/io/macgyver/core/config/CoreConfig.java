@@ -49,12 +49,12 @@ import com.ning.http.client.AsyncHttpClient;
 import io.macgyver.core.Bootstrap;
 import io.macgyver.core.ContextRefreshApplicationListener;
 import io.macgyver.core.CoreBindingSupplier;
-import io.macgyver.core.CorePlugin;
+
 import io.macgyver.core.CoreSystemInfo;
 import io.macgyver.core.Kernel;
 import io.macgyver.core.MacGyverBeanFactoryPostProcessor;
 import io.macgyver.core.MacGyverBeanPostProcessor;
-import io.macgyver.core.PluginManager;
+
 import io.macgyver.core.ScriptHookManager;
 import io.macgyver.core.Startup;
 import io.macgyver.core.auth.UserManager;
@@ -245,15 +245,7 @@ public class CoreConfig implements EnvironmentAware {
 
 
 
-	@Bean
-	public PluginManager macPluginManager() {
-		return new PluginManager();
-	}
 
-	@Bean
-	public CorePlugin macCorePlugin() {
-		return new CorePlugin();
-	}
 
 	@Bean
 	public ClusterManager macClusterManager() {

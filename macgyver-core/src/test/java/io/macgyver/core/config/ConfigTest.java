@@ -47,8 +47,6 @@ public class ConfigTest extends MacGyverIntegrationTest {
 		Assertions.assertThat(applicationContext.getBean("macUserManager")).isNotNull();
 		Assertions.assertThat(applicationContext.getBean("macGraphClient")).isNotNull();
 		Assertions.assertThat(applicationContext.getBean("macExtensionResourceProvider")).isNotNull();
-		Assertions.assertThat(applicationContext.getBean("macPluginManager")).isNotNull();
-		Assertions.assertThat(applicationContext.getBean("macCorePlugin")).isNotNull();
 		Assertions.assertThat(applicationContext.getBean("macClusterManager")).isNotNull();
 		Assertions.assertThat(applicationContext.getBean("macIgniteTcpDiscoverySpi")).isNotNull();
 		Assertions.assertThat(applicationContext.getBean("macIgnite")).isNotNull();
@@ -72,15 +70,12 @@ public class ConfigTest extends MacGyverIntegrationTest {
 		Assertions.assertThat(applicationContext.getBean("macWeb")).isNotNull();
 		Assertions.assertThat(applicationContext.getBean("macHandlerMappingPostProcessor")).isNotNull();
 		Assertions.assertThat(applicationContext.getBean("macWebConfig")).isNotNull();
-		Assertions.assertThat(applicationContext.getBean("macVaadinServlet")).isNotNull();
-		Assertions.assertThat(applicationContext.getBean("macViewDecorators")).isNotNull();
 		Assertions.assertThat(applicationContext.getBean("macAccessLogCustomizer")).isNotNull();
 		Assertions.assertThat(applicationContext.getBean("macNeo4jProxyServlet")).isNotNull();
 		Assertions.assertThat(applicationContext.getBean("macNeo4jProxyServletRegistrationBean")).isNotNull();
 		Assertions.assertThat(applicationContext.getBean("macContextFilter")).isNotNull();
 		Assertions.assertThat(applicationContext.getBean("macFilterRegistration")).isNotNull();
 		Assertions.assertThat(applicationContext.getBean("macUIContextManager")).isNotNull();
-		Assertions.assertThat(applicationContext.getBean("macUIMigrator")).isNotNull();
 		
 		
 		// this generates the test assertions above

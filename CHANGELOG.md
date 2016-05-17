@@ -1,5 +1,8 @@
 ## Changes
 
+### 1.2.0
+* Eliinate Vaadin
+
 ### 1.1.5
 * Fix CLI getToken()
 
