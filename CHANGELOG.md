@@ -1,5 +1,8 @@
 ## Changes
 
+### 1.1.4
+* Fix Memory Leak - https://github.com/LendingClub/macgyver/pull/301
+
 ### 1.1.3
 * Add quickstart functionality to bootstrap macgyver
 * curl | bash support for CLI install
