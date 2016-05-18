@@ -94,8 +94,8 @@ public abstract class Command {
 		return this;
 	}
 
-	Optional<String> getToken() {
-		return Optional.empty();
+	protected Optional<String> getToken() {
+		return Optional.ofNullable(Strings.emptyToNull(getConfig().path("token").asText(null)));
 	}
 
 	public abstract void execute() throws IOException;

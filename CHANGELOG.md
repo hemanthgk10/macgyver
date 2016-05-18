@@ -1,5 +1,8 @@
 ## Changes
 
+### 1.1.5
+* Fix CLI getToken()
+
 ### 1.1.4
 * Fix Memory Leak - https://github.com/LendingClub/macgyver/pull/301
 
