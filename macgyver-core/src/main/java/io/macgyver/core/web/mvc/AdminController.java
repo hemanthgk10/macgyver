@@ -44,9 +44,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.vaadin.server.Page;
-import com.vaadin.shared.Position;
-import com.vaadin.ui.Notification;
+
 
 import io.macgyver.core.Kernel;
 import io.macgyver.core.MacGyverException;

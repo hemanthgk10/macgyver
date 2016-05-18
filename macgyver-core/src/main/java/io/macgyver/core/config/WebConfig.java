@@ -24,14 +24,12 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.WebMvcAutoConfiguration;
 import org.springframework.boot.context.embedded.ConfigurableEmbeddedServletContainer;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerCustomizer;
 import org.springframework.boot.context.embedded.FilterRegistrationBean;
 import org.springframework.boot.context.embedded.ServletRegistrationBean;
 import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -45,17 +43,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import io.macgyver.core.Bootstrap;
-import io.macgyver.core.scheduler.TaskController;
 import io.macgyver.core.web.MacGyverContextFilter;
 import io.macgyver.core.web.UIContextManager;
 import io.macgyver.core.web.mvc.CoreApiController;
 import io.macgyver.core.web.mvc.HomeController;
 import io.macgyver.core.web.mvc.MacGyverWeb;
 import io.macgyver.core.web.neo4j.Neo4jProxyServlet;
-import io.macgyver.core.web.vaadin.MacGyverUI;
-import io.macgyver.core.web.vaadin.MacGyverVaadinServlet;
-import io.macgyver.core.web.vaadin.UIMigrator;
-import io.macgyver.core.web.vaadin.ViewDecorators;
 
 
 @Configuration
@@ -109,20 +102,6 @@ public class WebConfig implements EnvironmentAware {
 	@Bean
 	public MacGyverWeb macWebConfig() {
 		return new MacGyverWeb();
-	}
-
-	@Bean
-	public ServletRegistrationBean macVaadinServlet() {
-		ServletRegistrationBean sb = new ServletRegistrationBean(
-				new MacGyverVaadinServlet(), "/ui/*", "/VAADIN/*");
-		sb.addInitParameter("ui", MacGyverUI.class.getName());
-		// sb.addInitParameter("legacyPropertyToString","false");
-		return sb;
-	}
-
-	@Bean
-	public ViewDecorators macViewDecorators() {
-		return new ViewDecorators();
 	}
 
 	
@@ -213,9 +192,6 @@ public class WebConfig implements EnvironmentAware {
 		return new UIContextManager();
 	}
 	
-	@Bean UIMigrator macUIMigrator() {
-		return new UIMigrator();
-	}
-	
+
 
 }
