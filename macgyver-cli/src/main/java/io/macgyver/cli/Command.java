@@ -135,4 +135,8 @@ public abstract class Command {
 		return cli;
 	}
 	
+	public void exitWithError(String message) {
+		System.err.println("error: "+message);
+		System.exit(1);
+	}
 }

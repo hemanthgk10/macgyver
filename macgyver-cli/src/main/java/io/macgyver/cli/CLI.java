@@ -200,19 +200,18 @@ public class CLI {
 			myLogger.addAppender(fileAppender);
 		}
 	}
-	public static void main(String[] args) throws IOException {
-
-		boolean debug = true;
+	public static void main(String[] args)  {
 
 		try {
 			CLI m = new CLI();
 		
 			m.run(args);
 
-		} catch (CLIException  | ParameterException e) {
-			logger.debug("",e);
+		} catch (  IOException | RuntimeException e) {
+			logger.error("unexpected exception",e);
 		
-			System.err.println("error: " + e.getMessage());
+			System.err.println("error: " + e.toString());
+			System.exit(1);
 
 		}
 
