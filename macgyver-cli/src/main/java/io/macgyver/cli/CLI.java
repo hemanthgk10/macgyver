@@ -140,13 +140,13 @@ public class CLI {
 		logger.info("Command invocked:{} with args {}", command.getCommandName(), args[0]);
 		JCommander jCommander = new JCommander();
 		jCommander.addObject(command);
-        jCommander.setProgramName(this.getCommandName());
+                jCommander.setProgramName(this.getCommandName());
 
-        if (command.getHelp()) {
-        	System.out.println("Help Called:"+ command.getHelp());
-        	jCommander.usage();
-        	return;
-        }
+                if (command.getHelp()) {
+        	    logger.info("Help Called:{}", command.getHelp());
+        	    jCommander.usage();
+        	    return;
+                }
 		command.execute();
 		
 	
