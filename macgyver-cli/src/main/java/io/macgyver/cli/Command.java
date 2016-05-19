@@ -21,6 +21,7 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.beust.jcommander.Parameter;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
@@ -39,6 +40,13 @@ public abstract class Command {
 	Properties props = new Properties();
 
 	CLI cli;
+	
+	@Parameter(names ="--help", help = true, hidden = true)
+	private boolean help = false;
+
+	public boolean getHelp() {
+		return help;
+	}
 	
 	public String getCommandName() {
 		List<String> list = Splitter.on(".").splitToList(getClass().getName());
