@@ -137,6 +137,7 @@ public class LoginCommand  extends Command {
 
 		getCLI().getConfigManager().saveConfig();
 
+		System.out.println("authentication successful: api token granted");
 		
 	}
 

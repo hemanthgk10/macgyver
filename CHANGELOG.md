@@ -1,5 +1,10 @@
 ## Changes
 
+### 1.2.1
+* Improve help for CLI
+* Improve feedback on successful authentication
+* Advance AWS version
+
 ### 1.2.0
 * Eliinate Vaadin
 
