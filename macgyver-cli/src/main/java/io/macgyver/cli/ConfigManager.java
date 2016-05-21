@@ -70,7 +70,7 @@ public class ConfigManager {
 	
 	public void saveConfig() throws IOException {
 		File cfg = getConfigFile();
-		
-		mapper.writerWithDefaultPrettyPrinter().writeValue(cfg, data);
+
+		mapper.writerWithDefaultPrettyPrinter().writeValue(cfg, getData());
 	}
 }

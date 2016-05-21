@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -36,8 +36,10 @@ import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
 import com.google.common.reflect.ClassPath;
+import com.google.common.reflect.ClassPath.ClassInfo;
 
 import io.macgyver.cli.CLI;
+import io.macgyver.cli.Command;
 import io.macgyver.core.Bootstrap;
 import io.macgyver.core.Kernel;
 import io.macgyver.core.resource.Resource;
@@ -46,9 +48,9 @@ import net.lingala.zip4j.model.ZipParameters;
 
 public class ClientPackager {
 
-	public static final String CLIENT_DIR_NAME=".cli-generated";
+	public static final String CLIENT_DIR_NAME = ".cli-generated";
 	Logger logger = LoggerFactory.getLogger(ClientPackager.class);
-	File targetDir = new File(".",CLIENT_DIR_NAME);
+	File targetDir = new File(".", CLIENT_DIR_NAME);
 
 	public ClientPackager withOutputDir(File output) {
 		targetDir = output;
@@ -66,6 +68,7 @@ public class ClientPackager {
 		}
 		return rebuild();
 	}
+
 	public synchronized File rebuild() throws IOException {
 		try {
 			File f = getMacGyvverCLIExecutable();
@@ -87,30 +90,37 @@ public class ClientPackager {
 
 		ClassLoader cl = Thread.currentThread().getContextClassLoader();
 
-		ClassPath.from(cl).getTopLevelClasses(CLI.EXTENSION_PACKAGE)
-				.forEach(it -> {
+		for (String packageName : CLI.findPackageNamesToSearch()) {
 
-					logger.info("adding class: {}",it);
-					try (InputStream input = it.url().openStream()) {
-						byte[] b = ByteStreams.toByteArray(input);
-				
-						ZipParameters zp = new ZipParameters();
-						zp.setSourceExternalStream(true);
-						zp.setFileNameInZip(it.getName().replace(".",
-								"/") + ".class");
-						z.addStream(new ByteArrayInputStream(b), zp);
-					} catch (IOException | net.lingala.zip4j.exception.ZipException e) {
-						throw new RuntimeException(e);
-					} 
+			logger.info("searching pacakge for CLI commands: {}", packageName);
+			ClassPath.from(cl).getTopLevelClasses(packageName)
+					.forEach(it -> {
+						
+						if (isToBePackaged(it)) {
+							logger.info("adding command class: {}", it);
+							try (InputStream input = it.url().openStream()) {
+								byte[] b = ByteStreams.toByteArray(input);
 
-				});
+								ZipParameters zp = new ZipParameters();
+								zp.setSourceExternalStream(true);
+								zp.setFileNameInZip(it.getName().replace(".",
+										"/") + ".class");
+								z.addStream(new ByteArrayInputStream(b), zp);
+							} catch (IOException | net.lingala.zip4j.exception.ZipException e) {
+								throw new RuntimeException(e);
+							}
+						}
+
+					});
+		}
 
 		File generatedJar = new File(tempDir, "macgyver-capsule-with-extensions.jar");
 
 		try (InputStream in = cl.getResourceAsStream("cli/macgyver-cli-capsule.jar")) {
-			Preconditions.checkNotNull(in,"resource cli/macgyver-cli-capsule.jar could not be loaded");
+			Preconditions.checkNotNull(in,
+					"resource cli/macgyver-cli-capsule.jar could not be loaded.  Did you run gradle install in macgyver-cli?");
 			try (FileOutputStream out = new FileOutputStream(generatedJar)) {
-		
+
 				ByteStreams.copy(in, out);
 			}
 		}
@@ -131,13 +141,15 @@ public class ClientPackager {
 
 		PrintWriter bw = new PrintWriter(new FileWriter(executable));
 
-		org.springframework.core.io.Resource resource = Kernel.getApplicationContext().getResource("classpath:cli/cli-jar-header.sh");
+		org.springframework.core.io.Resource resource = Kernel.getApplicationContext()
+				.getResource("classpath:cli/cli-jar-header.sh");
 		try (InputStreamReader isr = new InputStreamReader(resource.getInputStream())) {
 			String script = CharStreams.toString(isr);
 			bw.println(script);
 		}
-	//	bw.println("#!/bin/bash");
-	//	bw.println("exec java -Dcli.exe=\"$0\" -Dcli.launch=true -jar $0 \"$@\"");
+		// bw.println("#!/bin/bash");
+		// bw.println("exec java -Dcli.exe=\"$0\" -Dcli.launch=true -jar $0
+		// \"$@\"");
 
 		bw.close();
 
@@ -149,5 +161,18 @@ public class ClientPackager {
 		executable.setExecutable(true);
 
 		return executable;
+	}
+	
+	public boolean isToBePackaged(ClassInfo ci) {
+		try {
+			Class z = Thread.currentThread().getContextClassLoader().loadClass(ci.getName());
+			if (Command.class.isAssignableFrom(z)) {
+				return true;
+			}
+		}
+		catch (Exception e) {
+			logger.debug("problem scanning class: "+ci);
+		}
+		return false;
 	}
 }

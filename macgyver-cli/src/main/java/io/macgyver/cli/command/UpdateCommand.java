@@ -21,9 +21,9 @@ import java.io.InputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Strings;
-import com.google.common.io.ByteSource;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
@@ -37,13 +37,28 @@ public class UpdateCommand  extends Command {
 
 	Logger logger = LoggerFactory.getLogger(UpdateCommand.class);
 
+	@Parameter(names={"--url"},arity=1,description="url for macgyver server")
+	String url;
+	
+	
+	
+	@Override
+	public String getServerUrl() {
+		if (url!=null) {
+			return url;
+		}
+		return super.getServerUrl();
+	}
+
+
+
 	@Override
 	public void execute() throws IOException {
 		
 		String exe = System.getProperty("cli.exe");
 		if (Strings.isNullOrEmpty(exe)) {
-			System.err.println("error: update can only be called from packaged executable");
-			System.exit(1);
+			throw new CLIException("update can only be called from packaged executable");
+			
 		}
 		File exeFile = new File(exe);
 		File exeBackup = new File(exe+".bak");
@@ -54,13 +69,14 @@ public class UpdateCommand  extends Command {
 		File tempExe = new File(tempDir,"macgyver");
 		Response response = getOkRestTarget().path("/cli/download").get().execute().response();
 		if (!response.isSuccessful()) {
-			throw new CLIException("could not download");
+			throw new CLIException("could not download CLI");
 		}
 		try (InputStream is = response.body().byteStream()) {
 			try (FileOutputStream fos = new FileOutputStream(tempExe)) {
 				ByteStreams.copy(is, fos);
-				tempExe.setExecutable(true);
 				Files.copy(tempExe,exeFile);
+				tempExe.setExecutable(true);
+				statusOutput("successfully updated "+exeFile.getAbsolutePath());
 			}
 		}
 		

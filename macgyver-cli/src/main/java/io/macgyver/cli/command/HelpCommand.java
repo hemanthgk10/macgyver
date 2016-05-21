@@ -34,7 +34,7 @@ public class HelpCommand extends Command {
 		
 		System.out.println("usage: macgyver <command> [args...]");
 		System.out.println("");
-		System.out.println("These are common MacGyver commands used in various situations:");
+		System.out.println("This is a list of macgyver commands:");
 		x.forEach( it -> {
 			System.out.println(it);
 		});

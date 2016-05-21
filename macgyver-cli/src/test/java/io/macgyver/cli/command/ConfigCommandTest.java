@@ -41,8 +41,8 @@ public class ConfigCommandTest {
 		cli.getConfigManager().setConfigDir(configDir);
 
 		try {
-			cli.run("config", "--set");
-			Assertions.failBecauseExceptionWasNotThrown(ParameterException.class);
+			boolean b = cli.run("config", "--set");
+			Assertions.assertThat(b).isFalse();
 		} catch (Exception e) {
 			Assertions.assertThat(e).isInstanceOf(ParameterException.class)
 					.hasMessage("Expected a value after parameter --set");
