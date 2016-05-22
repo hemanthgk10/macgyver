@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.beust.jcommander.Parameter;
+import com.beust.jcommander.ParameterException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.macgyver.cli.Command;
@@ -31,7 +32,7 @@ public class ConfigCommand extends Command {
 	@Parameter(names="--get-all")
 	boolean getAll;
 	
-	@Parameter(names="--set",arity=2)
+	@Parameter(names="--set",arity=2,description="sets a config value")
 	List<String> set;
 	
 	@Override
@@ -46,6 +47,9 @@ public class ConfigCommand extends Command {
 		else if (set!=null) {
 			getConfig().put(set.get(0), set.get(1));
 			getCLI().getConfigManager().saveConfig();
+		}
+		else {
+			throw new ParameterException("");
 		}
 	}
 
