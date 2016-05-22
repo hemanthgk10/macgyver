@@ -159,19 +159,6 @@ public class CoreConfig implements EnvironmentAware {
 
 	}
 
-	/*
-	 * @Bean public CrshShellAuthenticationProperties macCrashAuth() { // In
-	 * case no shell.auth property is provided fall back to Spring Security //
-	 * based authentication and get role to access shell from //
-	 * ManagementServerProperties. // In case shell.auth is set to spring and
-	 * roles are configured using // shell.auth.spring.roles the below default
-	 * role will be overridden by // ConfigurationProperties.
-	 * SpringAuthenticationProperties authenticationProperties = new
-	 * SpringAuthenticationProperties(); authenticationProperties.setRoles(new
-	 * String[] {"FOOR"});
-	 *
-	 * return authenticationProperties; }
-	 */
 
 	@Bean
 	public static PropertySourcesPlaceholderConfigurer macPropertyPlaceholderConfigurer() {

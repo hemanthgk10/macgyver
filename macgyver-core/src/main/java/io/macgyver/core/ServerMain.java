@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.actuate.autoconfigure.CrshAutoConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.event.ApplicationFailedEvent;
@@ -47,7 +48,7 @@ import reactor.bus.EventBus;
 
 @Configuration
 @ComponentScan(basePackages = { "io.macgyver.config", "io.macgyver.plugin.config", "io.macgyver.core.config" })
-@EnableAutoConfiguration
+@EnableAutoConfiguration(exclude={CrshAutoConfiguration.class})
 public class ServerMain {
 
 	static Logger logger = org.slf4j.LoggerFactory.getLogger(ServerMain.class);
