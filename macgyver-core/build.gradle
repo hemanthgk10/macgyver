@@ -47,9 +47,7 @@ dependencies {
     compile 'com.lambdaworks:scrypt:1.4.0'
 	compile 'it.sauronsoftware.cron4j:cron4j:2.2.5'
 
-	compile "org.apache.ignite:ignite-core:${IGNITE_VERSION}"
-	compile "org.apache.ignite:ignite-spring:${IGNITE_VERSION}"
-	
+
 	compile 'org.aspectj:aspectjweaver:1.8.5'
 	
 	compile 'jaxen:jaxen:1.1.6'  // needed???

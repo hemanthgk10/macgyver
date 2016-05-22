@@ -19,12 +19,10 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
-import org.apache.ignite.Ignite;
 import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.rapidoid.u.U;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,8 +30,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
 import io.macgyver.core.Kernel;
+import io.macgyver.core.cluster.ClusterManager;
 import io.macgyver.core.scheduler.TaskStateManager.TaskState;
-import io.macgyver.core.util.JsonNodes;
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.test.MacGyverIntegrationTest;
 import it.sauronsoftware.cron4j.TaskExecutor;
@@ -156,7 +154,7 @@ public class TaskStateManagerIntegrationTest extends MacGyverIntegrationTest {
 	@Test
 	public void testProcessId() {
 		Assertions.assertThat(tsm.getProcessUuid())
-				.isEqualTo(Kernel.getApplicationContext().getBean(Ignite.class).cluster().localNode().id().toString());
+				.isEqualTo(Kernel.getApplicationContext().getBean(ClusterManager.class).getLocalProcessId());
 	}
 
 	@Test
@@ -258,7 +256,7 @@ public class TaskStateManagerIntegrationTest extends MacGyverIntegrationTest {
 			Assertions.assertThat(it.path("taskId").asText()).isEqualTo(taskId);
 			Assertions.assertThat(it.path("state").asText()).isEqualTo("STARTED");
 			Assertions.assertThat(it.path("processUuid").asText()).isEqualTo(
-					Kernel.getApplicationContext().getBean(Ignite.class).cluster().localNode().id().toString());
+					Kernel.getApplicationContext().getBean(ClusterManager.class).getLocalProcessId());
 			Assertions.assertThat(it.path("type").asText()).isEqualTo("cron4j");
 			Assertions.assertThat(it.path("hostname").asText().length()).isGreaterThan(0);
 		});

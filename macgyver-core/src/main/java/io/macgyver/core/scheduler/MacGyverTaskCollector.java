@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,6 +14,7 @@
 package io.macgyver.core.scheduler;
 
 import io.macgyver.core.Kernel;
+import io.macgyver.core.cluster.ClusterManager;
 import io.macgyver.neorx.rest.NeoRxClient;
 import it.sauronsoftware.cron4j.SchedulingPattern;
 import it.sauronsoftware.cron4j.TaskCollector;
@@ -23,29 +24,39 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import com.beust.jcommander.internal.Lists;
 import com.fasterxml.jackson.databind.JsonNode;
 
 public class MacGyverTaskCollector implements TaskCollector {
 
 	Logger logger = LoggerFactory.getLogger(MacGyverTaskCollector.class);
 
+	@Autowired
 	NeoRxClient client;
+
+	@Autowired
+	ClusterManager clusterManager;
 
 	public MacGyverTaskCollector() {
 
 	}
 
-	public MacGyverTaskCollector(NeoRxClient c) {
-		this.client = c;
-	}
-
-
-
 	public List<JsonNode> fetchSchedule() {
-		List<JsonNode> list = client
-				.execCypherAsList("match (s:ScheduledTask) return s");
-
+		List<JsonNode> list = Lists.newArrayList();
+		if (clusterManager.isPrimary()) {
+			list.addAll(client
+					.execCypherAsList("match (s:ScheduledTask) return s"));
+			list.forEach(it -> {
+				if (logger.isDebugEnabled()) {
+					logger.debug("task: {}", it);
+				}
+			});
+		}
+		else {
+			logger.info("scheduled tasks will not fire on this node because it is a secondary node in the cluster");
+		}
 		return list;
 	}
 
@@ -60,7 +71,7 @@ public class MacGyverTaskCollector implements TaskCollector {
 		TaskTable tt = new TaskTable();
 
 		ScheduledTaskManager stm = Kernel.getApplicationContext().getBean(ScheduledTaskManager.class);
-		
+
 		for (JsonNode n : list) {
 			try {
 

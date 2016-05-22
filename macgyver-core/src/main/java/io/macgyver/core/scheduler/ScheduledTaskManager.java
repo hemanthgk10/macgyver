@@ -34,7 +34,7 @@ import com.google.common.io.CharStreams;
 
 import io.macgyver.core.Kernel;
 import io.macgyver.core.resource.Resource;
-import io.macgyver.core.scheduler.IgniteSchedulerService.CrontabLineProcessor;
+import io.macgyver.core.scheduler.LocalScheduler.CrontabLineProcessor;
 import io.macgyver.core.script.ExtensionResourceProvider;
 import io.macgyver.neorx.rest.NeoRxClient;
 

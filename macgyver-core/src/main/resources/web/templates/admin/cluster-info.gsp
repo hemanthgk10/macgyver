@@ -17,8 +17,9 @@
                       <tr>
                         <th>Id</th>
                         <th>Host</th>
-						<th>Ignite Version</th>
-						<th>Heartbeat</th>
+                        <th>Status</th>
+						<th>Last Heartbeat (secs ago)</th>
+                        
                       </tr>
                     </thead>
                     <tbody>
@@ -26,10 +27,10 @@
 request.getAttribute("list").each {
 %>
                       <tr>
-                        <td><%=it.path("id").asText()%></td>
-                        <td><%=it.path("host").asText()%></td>
-                        <td><%=it.path("igniteVersion").asText()%></td>
-						 <td><%=it.path("lastHeartbeatSecs").asText()%></td>
+                        <td><%=it.getId()%><%=it.isSelf()? "  (This Node)" : ""%></td>
+                        <td><%=it.getHost()%></td>
+                        <td><%=it.isPrimary() ? "PRIMARY" : "SECONDARY"%></td>
+						 <td><%=java.util.concurrent.TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()-it.getUpdateTs())%></td>
                       </tr>
 <%
 }
