@@ -134,7 +134,7 @@ public class LocalScheduler implements  Runnable, DirectScriptExecutor {
 
 
 	/**
-	 * This should only be invoked via ignite.
+	 * 
 	 * 
 	 * @param scriptName
 	 */
