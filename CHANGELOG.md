@@ -1,5 +1,12 @@
 ## Changes
 
+### 1.3.0
+* Remove Ignite (may use it later but not for clustering)
+* CLI Enhancmeents
+* Spring Boot 1.3.3 -> 1.3.5
+* Spring Securty 4.0.3 -> 4.1.0
+* Spring Framework 4.2.4 -> 4.2.6
+
 ### 1.2.1
 * Improve help for CLI
 * Improve feedback on successful authentication
