@@ -135,8 +135,7 @@ public class ClusterManager implements ApplicationListener<ApplicationReadyEvent
 
 		};
 		
-		// This initial delay gives things a chance to warm up before the fun starts, which is helpful.
-		long initialDelay = TimeUnit.SECONDS.toSeconds(30);
+		long initialDelay = TimeUnit.SECONDS.toSeconds(0);
 		scheduler.scheduleWithFixedDelay(r, initialDelay, scanIntervalSecs, TimeUnit.SECONDS);
 
 		logger.info("...started");
