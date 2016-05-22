@@ -64,6 +64,7 @@ public class ClusterManager implements ApplicationListener<ApplicationReadyEvent
 		public JsonNode getData() {
 			return data;
 		}
+
 		public String getId() {
 			return data.path("id").asText();
 		}
@@ -87,6 +88,7 @@ public class ClusterManager implements ApplicationListener<ApplicationReadyEvent
 		public String toString() {
 			return data.toString();
 		}
+
 		public String getHost() {
 			return data.path("host").asText();
 		}
@@ -118,6 +120,9 @@ public class ClusterManager implements ApplicationListener<ApplicationReadyEvent
 
 	@Override
 	public void onApplicationEvent(ApplicationReadyEvent arg0) {
+
+		ensureUniqueConstraints();
+
 		logger.info("starting ClusterManager...");
 		ThreadFactory tf = new ThreadFactoryBuilder().setDaemon(true).setNameFormat("ClusterManager-%s").build();
 		scheduler = Executors.newSingleThreadScheduledExecutor(tf);
@@ -134,7 +139,7 @@ public class ClusterManager implements ApplicationListener<ApplicationReadyEvent
 			}
 
 		};
-		
+
 		long initialDelay = TimeUnit.SECONDS.toSeconds(0);
 		scheduler.scheduleWithFixedDelay(r, initialDelay, scanIntervalSecs, TimeUnit.SECONDS);
 
@@ -192,9 +197,6 @@ public class ClusterManager implements ApplicationListener<ApplicationReadyEvent
 			expireNode(it);
 		});
 
-		
-	
-		
 		Collections.sort(list, clusterNodeComparator());
 		int primaryCount = list.stream().mapToInt(it -> {
 			return it.path("primary").asBoolean() ? 1 : 0;
@@ -222,7 +224,7 @@ public class ClusterManager implements ApplicationListener<ApplicationReadyEvent
 		handleLocalStateChange(thisNode.get());
 
 		if (logger.isDebugEnabled()) {
-			logger.debug("cluster nodes: {}",getClusterNodes().values());
+			logger.debug("cluster nodes: {}", getClusterNodes().values());
 		}
 
 	}
@@ -273,12 +275,12 @@ public class ClusterManager implements ApplicationListener<ApplicationReadyEvent
 
 	protected void onStepUp() {
 		logger.info("this node is {}", primaryStatus.get() ? "PRIMARY" : "SECONDARY");
-		logger.info("cluster: {}",getClusterNodes().values());
+		logger.info("cluster: {}", getClusterNodes().values());
 	}
 
 	protected void onStepDown() {
 		logger.info("this node is {}", primaryStatus.get() ? "PRIMARY" : "SECONDARY");
-		logger.info("cluster: {}",getClusterNodes().values());
+		logger.info("cluster: {}", getClusterNodes().values());
 	}
 
 	boolean isThisNode(JsonNode n) {
@@ -296,28 +298,35 @@ public class ClusterManager implements ApplicationListener<ApplicationReadyEvent
 		logger.info("removing cluster nade: {}", n);
 		neo4j.execCypher(cypher, "id", n.get("id"));
 	}
-	
+
 	public static Comparator<JsonNode> clusterNodeComparator() {
 		Ordering<JsonNode> priority = new Ordering<JsonNode>() {
 
 			@Override
 			public int compare(JsonNode left, JsonNode right) {
-				
-				return -1 * Ints.compare(left.path("priority").asInt(0),right.path("priority").asInt(0));
+
+				return -1 * Ints.compare(left.path("priority").asInt(0), right.path("priority").asInt(0));
 			}
-			
+
 		};
 		Ordering<JsonNode> order = new Ordering<JsonNode>() {
 
 			@Override
 			public int compare(JsonNode left, JsonNode right) {
-				
+
 				return left.path("id").asText("").compareTo(right.path("id").asText(""));
 			}
 		};
 
-		Comparator<JsonNode> x=  Ordering.compound(ImmutableList.of(priority,order));
+		Comparator<JsonNode> x = Ordering.compound(ImmutableList.of(priority, order));
 		return x;
 	}
 
+	protected void ensureUniqueConstraints() {
+		try {
+			neo4j.execCypher("CREATE CONSTRAINT ON (cn:ClusterNode) ASSERT cn.id IS UNIQUE");
+		} catch (Exception e) {
+			logger.error("problem creating unique constraint");
+		}
+	}
 }
