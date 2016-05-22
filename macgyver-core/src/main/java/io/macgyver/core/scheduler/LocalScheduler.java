@@ -20,34 +20,42 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.ignite.services.Service;
-import org.apache.ignite.services.ServiceContext;
+import javax.annotation.PostConstruct;
+
+import org.crsh.console.jline.internal.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Optional;
 import com.google.common.io.LineProcessor;
+import com.google.common.util.concurrent.Service;
 
 import io.macgyver.core.Kernel;
 import io.macgyver.core.scheduler.TaskStateManager.AgingTaskCleanup;
 import io.macgyver.core.scheduler.TaskStateManager.OrphanedTaskCleanup;
-import io.macgyver.core.scheduler.TaskStateManager.TaskState;
 import io.macgyver.neorx.rest.NeoRxClient;
 import it.sauronsoftware.cron4j.Scheduler;
 
-public class IgniteSchedulerService implements Service, Runnable, Serializable, DirectScriptExecutor {
+public class LocalScheduler implements  Runnable, DirectScriptExecutor {
 
-	static Logger logger = LoggerFactory.getLogger(IgniteSchedulerService.class);
+	static Logger logger = LoggerFactory.getLogger(LocalScheduler.class);
 
 	ScheduledFuture scheduledFuture;
 
+	@Autowired
+	Scheduler scheduler;
+	
+	@Autowired
 	MacGyverTaskCollector taskCollector;
 
-	AtomicReference<Scheduler> schedulerRef = new AtomicReference<>();
-
-	volatile NeoRxClient neo4j;
+	@Autowired
+	NeoRxClient neo4j;
+	
+	@Autowired
+	TaskStateManager taskStateManager;
 	
 	synchronized NeoRxClient getNeoRxClient() {
 		if (neo4j==null) {
@@ -89,45 +97,27 @@ public class IgniteSchedulerService implements Service, Runnable, Serializable, 
 
 	}
 
-	@Override
-	public synchronized void cancel(ServiceContext ctx) {
-
-		Scheduler s = schedulerRef.get();
-			if (s!=null) {
-				s.stop();
-			}
-
-			scheduledFuture.cancel(true);
-		
-
+	public boolean isMaster() {
+		return true;
 	}
 
-	@Override
-	public void init(ServiceContext ctx) throws Exception {
-		// we have a race/deadlock if we try to access spring from here
-	}
+	@PostConstruct
+	public void startup() throws Exception {
+		logger.info("starting scheduler...");
 
-	@Override
-	public synchronized void execute(ServiceContext ctx) throws Exception {
-		logger.info("execute...");
-		NeoRxClient client = Kernel.getApplicationContext().getBean(NeoRxClient.class);
-
-		taskCollector = new MacGyverTaskCollector(client);
-		TaskStateManager tsm = Kernel.getApplicationContext().getBean(TaskStateManager.class);
 		scheduledFuture = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay(this, 0, 10, TimeUnit.SECONDS);
-		Scheduler schedulerInstance = new Scheduler();
-		if (!schedulerInstance.isStarted()) {
-			schedulerInstance.addTaskCollector(taskCollector);
-			schedulerInstance.setDaemon(true);
-			schedulerInstance.addSchedulerListener(new MacGyverScheduleListener());
-			LoggerFactory.getLogger(IgniteSchedulerService.class).info("starting scheduler: {}", schedulerInstance);
-			schedulerInstance.start();
-			this.schedulerRef.set(schedulerInstance);
+	
+		Preconditions.checkNotNull(taskCollector);
+			scheduler.addTaskCollector(taskCollector);
+			scheduler.setDaemon(true);
+			scheduler.addSchedulerListener(new MacGyverScheduleListener());
 			
+			scheduler.start();
+				
 			
-			schedulerInstance.schedule(OrphanedTaskCleanup.CRON, tsm.new OrphanedTaskCleanup());
-			schedulerInstance.schedule(AgingTaskCleanup.CRON,tsm.new AgingTaskCleanup());
-		}
+			scheduler.schedule(OrphanedTaskCleanup.CRON, taskStateManager.new OrphanedTaskCleanup());
+			scheduler.schedule(AgingTaskCleanup.CRON,taskStateManager.new AgingTaskCleanup());
+	
 
 	}
 
@@ -144,7 +134,7 @@ public class IgniteSchedulerService implements Service, Runnable, Serializable, 
 
 
 	/**
-	 * This should only be invoked via ignite.
+	 * 
 	 * 
 	 * @param scriptName
 	 */
@@ -152,11 +142,9 @@ public class IgniteSchedulerService implements Service, Runnable, Serializable, 
 		ObjectNode n = new ObjectMapper().createObjectNode();
 		n.put("script", scriptName);
 		MacGyverTask task = new MacGyverTask(n);
+
+			scheduler.launch(task);
 		
-		Scheduler s = schedulerRef.get();
-		if (s!=null) {
-			s.launch(task);
-		}
 		
 	}
 

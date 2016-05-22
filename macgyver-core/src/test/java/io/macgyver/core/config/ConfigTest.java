@@ -48,8 +48,8 @@ public class ConfigTest extends MacGyverIntegrationTest {
 		Assertions.assertThat(applicationContext.getBean("macGraphClient")).isNotNull();
 		Assertions.assertThat(applicationContext.getBean("macExtensionResourceProvider")).isNotNull();
 		Assertions.assertThat(applicationContext.getBean("macClusterManager")).isNotNull();
-		Assertions.assertThat(applicationContext.getBean("macIgniteTcpDiscoverySpi")).isNotNull();
-		Assertions.assertThat(applicationContext.getBean("macIgnite")).isNotNull();
+
+
 		Assertions.assertThat(applicationContext.getBean("macEventLogger")).isNotNull();
 		Assertions.assertThat(applicationContext.getBean("macEventLogWriter")).isNotNull();
 		Assertions.assertThat(applicationContext.getBean("macTaskStateManager")).isNotNull();

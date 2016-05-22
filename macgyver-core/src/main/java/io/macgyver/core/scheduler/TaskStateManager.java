@@ -25,7 +25,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.ignite.Ignite;
 import org.rapidoid.u.U;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +41,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import io.macgyver.core.cluster.ClusterManager;
 import io.macgyver.neorx.rest.NeoRxClient;
 import it.sauronsoftware.cron4j.Task;
 import it.sauronsoftware.cron4j.TaskExecutor;
@@ -66,7 +66,7 @@ public class TaskStateManager implements ApplicationListener<ApplicationReadyEve
 	NeoRxClient neo4j;
 
 	@Autowired
-	Ignite ignite;
+	ClusterManager clusterManager;
 
 	Logger logger = LoggerFactory.getLogger(TaskStateManager.class);
 
@@ -168,7 +168,7 @@ public class TaskStateManager implements ApplicationListener<ApplicationReadyEve
 	}
 
 	protected String getProcessUuid() {
-		return ignite.cluster().localNode().id().toString();
+		return clusterManager.getLocalProcessId();
 	}
 
 	protected String getHostname() {
@@ -245,9 +245,9 @@ public class TaskStateManager implements ApplicationListener<ApplicationReadyEve
 
 		Instant now = Instant.now();
 
-		ignite.cluster().nodes().forEach(it -> {
-			processUuidList.add(it.id().toString());
-		});
+		
+		processUuidList.addAll(clusterManager.getProcessIdList());
+	
 
 		String cypher = "match (t:TaskState {state:'STARTED'}) where not has(t.endTs) and not t.processUuid in {list} set t.endTs={endTs}, t.endDate={endDate}, t.state={state} return t";
 		neo4j.execCypher(cypher, "list", processUuidList, "endTs", now.toEpochMilli(), "endDate", formatInstant(now),

@@ -19,11 +19,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.ignite.Ignite;
-import org.apache.ignite.cluster.ClusterNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,33 +37,29 @@ import org.springframework.web.servlet.ModelAndView;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
-
 import io.macgyver.core.Kernel;
 import io.macgyver.core.MacGyverException;
 import io.macgyver.core.auth.AuthUtil;
 import io.macgyver.core.auth.MacGyverRole;
 import io.macgyver.core.cluster.ClusterManager;
+import io.macgyver.core.cluster.ClusterManager.NodeInfo;
 import io.macgyver.core.crypto.Crypto;
-import io.macgyver.core.crypto.KeyStoreManager;
 import io.macgyver.core.resource.Resource;
 import io.macgyver.core.resource.ResourceProvider;
 import io.macgyver.core.resource.provider.filesystem.FileSystemResourceProvider;
 import io.macgyver.core.scheduler.DirectScriptExecutor;
-import io.macgyver.core.scheduler.IgniteSchedulerService;
+import io.macgyver.core.scheduler.LocalScheduler;
 import io.macgyver.core.script.ExtensionResourceProvider;
 import io.macgyver.core.service.ServiceDefinition;
 import io.macgyver.core.service.ServiceFactory;
 import io.macgyver.core.service.ServiceRegistry;
 import io.macgyver.core.web.BrowserControl;
-import io.macgyver.core.web.UIContext;
-import io.macgyver.core.web.UIContextDecorator;
 
 @Component("macAdminController")
 @Controller
@@ -78,6 +73,9 @@ public class AdminController {
 	@Autowired
 	ServiceRegistry serviceRegistry;
 
+	@Autowired
+	LocalScheduler localScheduler;
+	
 	Logger logger = LoggerFactory.getLogger(AdminController.class);
 	@Autowired
 	ApplicationContext applicationContext;
@@ -99,27 +97,12 @@ public class AdminController {
 		ClusterManager clusterManager = Kernel.getApplicationContext().getBean(
 				ClusterManager.class);
 
-		Ignite ignite = Kernel.getApplicationContext().getBean(Ignite.class);
-		List<ObjectNode> list = new ArrayList<>();
-		for (ClusterNode clusterNode : ignite.cluster().nodes()) {
-
-			ObjectNode n = new ObjectMapper().createObjectNode();
-			n.put("id", clusterNode.id().toString());
-
-			n.put("host", Joiner.on(", ").join(clusterNode.hostNames()));
-			n.put("igniteVersion", clusterNode.version().toString());
-
-			long heartbeat = clusterNode.metrics().getLastUpdateTime();
-
-			n.put("master", true);
-			long secsAgo = Math.max(0, System.currentTimeMillis() - heartbeat) / 1000L;
-			if (heartbeat == 0) {
-				n.put("lastHeartbeatSecs", "never");
-			} else {
-				n.put("lastHeartbeatSecs", secsAgo);
-			}
-			list.add(n);
-		}
+		List<NodeInfo> list = new ArrayList<>();
+		
+		list.addAll(clusterManager.getClusterNodes().values());
+		
+	
+		
 		return new ModelAndView("/admin/cluster-info", "list", list);
 
 	}
@@ -237,10 +220,7 @@ public class AdminController {
 		try {
 			DirectScriptExecutor service = Kernel
 					.getApplicationContext()
-					.getBean(Ignite.class)
-					.services()
-					.serviceProxy(IgniteSchedulerService.class.getName(),
-							DirectScriptExecutor.class, true);
+					.getBean(LocalScheduler.class);
 
 			service.executeScriptImmediately(r.getPath());
 

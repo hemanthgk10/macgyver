@@ -19,26 +19,18 @@ import java.net.MalformedURLException;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.ignite.Ignite;
-import org.apache.ignite.Ignition;
-import org.apache.ignite.configuration.IgniteConfiguration;
-import org.apache.ignite.spi.deployment.DeploymentSpi;
-import org.apache.ignite.spi.deployment.local.LocalDeploymentSpi;
-import org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.actuate.metrics.reader.MetricRegistryMetricReader;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.jmx.export.MBeanExporter;
 
-import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.SharedMetricRegistries;
 import com.codahale.metrics.Slf4jReporter;
 import com.codahale.metrics.Slf4jReporter.LoggingLevel;
@@ -49,24 +41,23 @@ import com.ning.http.client.AsyncHttpClient;
 import io.macgyver.core.Bootstrap;
 import io.macgyver.core.ContextRefreshApplicationListener;
 import io.macgyver.core.CoreBindingSupplier;
-
 import io.macgyver.core.CoreSystemInfo;
 import io.macgyver.core.Kernel;
 import io.macgyver.core.MacGyverBeanFactoryPostProcessor;
 import io.macgyver.core.MacGyverBeanPostProcessor;
-
 import io.macgyver.core.ScriptHookManager;
 import io.macgyver.core.Startup;
 import io.macgyver.core.auth.UserManager;
 import io.macgyver.core.cli.CLIDownloadController;
 import io.macgyver.core.cluster.ClusterManager;
-import io.macgyver.core.cluster.NeoRxTcpDiscoveryIpFinder;
 import io.macgyver.core.crypto.Crypto;
 import io.macgyver.core.log.EventLogger;
 import io.macgyver.core.log.Neo4jEventLogWriter;
 import io.macgyver.core.metrics.MacGyverMetricRegistry;
 import io.macgyver.core.reactor.MacGyverEventPublisher;
 import io.macgyver.core.resource.provider.filesystem.FileSystemResourceProvider;
+import io.macgyver.core.scheduler.LocalScheduler;
+import io.macgyver.core.scheduler.MacGyverTaskCollector;
 import io.macgyver.core.scheduler.ScheduledTaskManager;
 import io.macgyver.core.scheduler.TaskController;
 import io.macgyver.core.scheduler.TaskStateManager;
@@ -75,6 +66,7 @@ import io.macgyver.core.script.ExtensionResourceProvider;
 import io.macgyver.core.service.ServiceRegistry;
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.neorx.rest.NeoRxClientBuilder;
+import it.sauronsoftware.cron4j.Scheduler;
 import reactor.Environment;
 import reactor.bus.Event;
 import reactor.bus.EventBus;
@@ -89,7 +81,6 @@ import reactor.fn.Consumer;
 @Configuration
 public class CoreConfig implements EnvironmentAware {
 
-	public static final String MACGYVER_GRID_NAME = "macgyver";
 
 	@Autowired
 	org.springframework.core.env.Environment env;
@@ -256,37 +247,7 @@ public class CoreConfig implements EnvironmentAware {
 	@Qualifier("mbeanExporter")
 	MBeanExporter springMBeanExporter;
 
-	@Bean TcpDiscoverySpi macIgniteTcpDiscoverySpi() throws MalformedURLException{
-		TcpDiscoverySpi spi = new TcpDiscoverySpi();
-		spi.setIpFinder(new NeoRxTcpDiscoveryIpFinder(macGraphClient()));
 
-		return spi;
-	}
-	@Bean
-	public Ignite macIgnite() throws MalformedURLException {
-
-		if (springMBeanExporter!=null) {
-			// this bean borks the SpringMBeanExporter, so exclude it...
-			springMBeanExporter.addExcludedBean("macIgnite");
-		}
-
-		IgniteConfiguration cfg = new IgniteConfiguration();
-		cfg.setPeerClassLoadingEnabled(false);
-		cfg.setGridName(MACGYVER_GRID_NAME);
-		cfg.setMetricsLogFrequency(0); 
-		
-		cfg.setDiscoverySpi(macIgniteTcpDiscoverySpi());
-
-	
-		DeploymentSpi x = new LocalDeploymentSpi();
-
-		cfg.setDeploymentSpi(x);
-
-		Ignite ignite = Ignition.start(cfg);
-
-
-		return ignite;
-	}
 	
 	@Bean
 	public EventLogger macEventLogger() {
@@ -377,5 +338,19 @@ public class CoreConfig implements EnvironmentAware {
 
 		
 		return registry;
+	}
+	
+	@Bean
+	public MacGyverTaskCollector macTaskCollector() {
+		return new MacGyverTaskCollector();
+	}
+	@Bean
+	public LocalScheduler macLocalScheduler() {
+		return new LocalScheduler();
+	}
+	
+	@Bean
+	public Scheduler macCron4jScheduler() {
+		return new Scheduler();
 	}
 }
