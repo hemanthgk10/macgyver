@@ -153,7 +153,7 @@ public class LoginCommand  extends Command {
 
 		statusOutput("authentication successful: api token granted");
 		statusOutput("token valid until: "+new Date(n.path("expirationTs").asLong(0)));
-		statusOutput("run 'macgyver token --refresh' to obtain a new token with an extended TTL");
+		statusOutput("run 'macgyver login --refresh' to obtain a new token with an extended TTL");
 	}
 	
 
