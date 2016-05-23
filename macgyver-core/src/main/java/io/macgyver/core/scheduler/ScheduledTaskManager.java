@@ -14,7 +14,6 @@
 package io.macgyver.core.scheduler;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.util.List;
 import java.util.Map;
 
@@ -27,14 +26,11 @@ import org.springframework.context.ApplicationListener;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
-import com.google.common.io.CharStreams;
 
 import io.macgyver.core.Kernel;
 import io.macgyver.core.resource.Resource;
-import io.macgyver.core.scheduler.LocalScheduler.CrontabLineProcessor;
 import io.macgyver.core.script.ExtensionResourceProvider;
 import io.macgyver.neorx.rest.NeoRxClient;
 
@@ -55,7 +51,6 @@ public class ScheduledTaskManager implements ApplicationListener<ApplicationRead
 
 	ObjectMapper mapper = new ObjectMapper();
 	
-
 	public void scheduleInline(String id, String cron, String script) {
 		scheduleInline(id, cron, script, "groovy");
 	}
@@ -88,20 +83,18 @@ public class ScheduledTaskManager implements ApplicationListener<ApplicationRead
 	public void enable(String id, boolean b) {
 		String cypher = "match (t:ScheduledTask {id:{id}}) set t.enabled={enabled} return t";
 		throwIllegalStateOnEmptyList(id,neo4j.execCypher(cypher, "id", id, ENABLED, b).toList().toBlocking().first());
-		
 	}
-
 	
 	public void scheduleManually(String id) {
 		throwIllegalStateOnEmptyList(id,neo4j.execCypher("match (t:ScheduledTask {id:{id}}) set t.scheduledBy='manual' return t","id",id).toList().toBlocking().first());
 	}
+
 	public void scheduleByScript(String id) {
 		throwIllegalStateOnEmptyList(id, neo4j.execCypher("match (t:ScheduledTask {id:{id}}) where length(t.script)>0 set t.scheduledBy='script' return t","id",id).toList().toBlocking().first());
 	}
+
 	public boolean isEnabled(JsonNode config) {
-
 		return schedulerEnabled && config.path(ENABLED).asBoolean(true);
-
 	}
 
 	public void setSchedulerEnabled(boolean b) {
@@ -130,6 +123,7 @@ public class ScheduledTaskManager implements ApplicationListener<ApplicationRead
 	protected boolean isScripptScheduledByScript(JsonNode n) {
 		return n != null && n.path(SCHEDULED_BY).asText().equals(SCHEDULED_BY_SCRIPT);
 	}
+	
 	protected boolean isScriptManuallyScheduled(JsonNode n) {
 		return n != null && n.path(SCHEDULED_BY).asText().equals(SCHEDULED_BY_MANUAL);
 	}
@@ -138,9 +132,12 @@ public class ScheduledTaskManager implements ApplicationListener<ApplicationRead
 
 		Map<String, JsonNode> scriptMap = loadScheduledScriptTasks();
 
-		ExtensionResourceProvider extensionLoader = Kernel.getInstance().getApplicationContext()
+		Kernel.getInstance();
+		ExtensionResourceProvider extensionLoader = Kernel.getApplicationContext()
 				.getBean(ExtensionResourceProvider.class);
 		long scanTime = System.currentTimeMillis();
+		
+		CrontabExpressionExtractor expressionExtractor = new CrontabExpressionExtractor();
 	
 		for (Resource r : extensionLoader.findResources()) {
 			if (logger.isDebugEnabled()) {
@@ -149,12 +146,9 @@ public class ScheduledTaskManager implements ApplicationListener<ApplicationRead
 			String path = r.getPath();
 			if (path != null && path.startsWith("scripts/scheduler/")) {
 
-				
-				ObjectNode descriptor = extractCronExpression(r).or(mapper.createObjectNode());
+				ObjectNode descriptor = expressionExtractor.extractCronExpression(r).or(mapper.createObjectNode());
 				
 				boolean b = descriptor.path(ENABLED).asBoolean(true);
-
-				
 
 				if (isScriptManuallyScheduled(scriptMap.get(path))) {
 					
@@ -188,21 +182,6 @@ public class ScheduledTaskManager implements ApplicationListener<ApplicationRead
 	}
 
 
-	public Optional<ObjectNode> extractCronExpression(Resource r) {
-
-		try (StringReader sr = new StringReader(r.getContentAsString())) {
-			return CharStreams.readLines(sr, new CrontabLineProcessor());
-		} catch (IOException | RuntimeException e) {
-			try {
-				logger.warn("unable to extract cron expression: ", r.getContentAsString());
-			} catch (Exception IGNORE) {
-				logger.warn("unable to extract cron expression");
-			}
-		}
-
-		return Optional.absent();
-
-	}
 	
 	@Override
 	public void onApplicationEvent(ApplicationReadyEvent event) {
