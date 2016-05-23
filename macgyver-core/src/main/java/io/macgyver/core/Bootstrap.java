@@ -60,7 +60,10 @@ public class Bootstrap {
 
 
 	public File getMacGyverHome() {
-		Preconditions.checkNotNull(macgyverHome);
+	
+		if (macgyverHome==null) {
+			return new File(".");
+		}
 		return macgyverHome;
 	}
 	public File getWebDir() {

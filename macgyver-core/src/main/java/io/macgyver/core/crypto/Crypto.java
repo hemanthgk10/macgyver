@@ -132,10 +132,19 @@ public class Crypto {
 
 	}
 
+	public static final String ENCRYPTED_STRING_HEADER="eyJrIjoi";
 	public String decryptStringWithPassThrough(String input) {
 		try {
-			return decryptString(input);
-		} catch (Exception e) {
+			if (input.startsWith(ENCRYPTED_STRING_HEADER)) {
+				return decryptString(input);
+			}
+			return input;
+		}
+		catch (GeneralSecurityException e) {
+			e.printStackTrace();
+			return input;
+		}
+		catch (Exception e) {
 			return input;
 		}
 	}
