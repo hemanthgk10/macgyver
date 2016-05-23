@@ -78,7 +78,7 @@ public class TaskStateManager implements ApplicationListener<ApplicationReadyEve
 	
 
 	public void recordUserDefinedTaskStart(String guid, String ...userData) {
-		ObjectNode n = mapper.convertValue(U.map(userData), ObjectNode.class);
+		ObjectNode n = mapper.convertValue(U.map((Object[]) userData), ObjectNode.class);
 		
 		
 	    recordUserDefinedTaskStart(guid, n);

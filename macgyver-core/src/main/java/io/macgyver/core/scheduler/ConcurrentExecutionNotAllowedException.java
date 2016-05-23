@@ -13,15 +13,11 @@
  */
 package io.macgyver.core.scheduler;
 
-import it.sauronsoftware.cron4j.TaskExecutor;
-
 public class ConcurrentExecutionNotAllowedException extends IllegalStateException {
-
-
+	private static final long serialVersionUID = 1L;
 
 	public ConcurrentExecutionNotAllowedException(String message) {
 		super(message);
-		
 	}
 
 }

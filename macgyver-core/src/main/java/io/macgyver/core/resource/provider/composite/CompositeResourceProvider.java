@@ -15,7 +15,10 @@ package io.macgyver.core.resource.provider.composite;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,12 +78,18 @@ public class CompositeResourceProvider extends ResourceProvider {
 
 	@Override
 	public Iterable<Resource> findResources(ResourceMatcher matcher) throws IOException {
+		
+		Set<String> paths = new HashSet<>();
+		
 		List<Resource> list = Lists.newArrayList();
 
 		for (ResourceProvider loader : resourceLoaders) {
-
-			Iterables.addAll(list, loader.findResources(matcher));
-
+			for (Iterator<Resource> iter = loader.findResources(matcher).iterator(); iter.hasNext(); ) {
+				Resource resource = iter.next();
+				if (paths.add(resource.getPath())) {
+					list.add(resource);
+				}
+			}
 		}
 
 		return list;
