@@ -249,7 +249,7 @@ public class TaskStateManager implements ApplicationListener<ApplicationReadyEve
 		processUuidList.addAll(clusterManager.getProcessIdList());
 	
 
-		String cypher = "match (t:TaskState {state:'STARTED'}) where not has(t.endTs) and not t.processUuid in {list} set t.endTs={endTs}, t.endDate={endDate}, t.state={state} return t";
+		String cypher = "match (t:TaskState {state:'STARTED'}) where not exists(t.endTs) and not t.processUuid in {list} set t.endTs={endTs}, t.endDate={endDate}, t.state={state} return t";
 		neo4j.execCypher(cypher, "list", processUuidList, "endTs", now.toEpochMilli(), "endDate", formatInstant(now),
 				"state", TaskState.CANCELLED.toString());
 

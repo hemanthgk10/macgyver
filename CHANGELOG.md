@@ -1,5 +1,8 @@
 ## Changes
 
+### 1.3.2
+* Cypher compatability issues with neo4j 3.x
+
 ### 1.3.1
 * Added functionality for environment-specific script execution
 
