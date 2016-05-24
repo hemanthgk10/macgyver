@@ -187,7 +187,7 @@ public class ScheduledTaskManager implements ApplicationListener<ApplicationRead
 	public void onApplicationEvent(ApplicationReadyEvent event) {
 		try {
 			// this is a one-time migration to use "id" as the identity attribute
-			neo4j.execCypher("match (t:ScheduledTask) where has(t.script) and (t.id<>t.script or not has(t.id)) set t.id=t.script return t");
+			neo4j.execCypher("match (t:ScheduledTask) where exists(t.script) and (t.id<>t.script or not exists(t.id)) set t.id=t.script return t");
 		}
 		catch (RuntimeException e) {
 			logger.warn("problem matching ScheduledTask nodes",e);
