@@ -1,5 +1,8 @@
 ## Changes
 
+### 1.3.1
+* Added functionality for environment-specific script execution
+
 ### 1.3.0
 * Remove Ignite (may use it later but not for clustering)
 * CLI Enhancmeents
