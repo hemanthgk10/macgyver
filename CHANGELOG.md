@@ -8,7 +8,7 @@
 * formal support for sub-commands
 
 ### 1.3.3
-* fix memory leak with AWS SDK
+* Roll back AWS SDK to 1.10.76 (due to memory leak)
 
 ### 1.3.2
 * Cypher compatability issues with neo4j 3.x
