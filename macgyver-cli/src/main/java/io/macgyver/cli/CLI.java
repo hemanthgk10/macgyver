@@ -163,6 +163,7 @@ public class CLI {
 	}
 
 	public String getCommandName() {
+		
 		return commander.getParsedCommand();
 	}
 
@@ -182,8 +183,27 @@ public class CLI {
 		buildCommands();
 
 		try {
+			
+			if (v.length>0) {
+				String primary = v[0];
+				Command primaryCommand = commandMap.get(primary);
+				if (primaryCommand!=null && primaryCommand instanceof MetaCommand) {
+					if (args.length<2) {
+						getCommandMap().get("help").execute();
+						return false;
+					}
+					
+					String [] shifted = new String[args.length-1];
+					System.arraycopy(args, 1, shifted, 0, args.length-1);
+					String subCommandName = args[0]+"-"+args[1];
+					shifted[0]=subCommandName;
+					logger.info("sub-command: {}",shifted[0]);
+					args = shifted;
+				}
+			}
+		
 			commander.parse(args);
-
+			
 			String commandName = getCommandName();
 			logger.info("command name: {}", commandName);
 
@@ -191,6 +211,7 @@ public class CLI {
 				throw new MissingCommandException("");
 			}
 			Command command = commandMap.get(commandName);
+		
 			logger.info("Command invoked:{} with args {}", command.getCommandName(), args[0]);
 
 			if (command.isHelpRequested()) {

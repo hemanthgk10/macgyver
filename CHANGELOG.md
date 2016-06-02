@@ -1,5 +1,11 @@
 ## Changes
 
+### 1.3.4
+* formal support for sub-commands
+
+### 1.3.3
+* fix memory leak with AWS SDK
+
 ### 1.3.2
 * Cypher compatability issues with neo4j 3.x
 

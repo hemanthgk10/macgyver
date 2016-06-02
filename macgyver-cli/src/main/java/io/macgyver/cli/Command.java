@@ -76,7 +76,11 @@ public abstract class Command {
 			sb.append(Character.toLowerCase(c));
 		}
 
-		return sb.toString();
+		String n = sb.toString();
+		if (this instanceof MetaCommand && n.endsWith("-meta")) {
+			n = n.substring(0,n.length()-"-meta".length());
+		}
+		return n;
 
 	}
 
