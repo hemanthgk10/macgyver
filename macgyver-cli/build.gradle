@@ -31,9 +31,34 @@ task exeFatCapsule(type:Exec, dependsOn: "fatCapsule") {
     args "${projectDir}/makeExec.sh"
 }
 
-tasks.jar << {
+jar.doLast {
+
     tasks.fatCapsule.execute()
+    tasks.exeFatCapsule.execute()
+    
+ 
+    def capsuleJar = new File(project.projectDir,"build/libs/macgyver-cli-${project.version}-capsule.jar")
+ 
+    
+    
+    if (!capsuleJar.exists()) {
+        throw new IllegalStateException("capsule jar is missing ${capsuleJar.absolutePath}")
+    }
+    else {
+        println "capsule jar: ${capsuleJar.absolutePath}"
+    }
+    
+    def targetInCore  = new File(project.projectDir,"../macgyver-core/src/main/resources/cli/macgyver-cli-capsule.jar")
+    ant.copy(tofile: targetInCore.absolutePath, file: capsuleJar.absolutePath,overwrite:true, failonerror:false)  
+    if (!targetInCore.exists()) {
+        throw new IllegalStateException("target jar in macgyver-core is missing: ${targetInCore.absolutePath}")
+    }
+    else {
+        println "target in core: ${targetInCore.absolutePath}"
+    }
 }
+
+
 
 
 dependencies {

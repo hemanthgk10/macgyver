@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 
 import javax.annotation.PostConstruct;
 
@@ -28,6 +29,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.io.Closer;
 
@@ -38,21 +42,44 @@ public class CoreSystemInfo {
 	@Autowired
 	org.springframework.context.ApplicationContext applicationContext;
 
-	
-	AtomicReference<Map<String, String>> dataRef = new AtomicReference<>(
-			Collections.unmodifiableMap((new HashMap<String,String>())));
+	Supplier<Map<String,String>> combinedSupplier = new CombinedSupplier();
+	Supplier<Map<String, String>> coreSupplier = Suppliers.memoize(new SystemInfoSupplier());
 
-	public Map<String, String> getData() {
-		return dataRef.get();
+	Supplier<Map<String, String>> additionalDataSupplier = null;
+
+	
+	class CombinedSupplier implements Supplier<Map<String,String>> {
+
+		@Override
+		public Map<String, String> get() {
+			
+			Map<String,String> core = Maps.newHashMap();
+			core.putAll(coreSupplier.get());
+			
+			if (additionalDataSupplier!=null) {
+				core.putAll(additionalDataSupplier.get());
+			}
+			
+			return core;
+		}
+		
+	}
+	class SystemInfoSupplier implements Supplier<Map<String, String>> {
+
+		@Override
+		public Map<String, String> get() {
+			
+			return ImmutableMap.copyOf(loadRevisionInfo());
+		}
+
 	}
 
-	@PostConstruct
-	public void populateRevisionInfo() {
+	public Map<String, String> getData() {
+		return combinedSupplier.get();
+	}
 
-		Map<String, String> m = (Map<String, String>) Collections
-				.unmodifiableMap(loadRevisionInfo());
-		dataRef.set(m);
-
+	public void setExtraMetadataSupplier(Supplier<Map<String, String>> s) {
+		this.additionalDataSupplier = s;
 	}
 
 	protected Map<String, String> loadRevisionInfo() {
@@ -68,8 +95,8 @@ public class CoreSystemInfo {
 				if (is != null) {
 					Properties p = new Properties();
 					p.load(is);
-					Map<String,String> m = Maps.newHashMap();
-					for (Map.Entry<Object, Object> entry: p.entrySet()) {
+					Map<String, String> m = Maps.newHashMap();
+					for (Map.Entry<Object, Object> entry : p.entrySet()) {
 						m.put(entry.getKey().toString(), entry.getValue().toString());
 					}
 					return m;
@@ -88,4 +115,5 @@ public class CoreSystemInfo {
 		}
 		return Maps.newHashMap();
 	}
+
 }

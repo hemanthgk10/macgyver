@@ -1,5 +1,0 @@
-
-
-testGitHub {
-	serviceType="github"
-}

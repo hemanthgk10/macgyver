@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -29,19 +29,21 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 
+import io.macgyver.core.Bootstrap;
 import io.macgyver.core.Kernel;
 import io.macgyver.core.resource.Resource;
+import io.macgyver.core.resource.ResourceMatcher;
 import io.macgyver.core.script.ExtensionResourceProvider;
 import io.macgyver.neorx.rest.NeoRxClient;
 
-public class ScheduledTaskManager implements ApplicationListener<ApplicationReadyEvent>{
+public class ScheduledTaskManager implements ApplicationListener<ApplicationReadyEvent> {
 
 	public static final String SCHEDULE_TOKEN = "#@Schedule";
-	public static final String SCHEDULED_BY_SCRIPT="script";
-	public static final String SCHEDULED_BY_MANUAL="manual";
-	public static final String SCHEDULED_BY="scheduledBy";
-	public static final String ENABLED="enabled";
-	
+	public static final String SCHEDULED_BY_SCRIPT = "script";
+	public static final String SCHEDULED_BY_MANUAL = "manual";
+	public static final String SCHEDULED_BY = "scheduledBy";
+	public static final String ENABLED = "enabled";
+
 	Logger logger = LoggerFactory.getLogger(ScheduledTaskManager.class);
 
 	@Autowired
@@ -50,25 +52,29 @@ public class ScheduledTaskManager implements ApplicationListener<ApplicationRead
 	boolean schedulerEnabled = true;
 
 	ObjectMapper mapper = new ObjectMapper();
-	
+
 	public void scheduleInline(String id, String cron, String script) {
 		scheduleInline(id, cron, script, "groovy");
 	}
 
 	protected void throwIllegalStateOnEmptyList(String it, List<JsonNode> list) {
 		if (list.isEmpty()) {
-			throw new IllegalStateException("ScheduledTask id="+it+" does not exist");
+			throw new IllegalStateException("ScheduledTask id=" + it + " does not exist");
 		}
 	}
+
 	public void scheduleInline(String id, String cron, String script, String language) {
 		String cypher = "merge (t:ScheduledTask {id:{id}}) set t.scheduledBy='manual', t.cron={cron}, t.inlineScript={script}, t.enabled=true, t.inlineScriptLanguage={language} return t";
-		throwIllegalStateOnEmptyList(id,neo4j.execCypher(cypher, "id", id, "cron", cron, SCHEDULED_BY_SCRIPT, script, "language", language).toList().toBlocking().first());
+		throwIllegalStateOnEmptyList(id,
+				neo4j.execCypher(cypher, "id", id, "cron", cron, SCHEDULED_BY_SCRIPT, script, "language", language)
+						.toList().toBlocking().first());
 	}
 
 	public void updateSchedule(String id, String cron) {
 		String cypher = "match (t:ScheduledTask {id:{id}}) set t.cron={cron} return t";
-		throwIllegalStateOnEmptyList(id,neo4j.execCypher(cypher, "id", id, "cron", cron).toList().toBlocking().first());
-		
+		throwIllegalStateOnEmptyList(id,
+				neo4j.execCypher(cypher, "id", id, "cron", cron).toList().toBlocking().first());
+
 	}
 
 	public void disable(String id) {
@@ -79,18 +85,22 @@ public class ScheduledTaskManager implements ApplicationListener<ApplicationRead
 		enable(id, true);
 	}
 
-	
 	public void enable(String id, boolean b) {
 		String cypher = "match (t:ScheduledTask {id:{id}}) set t.enabled={enabled} return t";
-		throwIllegalStateOnEmptyList(id,neo4j.execCypher(cypher, "id", id, ENABLED, b).toList().toBlocking().first());
+		throwIllegalStateOnEmptyList(id, neo4j.execCypher(cypher, "id", id, ENABLED, b).toList().toBlocking().first());
 	}
-	
+
 	public void scheduleManually(String id) {
-		throwIllegalStateOnEmptyList(id,neo4j.execCypher("match (t:ScheduledTask {id:{id}}) set t.scheduledBy='manual' return t","id",id).toList().toBlocking().first());
+		throwIllegalStateOnEmptyList(id,
+				neo4j.execCypher("match (t:ScheduledTask {id:{id}}) set t.scheduledBy='manual' return t", "id", id)
+						.toList().toBlocking().first());
 	}
 
 	public void scheduleByScript(String id) {
-		throwIllegalStateOnEmptyList(id, neo4j.execCypher("match (t:ScheduledTask {id:{id}}) where length(t.script)>0 set t.scheduledBy='script' return t","id",id).toList().toBlocking().first());
+		throwIllegalStateOnEmptyList(id,
+				neo4j.execCypher(
+						"match (t:ScheduledTask {id:{id}}) where length(t.script)>0 set t.scheduledBy='script' return t",
+						"id", id).toList().toBlocking().first());
 	}
 
 	public boolean isEnabled(JsonNode config) {
@@ -123,9 +133,25 @@ public class ScheduledTaskManager implements ApplicationListener<ApplicationRead
 	protected boolean isScripptScheduledByScript(JsonNode n) {
 		return n != null && n.path(SCHEDULED_BY).asText().equals(SCHEDULED_BY_SCRIPT);
 	}
-	
+
 	protected boolean isScriptManuallyScheduled(JsonNode n) {
 		return n != null && n.path(SCHEDULED_BY).asText().equals(SCHEDULED_BY_MANUAL);
+	}
+
+	class ScriptResourceMatcher implements ResourceMatcher {
+
+		@Override
+		public boolean matches(Resource r) {
+			try {
+					if (r.getPath().startsWith("scripts/")) {
+					return true;
+				}
+				return false;
+			} catch (Exception e) {
+				return false;
+			}
+		}
+
 	}
 
 	public void scan() throws IOException {
@@ -136,10 +162,10 @@ public class ScheduledTaskManager implements ApplicationListener<ApplicationRead
 		ExtensionResourceProvider extensionLoader = Kernel.getApplicationContext()
 				.getBean(ExtensionResourceProvider.class);
 		long scanTime = System.currentTimeMillis();
-		
+
 		CrontabExpressionExtractor expressionExtractor = new CrontabExpressionExtractor();
-	
-		for (Resource r : extensionLoader.findResources()) {
+
+		for (Resource r : extensionLoader.findResources(new ScriptResourceMatcher())) {
 			if (logger.isDebugEnabled()) {
 				logger.debug("evaluating {} to see if it can be scheduled", r);
 			}
@@ -147,23 +173,26 @@ public class ScheduledTaskManager implements ApplicationListener<ApplicationRead
 			if (path != null && path.startsWith("scripts/scheduler/")) {
 
 				ObjectNode descriptor = expressionExtractor.extractCronExpression(r).or(mapper.createObjectNode());
-				
+
 				boolean b = descriptor.path(ENABLED).asBoolean(true);
 
 				if (isScriptManuallyScheduled(scriptMap.get(path))) {
-					
-					// if the ScheduledTask node's scheduledBy attribute is set to SCHEDULED_BY_MANUAL in neo4j, do not update.  This allows scripts enabled/cron attributes to be
+
+					// if the ScheduledTask node's scheduledBy attribute is set
+					// to SCHEDULED_BY_MANUAL in neo4j, do not update. This
+					// allows scripts enabled/cron attributes to be
 					// manually adjusted (outside of the script).
-					
+
 					if (logger.isDebugEnabled()) {
 						logger.debug("manually scheduled script tassk will not be updated: {}", path);
 					}
 				} else {
-					
-					// Update the corresponding ScheduledTask node in neo4j.  The cron4j TaskCollector will read this.
+
+					// Update the corresponding ScheduledTask node in neo4j. The
+					// cron4j TaskCollector will read this.
 					String cypher = "merge (s:ScheduledTask {id:{id}}) set s.script={id},s.scheduledBy='script', s.enabled={enabled}, s.cron={cron}, s.lastUpdateTs={ts} return s;";
 
-					neo4j.execCypher(cypher, "id",path,ENABLED, b, "cron", descriptor.path("cron").asText(),
+					neo4j.execCypher(cypher, "id", path, ENABLED, b, "cron", descriptor.path("cron").asText(),
 							"ts", scanTime);
 				}
 
@@ -181,25 +210,23 @@ public class ScheduledTaskManager implements ApplicationListener<ApplicationRead
 
 	}
 
-
-	
 	@Override
 	public void onApplicationEvent(ApplicationReadyEvent event) {
 		try {
-			// this is a one-time migration to use "id" as the identity attribute
-			neo4j.execCypher("match (t:ScheduledTask) where exists(t.script) and (t.id<>t.script or not exists(t.id)) set t.id=t.script return t");
+			// this is a one-time migration to use "id" as the identity
+			// attribute
+			neo4j.execCypher(
+					"match (t:ScheduledTask) where exists(t.script) and (t.id<>t.script or not exists(t.id)) set t.id=t.script return t");
+		} catch (RuntimeException e) {
+			logger.warn("problem matching ScheduledTask nodes", e);
 		}
-		catch (RuntimeException e) {
-			logger.warn("problem matching ScheduledTask nodes",e);
-		}
-		
+
 		try {
 			neo4j.execCypher("create index on :ScheduledTask(id)");
-		}
-		catch (RuntimeException e) {
+		} catch (RuntimeException e) {
 			logger.warn("problem creating index on TaskState(id)");
 		}
-		
+
 	}
 
 }

@@ -37,11 +37,11 @@ public class BootstrapTest extends MacGyverIntegrationTest {
 		assertNotNull(bootstrap);
 		assertSame(bootstrap, Bootstrap.getInstance());
 		
-		File d = new File("./src/test/resources/ext").getCanonicalFile();
+		File d = new File(".").getCanonicalFile();
 		assertEquals(d,Bootstrap.getInstance().getMacGyverHome().getCanonicalFile());
-		assertEquals(new java.io.File("./src/test/resources/ext/config").getCanonicalPath(),Bootstrap.getInstance().getConfigDir().getCanonicalPath());
-		assertEquals(new java.io.File("./src/test/resources/ext/web").getCanonicalPath(),Bootstrap.getInstance().getWebDir().getCanonicalPath());
-		assertEquals(new java.io.File("./src/test/resources/ext/scripts").getCanonicalPath(),Bootstrap.getInstance().getScriptsDir().getCanonicalPath());
+		assertEquals(new java.io.File("./config").getCanonicalPath(),Bootstrap.getInstance().getConfigDir().getCanonicalPath());
+		assertEquals(new java.io.File("./web").getCanonicalPath(),Bootstrap.getInstance().getWebDir().getCanonicalPath());
+		assertEquals(new java.io.File("./scripts").getCanonicalPath(),Bootstrap.getInstance().getScriptsDir().getCanonicalPath());
 		
 	}
 	

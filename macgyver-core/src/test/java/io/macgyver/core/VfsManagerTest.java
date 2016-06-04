@@ -38,8 +38,8 @@ public class VfsManagerTest extends MacGyverIntegrationTest {
 	@Test
 	public void testWebVfs() throws IOException {
 
-		File dir = new File("./src/test/resources/ext/web");
-
+		File dir = new File("./web");
+		dir.mkdirs();
 		File tempFile = new File(dir, ".junit_"
 				+ UUID.randomUUID().toString() + ".tmp");
 		Files.touch(tempFile);
@@ -60,7 +60,7 @@ public class VfsManagerTest extends MacGyverIntegrationTest {
 	@Test
 	public void testScriptsVfs() throws IOException {
 
-		File dir = new File("./src/test/resources/ext/scripts");
+		File dir = new File("./scripts");
 
 		File tempFile = new File(dir, ".junit_"
 				+ UUID.randomUUID().toString() + ".tmp");
