@@ -16,6 +16,7 @@ package io.macgyver.plugin.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import io.macgyver.plugin.ci.jenkins.JenkinsApiProxy;
 import io.macgyver.plugin.ci.jenkins.JenkinsServiceFactory;
 import io.macgyver.plugin.ci.jenkins.PostCompletedBuildResultWebhook;
 import io.macgyver.plugin.ci.jenkins.StatisticsNotificationWebhook;
@@ -37,5 +38,10 @@ public class JenkinsConfig {
 	@Bean
 	public StatisticsNotificationWebhook macStatisticsNotificationWebhook() {
 		return new StatisticsNotificationWebhook();
+	}
+	
+	@Bean
+	public JenkinsApiProxy macJenkinsApiProxy() {
+		return new JenkinsApiProxy();
 	}
 }
