@@ -1,5 +1,9 @@
 ## Changes
 
+### UNRELEASED
+* Add SpringFox + Swagger
+* Enable API Tokens to be sent via X-API-KEY
+
 ### 1.3.4
 * formal support for sub-commands
 

@@ -63,6 +63,7 @@ import rx.exceptions.OnErrorNotImplementedException;
 
 public class ApiTokenAuthenticationProvider implements AuthenticationProvider {
 
+	public static final String API_KEY_HEADER_NAME="X-API-KEY";
 	
 	ObjectMapper mapper = new ObjectMapper();
 	@Inject

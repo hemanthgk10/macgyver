@@ -84,16 +84,22 @@ public class ApiTokenAuthenticationFilter extends  GenericFilterBean {
 	static Pattern AUTH_TOKEN_PATTERN = Pattern.compile("Token\\s+(\\S+)",Pattern.CASE_INSENSITIVE);
 	
 	static Optional<String> extractTokenString(HttpServletRequest request) {
-		String x = request.getHeader("Authorization");
-		if (Strings.isNullOrEmpty(x)) {
-			return Optional.empty();
+		
+		String apiKey = request.getHeader(ApiTokenAuthenticationProvider.API_KEY_HEADER_NAME);
+		if (!Strings.isNullOrEmpty(apiKey)) {
+			return Optional.of(apiKey);
 		}
-		else {
+		
+		String x = request.getHeader("Authorization");
+		if (!Strings.isNullOrEmpty(x)) {
 			Matcher m = AUTH_TOKEN_PATTERN.matcher(x);
 			if (m.matches()) {
 				return Optional.of(m.group(1));
 			}		
 		}
+		
+	
+		
 		return Optional.empty();
 	}
 	static Optional<ApiTokenAuthentication> extractToken(HttpServletRequest request) {
