@@ -14,9 +14,11 @@
 package io.macgyver.core.scheduler;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -36,7 +38,7 @@ public class TaskController {
 	ObjectMapper mapper = new ObjectMapper();
 	
 	@PreAuthorize("hasAnyRole('ROLE_MACGYVER_USER', 'ROLE_MACGYVER_ADMIN')")
-	@RequestMapping("/api/core/tasks/active")
+	@RequestMapping(value="/api/core/tasks/active",method=RequestMethod.GET,produces=MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
 	public JsonNode apiActiveTasks() {
 	

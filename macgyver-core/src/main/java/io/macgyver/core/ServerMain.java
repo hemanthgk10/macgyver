@@ -38,6 +38,7 @@ import io.macgyver.core.Kernel.ServerStartedEvent;
 import io.macgyver.core.log.EventLogger;
 import reactor.bus.Event;
 import reactor.bus.EventBus;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 /**
  * Simple wrapper to start server.
@@ -49,6 +50,7 @@ import reactor.bus.EventBus;
 @Configuration
 @ComponentScan(basePackages = { "io.macgyver.config", "io.macgyver.plugin.config", "io.macgyver.core.config" })
 @EnableAutoConfiguration(exclude={CrshAutoConfiguration.class})
+@EnableSwagger2
 public class ServerMain {
 
 	static Logger logger = org.slf4j.LoggerFactory.getLogger(ServerMain.class);

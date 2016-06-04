@@ -37,7 +37,32 @@ public class ApiTokenAuthenticationFilterTest {
 		
 	}
 	
-	
+	@Test
+	public void testTokenHeader() {
+		ApiTokenAuthenticationFilter filter = new ApiTokenAuthenticationFilter();
+		
+		
+		MockHttpServletRequest request = new MockHttpServletRequest();
+		Assertions.assertThat(filter.extractTokenString(request).isPresent()).isFalse();
+		
+		request = new MockHttpServletRequest();
+		request.addHeader("X-Api-key", "foobar");
+		Assertions.assertThat(filter.extractTokenString(request).get()).isEqualTo("foobar");
+		
+		
+		request = new MockHttpServletRequest();
+		request.addHeader("Authorization", "Token from-auth");
+		Assertions.assertThat(filter.extractTokenString(request).get()).isEqualTo("from-auth");
+		
+		request = new MockHttpServletRequest();
+		request.addHeader("X-Api-key", "foobar");
+		request.addHeader("Authorization", "Token from-auth");
+		Assertions.assertThat(filter.extractTokenString(request).get()).isEqualTo("foobar");
+		
+		
+		
+		
+	}
 	@Test
 	public void testBasicAuth() {
 		MockHttpServletRequest request  = new MockHttpServletRequest();

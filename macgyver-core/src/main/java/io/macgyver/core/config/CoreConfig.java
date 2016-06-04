@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +16,7 @@ package io.macgyver.core.config;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -36,6 +37,7 @@ import com.codahale.metrics.Slf4jReporter;
 import com.codahale.metrics.Slf4jReporter.LoggingLevel;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.ning.http.client.AsyncHttpClient;
 
 import io.macgyver.core.Bootstrap;
@@ -47,6 +49,7 @@ import io.macgyver.core.MacGyverBeanFactoryPostProcessor;
 import io.macgyver.core.MacGyverBeanPostProcessor;
 import io.macgyver.core.ScriptHookManager;
 import io.macgyver.core.Startup;
+import io.macgyver.core.auth.ApiTokenAuthenticationProvider;
 import io.macgyver.core.auth.UserManager;
 import io.macgyver.core.cli.CLIDownloadController;
 import io.macgyver.core.cluster.ClusterManager;
@@ -77,10 +80,24 @@ import reactor.bus.routing.ConsumerFilteringRouter;
 import reactor.bus.routing.Router;
 import reactor.core.dispatch.ThreadPoolExecutorDispatcher;
 import reactor.fn.Consumer;
+import springfox.documentation.builders.ApiInfoBuilder;
+import springfox.documentation.builders.PathSelectors;
+import springfox.documentation.builders.RequestHandlerSelectors;
+import springfox.documentation.service.ApiInfo;
+import springfox.documentation.service.ApiKey;
+import springfox.documentation.service.AuthorizationScope;
+import springfox.documentation.service.SecurityReference;
+import springfox.documentation.spi.DocumentationType;
+import springfox.documentation.spi.service.contexts.SecurityContext;
+import springfox.documentation.spring.web.plugins.Docket;
+import springfox.documentation.swagger.web.ApiKeyVehicle;
+import springfox.documentation.swagger.web.SecurityConfiguration;
+import springfox.documentation.swagger.web.UiConfiguration;
+
+import static springfox.documentation.builders.PathSelectors.*;
 
 @Configuration
 public class CoreConfig implements EnvironmentAware {
-
 
 	@Autowired
 	org.springframework.core.env.Environment env;
@@ -96,7 +113,6 @@ public class CoreConfig implements EnvironmentAware {
 	public AsyncHttpClient macAsyncHttpClient() {
 		return new AsyncHttpClient();
 	}
-
 
 	@Bean
 	public MacGyverBeanPostProcessor macSpringBeanPostProcessor() {
@@ -159,7 +175,6 @@ public class CoreConfig implements EnvironmentAware {
 
 	}
 
-
 	@Bean
 	public static PropertySourcesPlaceholderConfigurer macPropertyPlaceholderConfigurer() {
 		return new PropertySourcesPlaceholderConfigurer();
@@ -196,10 +211,9 @@ public class CoreConfig implements EnvironmentAware {
 		logger.info("neo4j.uri: {}", url);
 
 		boolean validateCerts = false;
-		
-		return new NeoRxClientBuilder().withCertificateValidation(validateCerts).withCredentials(env.getProperty("neo4j.username"), env.getProperty("neo4j.password")).build();
-		
 
+		return new NeoRxClientBuilder().withCertificateValidation(validateCerts)
+				.withCredentials(env.getProperty("neo4j.username"), env.getProperty("neo4j.password")).build();
 
 	}
 
@@ -221,21 +235,15 @@ public class CoreConfig implements EnvironmentAware {
 
 	}
 
-
-
-
-
 	@Bean
 	public ClusterManager macClusterManager() {
 		return new ClusterManager();
 	}
 
-	@Autowired(required=false)
+	@Autowired(required = false)
 	@Qualifier("mbeanExporter")
 	MBeanExporter springMBeanExporter;
 
-
-	
 	@Bean
 	public EventLogger macEventLogger() {
 		return new EventLogger();
@@ -266,22 +274,22 @@ public class CoreConfig implements EnvironmentAware {
 		return Environment.initializeIfEmpty();
 	}
 
-	
-	
 	@Value("${REACTOR_THREAD_POOL_DISPATCHER_THREAD_COUNT:10}")
 	int reactorThreadCount;
-	
+
 	@Value("${REACTOR_THREAD_POOL_DISPATCHER_BACKLOG:2048}")
 	int reactorBacklog;
-	
+
 	@Bean
 	public ThreadPoolExecutorDispatcher macReactorThreadPoolDispatcher() {
-		
-		logger.info("REACTOR_THREAD_POOL_DISPATCHER_THREAD_COUNT : {}",reactorThreadCount);
-		logger.info("REACTOR_THREAD_POOL_DISPATCHER_BACKLOG      : {}",reactorBacklog);
-		ThreadPoolExecutorDispatcher threadPoolDispatcher = new ThreadPoolExecutorDispatcher(reactorThreadCount, reactorBacklog);
+
+		logger.info("REACTOR_THREAD_POOL_DISPATCHER_THREAD_COUNT : {}", reactorThreadCount);
+		logger.info("REACTOR_THREAD_POOL_DISPATCHER_BACKLOG      : {}", reactorBacklog);
+		ThreadPoolExecutorDispatcher threadPoolDispatcher = new ThreadPoolExecutorDispatcher(reactorThreadCount,
+				reactorBacklog);
 		return threadPoolDispatcher;
 	}
+
 	@Bean
 	public EventBus macReactorEventBus() {
 
@@ -289,10 +297,10 @@ public class CoreConfig implements EnvironmentAware {
 		boolean cacheNotFound = false;
 
 		Registry<Object, Consumer<? extends Event<?>>> registry = Registries.create(useCache, cacheNotFound, null);
-		
+
 		Router router = new ConsumerFilteringRouter(
 				new PassThroughFilter());
-		
+
 		EventBus bus = new EventBus(registry, macReactorThreadPoolDispatcher(), router, null, null);
 
 		return bus;
@@ -323,21 +331,74 @@ public class CoreConfig implements EnvironmentAware {
 
 		r.start(60, TimeUnit.SECONDS);
 
-		
 		return registry;
 	}
-	
+
 	@Bean
 	public MacGyverTaskCollector macTaskCollector() {
 		return new MacGyverTaskCollector();
 	}
+
 	@Bean
 	public LocalScheduler macLocalScheduler() {
 		return new LocalScheduler();
 	}
-	
+
 	@Bean
 	public Scheduler macCron4jScheduler() {
 		return new Scheduler();
+	}
+
+	private SecurityContext securityContext() {
+		return SecurityContext.builder()
+				.securityReferences(defaultAuth())
+				.forPaths(PathSelectors.regex("/api.*"))
+				.build();
+	}
+
+	List<SecurityReference> defaultAuth() {
+		AuthorizationScope authorizationScope = new AuthorizationScope("global", "accessEverything");
+		AuthorizationScope[] authorizationScopes = new AuthorizationScope[1];
+		authorizationScopes[0] = authorizationScope;
+		return Lists.newArrayList(
+				new SecurityReference("mykey", authorizationScopes));
+	}
+
+	 @Bean
+	  SecurityConfiguration security() {
+	    return new SecurityConfiguration(
+	        "test-app-client-id",
+	        "test-app-client-secret",
+	        "test-app-realm",
+	        "test-app",
+	        "apiKey",
+	        ApiKeyVehicle.HEADER, 
+	        ApiTokenAuthenticationProvider.API_KEY_HEADER_NAME, 
+	        "," /*scope separator*/);
+	  }
+	@Bean
+	public Docket springfoxDocket() {
+		return new Docket(DocumentationType.SWAGGER_2)
+				.select()
+				.apis(RequestHandlerSelectors.any())
+				.paths(regex("/api/.*"))
+				.build()
+				.pathMapping("/")
+				.securitySchemes(Lists.newArrayList(new ApiKey("apikey", ApiTokenAuthenticationProvider.API_KEY_HEADER_NAME, "header")))
+			//	.securityContexts(Lists.newArrayList(securityContext())) // UNUSED
+				.apiInfo(metadata());
+	}
+
+	@Bean
+	public UiConfiguration springfoxUiConfig() {
+		return UiConfiguration.DEFAULT;
+	}
+
+	private ApiInfo metadata() {
+		return new ApiInfoBuilder()
+				.title("MacGyver API")
+				.description("API Documentation")
+				.version("1.0")
+				.build();
 	}
 }
