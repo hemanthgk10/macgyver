@@ -7,6 +7,7 @@ services {
     foo {
         xyz {
             password="eyJrIjoibWFjMCIsImQiOiIrdTlEQVlPZVlld3Z4YXZ4VVdtU256OFM4UWxIUWFIOUVNc1REY0xxejM4PSJ9"
+            password="eyJrIjoibWFjMCIsImQiOiIxdVREM1M2L3hmME1lY1IvVlFxaE83NmFMZjFCR1ZvZ2pHaHZWUGxiMVBzPSJ9"
         }
     }
    

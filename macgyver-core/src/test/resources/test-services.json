@@ -1,0 +1,20 @@
+{
+    "ignore" : "me",
+    "myservice" : {
+        "fizz":"buzz",
+        "foo" : "x"
+    },
+    "environments": {
+        "blah" : "blah",
+        "qa": {
+        	"myservice": {
+        		"foo":"qafoo"
+        	}
+        },
+        "prod": {
+            "myservice": {
+                "foo": "bar"
+            }
+        }
+    }
+}
