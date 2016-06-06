@@ -30,6 +30,9 @@ import java.security.NoSuchAlgorithmException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Strings;
 import com.google.common.io.Closer;
 
@@ -42,6 +45,7 @@ public class KeyStoreManager {
 	private char[] globalKeyPass = defaultPass;
 	KeyStore keyStore;
 
+	Logger logger = LoggerFactory.getLogger(KeyStoreManager.class);
 	public static final String KEYSTORE_LOCATION_SYSTEM_PROPERTY = "macgyver.keyStore";
 
 	public File getKeyStoreLocation() throws IOException{
@@ -80,6 +84,7 @@ public class KeyStoreManager {
 
 		Closer c = Closer.create();
 		try {
+			logger.info("loading keystore from: {}",getKeyStoreLocation());
 			BufferedInputStream is = new BufferedInputStream(new FileInputStream(getKeyStoreLocation()));
 			c.register(is);
 			ks.load(is, getKeyStorePassword());

@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.core.env.Environment;
 import org.springframework.core.env.StandardEnvironment;
 
 import com.google.common.base.Optional;
@@ -102,8 +103,11 @@ public class Kernel implements ApplicationContextAware {
 		if (profile != null) {
 			return profile;
 		}
-		StandardEnvironment standardEnvironment = new StandardEnvironment();
+		
+		
+		Environment standardEnvironment =Kernel.getApplicationContext().getEnvironment();
 
+	
 		String[] activeProfiles = standardEnvironment.getActiveProfiles();
 		if (activeProfiles == null) {
 			profile = Optional.absent();

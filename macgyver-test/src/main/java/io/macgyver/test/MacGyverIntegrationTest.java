@@ -85,7 +85,7 @@ public abstract class MacGyverIntegrationTest extends
 		if (Strings.isNullOrEmpty(macGyverHome)) {
 			File dir = new File("./src/test/resources/ext");
 			macGyverHome = dir.getAbsolutePath();
-			System.setProperty("macgyver.home", macGyverHome);
+			System.setProperty("macgyver.home", ".");
 
 		}
 
@@ -110,6 +110,9 @@ public abstract class MacGyverIntegrationTest extends
 	@Before
 	public void checkNeo() {
 		Assume.assumeTrue(isNeo4jAvailable());
+		
+		logger.info("running tests in environment: {}",applicationContext.getEnvironment());
+
 	}
 	/**
 	 * Allows integration tests to be written using properties that are held

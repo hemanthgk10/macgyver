@@ -13,29 +13,34 @@
  */
 package io.macgyver.core;
 
-import io.macgyver.core.service.ServiceRegistry;
-import io.macgyver.test.MacGyverIntegrationTest;
+import java.util.Map;
 
 import org.assertj.core.api.Assertions;
-import org.junit.Assert;
 import org.junit.Test;
+import org.rapidoid.u.U;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.google.common.base.Supplier;
+import com.google.common.collect.Maps;
 
-public class AutoBeanRegisterTest extends MacGyverIntegrationTest {
+import io.macgyver.test.MacGyverIntegrationTest;
 
-	
-	@Autowired
-	ServiceRegistry registry;
-	
+public class CoreSystemInfoTest extends MacGyverIntegrationTest {
+
 	@Autowired
 	CoreSystemInfo coreSystemInfo;
 	
 	@Test
-	public void testRegistration() {
-		
-		Assert.assertNotNull(registry);
-	}
+	public void testCoreSystemInfo() {
 	
-
+		coreSystemInfo.setExtraMetadataSupplier(new Supplier<Map<String,String>>() {
+			
+			@Override
+			public Map<String, String> get() {
+				return U.map("foo", "bar");
+				
+			}
+		});
+		Assertions.assertThat(coreSystemInfo.getData()).containsEntry("foo", "bar");
+	}
 }

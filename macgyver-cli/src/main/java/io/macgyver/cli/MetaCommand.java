@@ -21,7 +21,7 @@ public abstract class MetaCommand extends Command {
 	public void execute() throws IOException {
 
 		getCLI().getCommander().getParameters().forEach(it -> {
-			System.out.println("ARGS: {}"+ it);
+			
 		});
 	}
 

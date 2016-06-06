@@ -41,6 +41,10 @@ public class FileSystemResourceProvider extends ResourceProvider {
 
 	public boolean isApprovedPath(File f) {
 		try {
+			if (f.getAbsolutePath().contains(".git/")) {
+				return false;
+			}
+	
 			File approvedParent = rootDir.getCanonicalFile();
 			while (f != null) {
 				f = f.getCanonicalFile();

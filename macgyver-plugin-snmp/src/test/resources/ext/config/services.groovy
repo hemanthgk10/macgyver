@@ -1,6 +1,0 @@
-
-
-snmpTest {
-	
-	serviceType="snmp"
-}

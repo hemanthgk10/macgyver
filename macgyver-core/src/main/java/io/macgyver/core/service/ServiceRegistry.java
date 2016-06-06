@@ -230,6 +230,7 @@ public class ServiceRegistry {
 		logger.info("loading services from: {}", configGroovy);
 		ConfigSlurper slurper = new ConfigSlurper();
 		if (Kernel.getExecutionProfile().isPresent()) {
+			logger.info("sourcing {} using profile={}",configGroovy,Kernel.getExecutionProfile().get());
 			slurper.setEnvironment(Kernel.getExecutionProfile().get());
 		}
 

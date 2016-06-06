@@ -1,6 +1,0 @@
-
-
-hipchatTest {
-	
-	serviceType="hipchat"
-}
