@@ -1,8 +1,11 @@
 ## Changes
 
-### UNRELEASED
+### 1.3.5
 * Add SpringFox + Swagger
 * Enable API Tokens to be sent via X-API-KEY
+* Support for config to be loaded via mechanisms other than services.groovy (spring config, neo4j, json)
+* JUnit Integration tests run with the "junit" profile
+* src/test/resources/ext no longer used (dedicated junit profile used instead)
 
 ### 1.3.4
 * formal support for sub-commands
