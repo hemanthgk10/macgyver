@@ -13,13 +13,6 @@
  */
 package io.macgyver.plugin.cloud.aws;
 
-import io.macgyver.core.service.ServiceDefinition;
-import io.macgyver.core.service.ServiceFactory;
-
-import java.io.IOException;
-
-import org.apache.http.auth.AuthScope;
-
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSCredentialsProviderChain;
@@ -28,6 +21,9 @@ import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.google.common.base.Strings;
+
+import io.macgyver.core.service.ServiceDefinition;
+import io.macgyver.core.service.ServiceFactory;
 
 public class AWSServiceFactory extends ServiceFactory<AWSServiceClient> {
 

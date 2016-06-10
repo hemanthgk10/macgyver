@@ -13,11 +13,6 @@
  */
 package io.macgyver.plugin.cloud.aws.scanner;
 
-import io.macgyver.neorx.rest.NeoRxClient;
-import io.macgyver.plugin.cloud.aws.AWSServiceClient;
-
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -29,12 +24,12 @@ import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Instance;
-import com.amazonaws.services.ec2.model.Reservation;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+
+import io.macgyver.neorx.rest.NeoRxClient;
+import io.macgyver.plugin.cloud.aws.AWSServiceClient;
 
 public class EC2InstanceScanner extends AWSServiceScanner {
 

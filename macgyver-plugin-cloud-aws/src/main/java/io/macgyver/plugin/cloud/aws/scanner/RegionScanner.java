@@ -13,7 +13,6 @@
  */
 package io.macgyver.plugin.cloud.aws.scanner;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.slf4j.Logger;

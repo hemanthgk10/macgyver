@@ -14,20 +14,17 @@
 package io.macgyver.plugin.cloud.aws.scanner;
 
 import java.util.List;
-import java.util.TimerTask;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 
-import org.apache.log4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.google.common.base.Strings;
 import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 
 import io.macgyver.core.service.ServiceRegistry;
 import io.macgyver.neorx.rest.NeoRxClient;

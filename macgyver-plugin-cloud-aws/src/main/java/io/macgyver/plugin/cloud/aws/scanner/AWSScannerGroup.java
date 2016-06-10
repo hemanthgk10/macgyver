@@ -20,16 +20,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.amazonaws.auth.AWSCredentialsProviderChain;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.plugin.cloud.aws.AWSServiceClient;
-import io.macgyver.plugin.cloud.aws.AWSServiceClientImpl;
 
 public class AWSScannerGroup extends AWSServiceScanner {
 
