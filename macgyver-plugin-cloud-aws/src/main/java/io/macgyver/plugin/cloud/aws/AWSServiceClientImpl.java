@@ -13,8 +13,6 @@
  */
 package io.macgyver.plugin.cloud.aws;
 
-import io.macgyver.core.MacGyverException;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Optional;
@@ -23,10 +21,10 @@ import com.amazonaws.AmazonWebServiceClient;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
-import com.amazonaws.services.codedeploy.AmazonCodeDeployClient;
-import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.s3.AmazonS3Client;
+
+import io.macgyver.core.MacGyverException;
 
 public class AWSServiceClientImpl implements AWSServiceClient {
 
@@ -104,11 +102,10 @@ public class AWSServiceClientImpl implements AWSServiceClient {
 	public <T extends AmazonWebServiceClient> T createClient(
 			Class<? extends T> t, Region region) {
 		try {
-			Class<AWSCredentialsProvider>[] args = new Class[] { AWSCredentialsProvider.class };
 
-			Constructor<T> constructor = (Constructor<T>) t
-					.getDeclaredConstructor(args);
-			T client = constructor.newInstance(getCredentialsProvider());
+			Constructor<?> constructor = (Constructor<?>) t
+					.getDeclaredConstructor(AWSCredentialsProvider.class);
+			T client = t.cast(constructor.newInstance(getCredentialsProvider()));
 
 			if (region != null) {
 				assignRegion(client, region);
