@@ -118,7 +118,7 @@ public class ASGScanner extends AWSServiceScanner {
 				+ "merge (x)-[r:HAS]->(y) set r.updateTs={updateTs}";
 		getNeoRxClient().execCypher(cypher, "asgArn", asgArn, "lcn", launchConfig, "region", region, "account",
 				getAccountId(), "updateTs", updateTs);
-		deleteObsoleteRelationships("AwsLaunchConfig", asgArn, updateTs);
+		deleteObsoleteRelationships("AwsLaunchConfig", "HAS", asgArn, updateTs);
 	}
 
 	protected void mapAsgToSubnet(String subnets, String asgArn, String region) {
@@ -131,7 +131,7 @@ public class ASGScanner extends AWSServiceScanner {
 					+ "merge (x)-[r:LAUNCHES_INSTANCES_IN]->(y) set r.updateTs={updateTs}";
 			getNeoRxClient().execCypher(cypher, "asgArn", asgArn, "subnetArn", subnetArn, "updateTs", updateTs);
 		}
-		deleteObsoleteRelationships("AwsSubnet", asgArn, updateTs);
+		deleteObsoleteRelationships("AwsSubnet", "LAUNCHES_INSTANCES_IN", asgArn, updateTs);
 	}
 
 	protected void mapAsgToInstance(JsonNode instances, String asgArn, String region) {
@@ -144,7 +144,7 @@ public class ASGScanner extends AWSServiceScanner {
 					+ "merge (y)-[r:CONTAINS]->(x) set r.updateTs={updateTs}";
 			getNeoRxClient().execCypher(cypher, "instanceArn", instanceArn, "asgArn", asgArn, "updateTs", updateTs);
 		}
-		deleteObsoleteRelationships("AwsEc2Instance", asgArn, updateTs);
+		deleteObsoleteRelationships("AwsEc2Instance", "CONTAINS", asgArn, updateTs);
 	}
 
 	protected void mapAsgToElb(JsonNode elbs, String asgArn, String region) {
@@ -158,13 +158,13 @@ public class ASGScanner extends AWSServiceScanner {
 					+ "merge (y)-[r:ATTACHED_TO]-(x) set r.updateTs={updateTs}";
 			getNeoRxClient().execCypher(cypher, "elbArn", elbArn, "asgArn", asgArn, "updateTs", updateTs);
 		}
-		deleteObsoleteRelationships("AwsElb", asgArn, updateTs);
+		deleteObsoleteRelationships("AwsElb", "ATTACHED_TO", asgArn, updateTs);
 	}
 
-	protected void deleteObsoleteRelationships(String targetLabel, String asgArn, long updateTs) {
+	protected void deleteObsoleteRelationships(String targetLabel, String relationLabel, String asgArn, long updateTs) {
 		// remove relationships not updated
-		getNeoRxClient().execCypher("match (y:AwsAsg {aws_arn:{asgArn}})-[r:CONTAINS]->(x:" + targetLabel + ") "
-				+ " where r.updateTs < {updateTs} delete r", "asgArn", asgArn, "updateTs", updateTs);
+		getNeoRxClient().execCypher("match (y:AwsAsg {aws_arn:{asgArn}})-[r:" + relationLabel + "]->(x:" + targetLabel
+				+ ") " + " where r.updateTs < {updateTs} delete r", "asgArn", asgArn, "updateTs", updateTs);
 	}
 
 }
