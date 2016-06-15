@@ -50,7 +50,12 @@ public class Neo4jLogWriterIntegrationTest extends MacGyverIntegrationTest {
 	
 	@After
 	public void cleanup() {
+		try {
 		neo4j.execCypher("match (x:EventLog) where exists(x.foo) delete x");
+		}
+		catch (Exception e) {
+			logger.warn("could not clean up",e);
+		}
 	}
 	@Test
 	public void testLog() throws InterruptedException, IOException {

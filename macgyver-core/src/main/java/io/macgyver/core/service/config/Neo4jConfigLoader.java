@@ -15,8 +15,12 @@ package io.macgyver.core.service.config;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.base.Preconditions;
@@ -26,13 +30,15 @@ import io.macgyver.neorx.rest.NeoRxClient;
 
 public class Neo4jConfigLoader extends ConfigLoader {
 
+	Logger logger = LoggerFactory.getLogger(Neo4jConfigLoader.class);
+	
 	@Autowired
 	NeoRxClient neo4j;
 	
 	@Override
 	public void applyConfig(Map<String, String> m) {
 		Preconditions.checkNotNull(neo4j);
-		
+		try {
 		neo4j.execCypher("match (c:ServiceConfig) return c").forEach(x->{
 			String serviceName = x.path("serviceName").asText();
 			if (isNullOrEmpty(serviceName)) {
@@ -41,7 +47,29 @@ public class Neo4jConfigLoader extends ConfigLoader {
 				});
 			}
 		});
+		}
+		catch (RuntimeException e) {
+			if (isIntegrationTest()) {
+				// allow this to fail for integration tests only.  If neo4j is detected to be unavailable at test time, int tests will simply be skipped.
+				logger.warn("neo4j connectivity failed for Neo4jConfigLoader...continuing because we are in an integration test",e);
+				return;
+			}
+			throw e;
+		}
 
+	}
+	
+	
+	boolean isIntegrationTest() {
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter(sw);
+		new RuntimeException().printStackTrace(pw);
+		pw.close();
+		
+		if (sw.toString().contains("org.junit")) {
+			return true;
+		}
+		return false;
 	}
 
 }
