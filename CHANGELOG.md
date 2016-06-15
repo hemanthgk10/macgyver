@@ -1,5 +1,8 @@
 ## Changes
 
+## 1.3.6
+* removing relationships between ELB-ASG when ASGs are detached from ELB
+
 ### 1.3.5
 * Add SpringFox + Swagger
 * Enable API Tokens to be sent via X-API-KEY
