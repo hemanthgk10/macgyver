@@ -35,6 +35,7 @@ subprojects {
     apply plugin: 'eclipse'
     apply plugin: 'idea'
 	apply plugin: 'checkstyle'
+    apply plugin: 'jacoco'
 	apply plugin: "com.github.hierynomus.license"
 
     
@@ -197,6 +198,27 @@ subprojects {
 	  from sourceSets.main.runtimeClasspath
 	  into 'build/temp-deps'
 	}
+    
+    jacocoTestReport {
+        group = "reporting"
+        description = "Generate Jacoco coverage reports after running tests."
+        
+        reports {
+            xml.enabled true
+            html.enabled true
+            csv.enabled false
+            html.destination "${buildDir}/reports/jacoco-html"
+            
+        }
+       sourceSets sourceSets.main
+       
+
+    }
+    jacocoTestReport.doFirst{
+        classDirectories = files('build/classes/main/io/macgyver')
+    }
+   
+
 }
 
 
