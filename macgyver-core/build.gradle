@@ -40,14 +40,14 @@ dependencies {
     compile "org.springframework:spring-context-support:${SPRING_VERSION}"
     compile "org.springframework:spring-tx:${SPRING_VERSION}"
     
-    compile 'org.ocpsoft.prettytime:prettytime:3.2.7.Final'
+    compile 'org.ocpsoft.prettytime:prettytime:4.0.1.Final'
     compile 'joda-time:joda-time:2.7'
     
     compile "io.dropwizard.metrics:metrics-core:${DROPWIZARD_METRICS_VERSION}"
     compile 'com.lambdaworks:scrypt:1.4.0'
 	compile 'it.sauronsoftware.cron4j:cron4j:2.2.5'
 
-
+	compile "net.jodah:failsafe:${FAILSAFE_VERSION}"
 	compile 'org.aspectj:aspectjweaver:1.8.5'
 	
 	compile 'jaxen:jaxen:1.1.6'  // needed???
