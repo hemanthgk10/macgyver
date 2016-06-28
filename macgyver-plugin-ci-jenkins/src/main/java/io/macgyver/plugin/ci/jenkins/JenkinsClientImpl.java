@@ -13,14 +13,18 @@
  */
 package io.macgyver.plugin.ci.jenkins;
 
-import io.macgyver.okrest.BasicAuthInterceptor;
-import io.macgyver.okrest.OkRestLoggingInterceptor;
-import io.macgyver.okrest.OkRestClient;
-import io.macgyver.okrest.OkRestException;
-import io.macgyver.okrest.OkRestResponse;
-import io.macgyver.okrest.OkRestTarget;
-import io.macgyver.okrest.OkRestWrapperException;
-import io.macgyver.okrest.compat.OkUriBuilder;
+
+import io.macgyver.okrest3.OkRestClient.Builder;
+import io.macgyver.okrest3.OkRestException;
+import io.macgyver.okrest3.OkRestTarget;
+import io.macgyver.okrest3.OkRestWrapperException;
+import io.macgyver.okrest3.compat.OkUriBuilder;
+import okhttp3.FormBody;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,18 +48,14 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
 import com.squareup.okhttp.FormEncodingBuilder;
-import com.squareup.okhttp.Headers;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
+
+
 
 public class JenkinsClientImpl implements JenkinsClient {
 
 	Logger logger = LoggerFactory.getLogger(JenkinsClientImpl.class);
 
-	OkRestTarget target;
+	io.macgyver.okrest3.OkRestTarget target;
 
 	private String urlBase;
 
@@ -64,12 +64,16 @@ public class JenkinsClientImpl implements JenkinsClient {
 		this.urlBase = urlBase;
 
 
-		target = new OkRestClient().uri(urlBase);
-
+		Builder builder = new io.macgyver.okrest3.OkRestClient.Builder();
 		if (!Strings.isNullOrEmpty(username)) {
-			target.getOkHttpClient().interceptors()
-					.add(new BasicAuthInterceptor(username, password));
+			builder.withOkHttpClientConfig(cfg -> {
+				cfg.addInterceptor(new io.macgyver.okrest3.BasicAuthInterceptor(username, password));
+			});
 		}
+		
+		target = builder.build().uri(urlBase);
+		
+		
 	}
 
 	@Override
@@ -105,7 +109,7 @@ public class JenkinsClientImpl implements JenkinsClient {
 	public org.jdom2.Document getJobConfig(String jobName) {
 
 		try {
-			OkRestResponse rr = target.path("job").path(jobName)
+			io.macgyver.okrest3.OkRestResponse rr = target.path("job").path(jobName)
 					.path("config.xml").get().execute();
 
 			return new SAXBuilder().build(rr.response().body().byteStream());
@@ -131,13 +135,13 @@ public class JenkinsClientImpl implements JenkinsClient {
 
 			String url = new OkUriBuilder().uri(urlBase).path("scriptText").build().toString();
 
-			RequestBody formBody = new FormEncodingBuilder().add("script",
+			FormBody formBody = new FormBody.Builder().add("script",
 					groovy).build();
 
 			Request request = new Request.Builder().url(url).post(formBody)
 					.build();
 
-			OkHttpClient client = target.getOkHttpClient();
+			okhttp3.OkHttpClient client = target.getOkHttpClient();
 			Response response = client.newCall(request).execute();
 
 			throwRestExceptionOnError(response);
@@ -165,7 +169,7 @@ public class JenkinsClientImpl implements JenkinsClient {
 			String url = new OkUriBuilder().uri(urlBase).path("job").path(jobName)
 					.path("build").build().toString();
 
-			RequestBody formBody = new FormEncodingBuilder().add("__dummy__",
+			FormBody formBody = new FormBody.Builder().add("__dummy__",
 					"").build();
 
 			Request request = new Request.Builder()
@@ -220,7 +224,7 @@ public class JenkinsClientImpl implements JenkinsClient {
 			String url = new OkUriBuilder().uri(urlBase).path("job").path(jobName)
 					.path("buildWithParameters").build().toString();
 
-			FormEncodingBuilder builder = new FormEncodingBuilder();
+			FormBody.Builder builder = new FormBody.Builder();
 
 			if (m == null || m.isEmpty()) {
 				builder = builder.add("__dummy__", "__dummy__");
@@ -367,4 +371,8 @@ public class JenkinsClientImpl implements JenkinsClient {
 		return urlBase;
 	}
 
+	@Override
+	public OkRestTarget getOkRestTarget() {
+		return target;
+	}
 }

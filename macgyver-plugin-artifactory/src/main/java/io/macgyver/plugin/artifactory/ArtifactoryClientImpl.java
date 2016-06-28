@@ -27,6 +27,9 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Splitter;
 import com.google.common.io.ByteStreams;
@@ -35,6 +38,7 @@ import com.google.common.io.Files;
 
 public class ArtifactoryClientImpl extends ArtifactoryClient {
 
+	Logger logger = LoggerFactory.getLogger(ArtifactoryClientImpl.class);
 
 	OkRestClient okRestClient;
 	OkRestTarget base;
@@ -76,7 +80,12 @@ public class ArtifactoryClientImpl extends ArtifactoryClient {
 
 	@Override
 	public void delete(String path) throws IOException{
-		base.path(path).delete().execute();
+		logger.info("deleting {}",path);
+		OkRestResponse response = base.path(path).delete().execute();
+		
+		response.response().body().bytes();
+		logger.info("delete status: {}",response.response().code());
+		response.response().body().close();
 	}
 
 	@Override
