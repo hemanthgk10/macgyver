@@ -1,5 +1,9 @@
 ## Changes
 
+## 1.3.8
+* expose OkRest/OkHttp from jenkins client
+* upgrade Jenkins to OkRest/OkHttp 3.x
+
 ## 1.3.6
 * removing relationships between ELB-ASG when ASGs are detached from ELB
 

@@ -15,6 +15,7 @@ package io.macgyver.plugin.ci.jenkins;
 
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.neorx.rest.NeoRxClientBuilder;
+import io.macgyver.okrest3.OkRestResponse;
 import io.macgyver.plugin.ci.jenkins.decorators.GitHubDecorator;
 
 import java.io.IOException;
@@ -26,11 +27,12 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.RecordedRequest;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
 
-public class JenkinsTest {
+public class JenkinsClientImplTest {
 
 	@Rule
 	public MockWebServer mockServer = new MockWebServer();
@@ -40,7 +42,7 @@ public class JenkinsTest {
 	@Before
 	public void setupClient() {
 		client = new JenkinsClientBuilder()
-				.url(mockServer.getUrl("/jenkins").toString())
+				.url(mockServer.url("/jenkins").toString())
 				.credentials("username", "password").build();
 
 	}
@@ -58,6 +60,32 @@ public class JenkinsTest {
 		Assertions.assertThat(rr.getMethod()).isEqualTo("GET");
 	}
 
+	@Test
+	public void testOkRestClientGet() throws InterruptedException {
+		mockServer
+		.enqueue(new MockResponse()
+				.setBody("{}"));
+		
+		client.getOkRestTarget().path("/foo/bar").get().execute();
+		
+		RecordedRequest rr = mockServer.takeRequest();
+		Assertions.assertThat(rr.getRequestLine()).isEqualTo("GET /jenkins/foo/bar HTTP/1.1");
+		
+	}
+	
+	@Test
+	public void testOkRestClientPost() throws InterruptedException {
+		mockServer
+		.enqueue(new MockResponse()
+				.setBody("{}"));
+		
+		client.getOkRestTarget().path("/fizz/buzz").post(new ObjectMapper().createObjectNode().put("foo", "bar")).execute();
+		
+		RecordedRequest rr = mockServer.takeRequest();
+		Assertions.assertThat(rr.getRequestLine()).isEqualTo("POST /jenkins/fizz/buzz HTTP/1.1");
+		Assertions.assertThat(rr.getHeader("Content-type")).contains("application/json");
+		
+	}
 	@Test
 	public void testGetLoadStats() throws InterruptedException {
 
