@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,11 +21,15 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.davidmoten.rx.jdbc.Database;
 
 public class DataSourceFactoryTest extends MacGyverIntegrationTest {
 
@@ -50,19 +54,20 @@ public class DataSourceFactoryTest extends MacGyverIntegrationTest {
 	@Test
 	public void testAutoRegistration() throws SQLException {
 
-
 		JdbcTemplate t = (JdbcTemplate) registry.get("testdsTemplate");
 		Assert.assertNotNull(t);
-		Assert.assertSame(t,registry.get("testdsTemplate"));
-		
+		Assert.assertSame(t, registry.get("testdsTemplate"));
+
 		DataSource ds = (DataSource) registry.get("testds");
 		Assert.assertNotNull(ds);
-		
-			DataSource ds1 = (DataSource) registry.get("testds");
-			DataSource ds2 = (DataSource) registry.get("testds");
-			Assert.assertNotNull(ds1);
-			Assert.assertSame(ds1,ds2);
-			Assert.assertSame(ds, t.getDataSource());
+
+		DataSource ds1 = (DataSource) registry.get("testds");
+		DataSource ds2 = (DataSource) registry.get("testds");
+		Assert.assertNotNull(ds1);
+		Assert.assertSame(ds1, ds2);
+		Assert.assertSame(ds, t.getDataSource());
 	}
+
+
 
 }
