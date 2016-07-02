@@ -32,7 +32,7 @@ request.getAttribute("list").each {
 if (it.path("executeAllowed").asBoolean()) {
 %>
 <form action="/core/admin/scripts" method="post" >
-<input type="hidden" name="hash" value="<%=it.path("hash").asText()%>" />
+<input type="hidden" name="path" value="<%=it.path("resource").asText()%>" />
 <button class="btn btn-block btn-primary btn-xs">Execute</button>
 </form>
 <%

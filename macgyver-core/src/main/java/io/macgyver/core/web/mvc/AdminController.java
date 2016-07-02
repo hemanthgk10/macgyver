@@ -170,11 +170,14 @@ public class AdminController {
 		List<JsonNode> list = Lists.newArrayList();
 		try {
 
-			String hash = request.getParameter("hash");
-			if (!Strings.isNullOrEmpty(hash)) {
+			String path = request.getParameter("path");
+			if (!Strings.isNullOrEmpty(path)) {
 				try {
-
-					Optional<Resource> r = findResourceByHash(hash);
+					if (!currentUserHasExecutePermissions()) {
+						throw new MacGyverException("unauthorized");
+					}
+					
+					Optional<Resource> r = findResourceByPath(path);
 					if (r.isPresent()) {
 						scheduleImmediate(r.get());
 					}
@@ -201,7 +204,7 @@ public class AdminController {
 					} else if (rp.getClass().getName().contains("Git")) {
 						n.put("providerType", "git");
 					}
-					n.put("hash", r.getHash());
+		
 					n.put("executeAllowed", currentUserHasExecutePermissions());
 					list.add(n);
 
@@ -216,6 +219,12 @@ public class AdminController {
 
 	}
 
+	protected Optional<Resource> findResourceByPath(String path) throws IOException {
+		ExtensionResourceProvider extensionProvider = Kernel.getInstance()
+				.getApplicationContext()
+				.getBean(ExtensionResourceProvider.class);
+		return extensionProvider.findResourceByPath(path);
+	}
 	public void scheduleImmediate(Resource r) {
 		try {
 			DirectScriptExecutor service = Kernel
@@ -234,15 +243,7 @@ public class AdminController {
 				.getBean(ExtensionResourceProvider.class);
 	}
 
-	Optional<Resource> findResourceByHash(String hash) throws IOException {
-		for (Resource r : getExtensionResourceProvider().findResources()) {
-			String resourceHash = r.getHash();
-			if (resourceHash.equals(hash)) {
-				return Optional.of(r);
-			}
-		}
-		return Optional.absent();
-	}
+
 
 	public String encrypt(String plaintext, String alias) {
 
