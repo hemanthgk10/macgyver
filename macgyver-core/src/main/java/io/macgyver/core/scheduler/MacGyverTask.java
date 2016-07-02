@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Charsets;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 
@@ -103,7 +104,13 @@ public class MacGyverTask extends Task {
 	}
 
 	public String toString() {
-		return MoreObjects.toStringHelper(this).add("id", getTaskId()).toString();		
+		ToStringHelper helper = MoreObjects.toStringHelper(this);
+		if (config!=null) {
+			config.fields().forEachRemaining(x->{
+				helper.add(x.getKey(), x.getValue());
+			});
+		}
+		return helper.toString();	
 	}
 
 	public String getTaskId() {

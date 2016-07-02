@@ -24,6 +24,7 @@ import org.crsh.console.jline.internal.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -96,8 +97,19 @@ public class LocalScheduler implements Runnable, DirectScriptExecutor {
 	 * @param scriptName
 	 */
 	public void executeScriptImmediately(String scriptName) {
+		
+		
+		
 		ObjectNode n = new ObjectMapper().createObjectNode();
 		n.put("script", scriptName);
+		try {
+			String val = SecurityContextHolder.getContext().getAuthentication().getName();
+			n.put("user", val);
+		}
+		catch (Exception e) {
+			// debug level is fine...we tried
+			logger.debug("could not determine current user",e);
+		}
 		MacGyverTask task = new MacGyverTask(n);
 		scheduler.launch(task);
 	}
