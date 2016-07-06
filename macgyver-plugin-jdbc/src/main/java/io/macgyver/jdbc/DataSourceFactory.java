@@ -25,6 +25,7 @@ import javax.sql.DataSource;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import com.github.davidmoten.rx.jdbc.Database;
 import com.google.common.base.Throwables;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -77,8 +78,12 @@ public class DataSourceFactory extends ServiceFactory<DataSource> {
 	protected void doCreateCollaboratorInstances(
 			ServiceRegistry registry,
 			ServiceDefinition primaryDefinition, Object primaryBean) {
-		JdbcTemplate t = new JdbcTemplate((DataSource)primaryBean, true);
+		DataSource ds = (DataSource) primaryBean;
+		JdbcTemplate t = new JdbcTemplate(ds, true);
 		registry.registerCollaborator(primaryDefinition.getPrimaryName()+"Template", t);
+		
+		Database rx = Database.fromDataSource(ds);
+		registry.registerCollaborator(primaryDefinition.getPrimaryName()+"RxJdbc", rx);
 	}
 
 	@Override
@@ -87,6 +92,10 @@ public class DataSourceFactory extends ServiceFactory<DataSource> {
 		ServiceDefinition def = new ServiceDefinition(primary.getName()+"Template", primary.getName(), primary.getProperties(), this);
 
 		defSet.add(def);
+		
+		ServiceDefinition rxJdbc = new ServiceDefinition(primary.getName()+"RxJdbc", primary.getName(), primary.getProperties(), this);
+
+		defSet.add(rxJdbc);
 
 	}
 
