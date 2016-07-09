@@ -39,7 +39,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.io.ByteStreams;
 
-import io.macgyver.core.reactor.MacGyverEventPublisher;
+import io.macgyver.core.event.MacGyverEventPublisher;
 import reactor.bus.EventBus;
 import reactor.bus.selector.Selectors;
 

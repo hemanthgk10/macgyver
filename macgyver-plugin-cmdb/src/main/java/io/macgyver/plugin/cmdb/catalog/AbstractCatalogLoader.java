@@ -38,7 +38,7 @@ import com.google.common.hash.Hashing;
 
 import ch.qos.logback.core.helpers.Transform;
 import io.macgyver.core.MacGyverException;
-import io.macgyver.core.reactor.MacGyverEventPublisher;
+import io.macgyver.core.event.MacGyverEventPublisher;
 import io.macgyver.core.resource.Resource;
 import io.macgyver.core.resource.ResourceMatcher;
 import io.macgyver.core.resource.ResourceProvider;
@@ -99,7 +99,7 @@ public abstract class AbstractCatalogLoader {
 		return (T) this;
 	}
 
-	public <T extends AbstractCatalogLoader> T withEventPublisher(MacGyverEventPublisher publisher) {
+	public <T extends AbstractCatalogLoader> T withEventPublisher(io.macgyver.core.event.MacGyverEventPublisher publisher) {
 		this.publisher = publisher;
 		return (T) this;
 	}

@@ -20,7 +20,7 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import io.macgyver.core.reactor.MacGyverEventPublisher;
+import io.macgyver.core.event.MacGyverEventPublisher;
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.plugin.cmdb.catalog.AppDefinitionLoader;
 import io.macgyver.plugin.git.GitResourceProvider;

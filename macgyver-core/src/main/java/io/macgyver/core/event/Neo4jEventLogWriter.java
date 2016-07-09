@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.macgyver.core.log;
+package io.macgyver.core.event;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -27,7 +27,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
-import io.macgyver.core.log.EventLogger.LogMessage;
+import io.macgyver.core.event.EventLogger.LogMessage;
 import io.macgyver.neorx.rest.NeoRxClient;
 import reactor.bus.Event;
 import reactor.bus.EventBus;
@@ -95,10 +95,11 @@ public class Neo4jEventLogWriter implements InitializingBean {
 						checkLabel(label);
 						labelClause = ":" + label;
 					}
-					JsonNode n = logEvent.getData().getData();
+					JsonNode n = logEvent.getData().getPayload();
 					
 					try {
 						ObjectNode props = (ObjectNode) n;
+						props = props.deepCopy();
 										
 						applyTimestamp(logEvent.getData().getTimestamp(), props);
 

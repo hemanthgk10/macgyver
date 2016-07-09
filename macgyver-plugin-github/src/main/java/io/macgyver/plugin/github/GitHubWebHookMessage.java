@@ -22,7 +22,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.MoreObjects;
 import com.google.common.io.ByteStreams;
 
-import io.macgyver.core.reactor.MacGyverMessage;
+import io.macgyver.core.event.MacGyverMessage;
+
+
 
 public class GitHubWebHookMessage extends MacGyverMessage {
 	static ObjectMapper mapper = new ObjectMapper();

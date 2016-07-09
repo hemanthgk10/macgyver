@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.macgyver.core.log;
+package io.macgyver.core.event;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -25,12 +25,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.uuid.EthernetAddress;
+import com.fasterxml.uuid.Generators;
+import com.fasterxml.uuid.UUIDGenerator;
+import com.fasterxml.uuid.impl.TimeBasedGenerator;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-
-import io.macgyver.core.reactor.MacGyverEventPublisher;
-import io.macgyver.core.reactor.MacGyverMessage;
 
 public final class EventLogger {
 
@@ -43,8 +44,8 @@ public final class EventLogger {
 
 	public Supplier<String> sourceHostSupplier = Suppliers.memoize(new SourceHostSupplier());
 
-	public static class SourceHostSupplier implements Supplier<String> {
 
+	public static class SourceHostSupplier implements Supplier<String> {
 		@Override
 		public String get() {
 			try {
@@ -55,18 +56,20 @@ public final class EventLogger {
 			}
 			return "localhost";
 		}
-
 	}
 
 	public class LogMessage extends MacGyverMessage {
 		String label = null;
 		boolean sent = false;
 
+		public LogMessage() {
+			super();
+			withEventType(LogMessage.class.getName());
+		}
 		public LogMessage withLabel(String label) {
 			this.label = label;
 			return this;
 		}
-
 		public String getLabel() {
 			return label;
 		}
@@ -75,13 +78,10 @@ public final class EventLogger {
 			return (LogMessage) withAttribute("message", msg);
 		}
 
-		public LogMessage withSourceHost(String host) {
-			return (LogMessage) withAttribute("sourceHost", host);
-		}
-
 		public void log() {
 			logEvent(this);
 		}
+		
 	}
 
 	public LogMessage event() {
@@ -96,11 +96,9 @@ public final class EventLogger {
 			Preconditions.checkNotNull(publisher);
 			Preconditions.checkNotNull(event,"event cannot be null");
 			Preconditions.checkState(event.sent == false, "event already published");
-			JsonNode data = event.getData();
+			JsonNode data = event.getPayload();
 			logger.info("logEvent data: {}",data);
-			if (!data.has("sourceHost")) {
-				event.withAttribute("sourceHost", sourceHostSupplier.get());
-			}
+
 			publisher.createMessage().withMessage(event).publish();
 			event.sent = true;
 		} catch (RuntimeException e) {

@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.macgyver.core.reactor;
+package io.macgyver.core.event;
 
 import java.net.InetAddress;
 import java.util.function.Consumer;
@@ -46,6 +46,9 @@ public class MacGyverEventPublisher {
 
 		public MessageBuilder withMessageType(Class<? extends MacGyverMessage> clazz) {
 			try {
+				if (message.getPayload().size()>0) {
+					throw new IllegalStateException("cannot call withMessageType() after values have been set");
+				}
 				message = clazz.newInstance();
 
 				return this;
@@ -60,6 +63,7 @@ public class MacGyverEventPublisher {
 		}
 		public MessageBuilder withMessage(MacGyverMessage m) {
 			this.message = m;
+			
 			return this;
 		}
 
@@ -91,6 +95,7 @@ public class MacGyverEventPublisher {
 	
 	protected void publishObject(Object object) {
 		if (eventBus != null) {
+			
 			eventBus.notify(object, Event.wrap(object));
 		} else {
 			logger.warn("event not published because EventBus was not set");

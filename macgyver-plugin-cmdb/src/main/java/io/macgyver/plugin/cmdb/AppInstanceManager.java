@@ -51,7 +51,7 @@ import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import io.macgyver.core.metrics.MetricsUtil;
-import io.macgyver.core.reactor.MacGyverEventPublisher;
+
 import io.macgyver.core.util.JsonNodes;
 import io.macgyver.core.util.Neo4jPropertyFlattener;
 import io.macgyver.neorx.rest.NeoRxClient;
@@ -74,7 +74,7 @@ public class AppInstanceManager {
 	MetricRegistry metricRegistry;
 	
 	@Autowired
-	MacGyverEventPublisher publisher;
+	io.macgyver.core.event.MacGyverEventPublisher publisher;
 
 	ObjectMapper mapper = new ObjectMapper();
 

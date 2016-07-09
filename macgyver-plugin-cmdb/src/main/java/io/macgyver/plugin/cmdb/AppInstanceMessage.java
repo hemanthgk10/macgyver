@@ -13,9 +13,9 @@
  */
 package io.macgyver.plugin.cmdb;
 
-import io.macgyver.core.reactor.MacGyverMessage;
 
-public class AppInstanceMessage extends MacGyverMessage {
+
+public class AppInstanceMessage extends io.macgyver.core.event.MacGyverMessage {
 
 	public static class Discovery extends AppInstanceMessage {
 

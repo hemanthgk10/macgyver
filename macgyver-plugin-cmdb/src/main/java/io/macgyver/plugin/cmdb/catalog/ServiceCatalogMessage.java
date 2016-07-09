@@ -16,9 +16,8 @@ package io.macgyver.plugin.cmdb.catalog;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.macgyver.core.reactor.MacGyverMessage;
 
-public abstract class ServiceCatalogMessage extends MacGyverMessage {
+public abstract class ServiceCatalogMessage extends io.macgyver.core.event.MacGyverMessage {
 
 	public static class UpdateMessage extends ServiceCatalogMessage {
 
