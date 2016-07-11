@@ -13,14 +13,22 @@
  */
 package io.macgyver.core.reactor;
 
+import java.util.UUID;
+
 import org.assertj.core.api.Assertions;
+import org.assertj.core.data.Offset;
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.MissingNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.uuid.Generators;
 
-import io.macgyver.core.reactor.MacGyverEventPublisher.MessageBuilder;
+import io.macgyver.core.event.MacGyverEventPublisher;
+import io.macgyver.core.event.MacGyverMessage;
+import io.macgyver.core.util.JsonNodes;
+import io.macgyver.core.event.MacGyverEventPublisher.MessageBuilder;
 
 public class MacGyverMessageTest {
 
@@ -39,9 +47,49 @@ public class MacGyverMessageTest {
 		
 		Assertions.assertThat(m).isInstanceOf(TestMessage.class);
 		
-		Assertions.assertThat(m.getData().isObject()).isTrue();
+		Assertions.assertThat(m.getEnvelope().isObject()).isTrue();
 	}
 
+	@Test
+	public void testIt() {
+		MacGyverMessage m = new MacGyverMessage();
+		
+		Assertions.assertThat(UUID.fromString(m.getEventId()).toString()).isEqualTo(m.getEventId());
+		Assertions.assertThat(m.getEnvelope().get("eventTs").asLong()).isCloseTo(System.currentTimeMillis(), Offset.offset(5000L));
+		Assertions.assertThat(m.getEnvelope().path("eventType").asText()).isEqualTo("io.macgyver.core.event.MacGyverMessage");
+		Assertions.assertThat(m.getPayload().size()).isEqualTo(0);
+		Assertions.assertThat(m.getPayload()).isSameAs(m.getEnvelope().get("data"));
+	
+	}
 
+	
+	@Test
+	public void testIt2() {
+		MacGyverMessage m = new MacGyverMessage().withAttribute("foo", "bar");
+		
+		Assertions.assertThat(UUID.fromString(m.getEventId()).toString()).isEqualTo(m.getEventId());
+		Assertions.assertThat(m.getEnvelope().get("eventTs").asLong()).isCloseTo(System.currentTimeMillis(), Offset.offset(5000L));
+		Assertions.assertThat(m.getEnvelope().path("eventType").asText()).isEqualTo("io.macgyver.core.event.MacGyverMessage");
+		Assertions.assertThat(m.getPayload().path("foo").asText()).isEqualTo("bar");
+		Assertions.assertThat(m.getPayload()).isSameAs(m.getEnvelope().get("data"));
+	
+	}
+	
+	
+	@Test
+	public void testIt3() {
+		
+		JsonNode payload = JsonNodes.mapper.createObjectNode().put("fizz", "buzz");
+		
+		MacGyverMessage m = new MacGyverMessage().withAttribute("foo", "bar").withData(payload);
+		
+		Assertions.assertThat(UUID.fromString(m.getEventId()).toString()).isEqualTo(m.getEventId());
+		Assertions.assertThat(m.getEnvelope().get("eventTs").asLong()).isCloseTo(System.currentTimeMillis(), Offset.offset(5000L));
+		Assertions.assertThat(m.getEnvelope().path("eventType").asText()).isEqualTo("io.macgyver.core.event.MacGyverMessage");
+		Assertions.assertThat(m.getPayload().has("foo")).isFalse();
+		Assertions.assertThat(m.getPayload().get("fizz").asText()).isEqualTo("buzz");
+		Assertions.assertThat(m.getPayload()).isSameAs(m.getEnvelope().get("data"));
+	
+	}
 	
 }

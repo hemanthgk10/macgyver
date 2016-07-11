@@ -15,7 +15,10 @@ package io.macgyver.plugin.config;
 
 
 import io.macgyver.jdbc.DataSourceFactory;
+import io.macgyver.jdbc.event.JdbcEventWriter;
+import reactor.bus.EventBus;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -24,10 +27,20 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class JdbcConfig {
 
+	@Autowired
+	EventBus eventBus;
+	
 	@Bean
 	public DataSourceFactory dataSourceFactory() {
 		return new DataSourceFactory();
 	}
 
 
+	@Bean
+	public JdbcEventWriter macJdbcEventLogWriter() {
+		JdbcEventWriter w = new JdbcEventWriter().withPrivateEventBus();
+		
+		w.subscribe(eventBus);
+		return w;
+	}
 }

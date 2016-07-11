@@ -37,8 +37,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 
-import io.macgyver.core.reactor.MacGyverEventPublisher;
-import io.macgyver.core.reactor.MacGyverEventPublisher.MessageBuilder;
+import io.macgyver.core.event.MacGyverEventPublisher;
 import io.macgyver.neorx.rest.NeoRxClient;
 
 @Controller
@@ -104,7 +103,7 @@ public class AppEventApiController {
 			}
 		}
 
-		MessageBuilder mb = null;
+		io.macgyver.core.event.MacGyverEventPublisher.MessageBuilder mb = null;
 		if (eventType.equals("DEPLOY_INITIATED") || eventType.equals("DEPLOYMENT_INITIATED")) {
 			mb = publisher.createMessage(AppInstanceMessage.DeploymentInitiated.class).withMessageBody(data);
 		} else if (eventType.equals("DEPLOY_COMPLETE") || eventType.equals("DEPLOYMENT_COMPLETE")) {

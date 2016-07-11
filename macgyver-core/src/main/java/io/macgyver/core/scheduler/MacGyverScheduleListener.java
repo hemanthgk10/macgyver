@@ -23,8 +23,8 @@ import org.slf4j.MDC;
 import com.google.common.hash.Hashing;
 
 import io.macgyver.core.Kernel;
-import io.macgyver.core.log.EventLogger;
-import io.macgyver.core.log.Neo4jEventLogWriter;
+import io.macgyver.core.event.EventLogger;
+import io.macgyver.core.event.Neo4jEventLogWriter;
 import it.sauronsoftware.cron4j.SchedulerListener;
 import it.sauronsoftware.cron4j.Task;
 import it.sauronsoftware.cron4j.TaskExecutor;

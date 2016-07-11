@@ -28,7 +28,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.macgyver.core.reactor.MacGyverEventPublisher;
+import io.macgyver.core.event.MacGyverEventPublisher;
 import io.macgyver.plugin.ci.jenkins.JenkinsNotificationMessage.BuildNotificationMessage;
 
 /**

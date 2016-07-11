@@ -76,7 +76,6 @@ public class JacksonRxJdbcResultSetMapper implements ResultSetMapper<ObjectNode>
 	protected List<ColumnInfo> getColumnInfo(ResultSet rs) throws SQLException {
 		List<ColumnInfo> list = cache.getIfPresent(rs);
 		if (list != null) {
-			System.out.println("cache hit");
 			return list;
 		}
 

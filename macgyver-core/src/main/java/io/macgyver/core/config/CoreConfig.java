@@ -55,10 +55,11 @@ import io.macgyver.core.auth.UserManager;
 import io.macgyver.core.cli.CLIDownloadController;
 import io.macgyver.core.cluster.ClusterManager;
 import io.macgyver.core.crypto.Crypto;
-import io.macgyver.core.log.EventLogger;
-import io.macgyver.core.log.Neo4jEventLogWriter;
+import io.macgyver.core.event.EventLogger;
+import io.macgyver.core.event.MacGyverEventPublisher;
+import io.macgyver.core.event.Neo4jEventLogWriter;
+import io.macgyver.core.event.Slf4jEventWriter;
 import io.macgyver.core.metrics.MacGyverMetricRegistry;
-import io.macgyver.core.reactor.MacGyverEventPublisher;
 import io.macgyver.core.resource.provider.filesystem.FileSystemResourceProvider;
 import io.macgyver.core.scheduler.LocalScheduler;
 import io.macgyver.core.scheduler.MacGyverTaskCollector;
@@ -435,5 +436,10 @@ public class CoreConfig implements EnvironmentAware {
 		cl.addLoader(new SpringConfigLoader());
 		cl.addLoader(macNeo4jConfigLoader());
 		return cl;
+	}
+	
+	@Bean
+	public Slf4jEventWriter macSlf4jEventWriter() {
+		return new Slf4jEventWriter();
 	}
 }

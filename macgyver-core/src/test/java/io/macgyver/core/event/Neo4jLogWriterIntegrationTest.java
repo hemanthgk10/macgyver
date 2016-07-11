@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.macgyver.core.log;
+package io.macgyver.core.event;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -30,8 +30,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.macgyver.core.log.EventLogger.LogMessage;
-import io.macgyver.core.reactor.MacGyverMessage;
+import io.macgyver.core.event.MacGyverMessage;
+import io.macgyver.core.event.Neo4jEventLogWriter;
+import io.macgyver.core.event.EventLogger.LogMessage;
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.test.MacGyverIntegrationTest;
 

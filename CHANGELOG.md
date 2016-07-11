@@ -1,10 +1,16 @@
 ## Changes
 
-## 1.3.8
+### 1.4.0
+* Refactor Event Processing Model
+
+### 1.3.9 
+* Add RxJava JDBC
+
+### 1.3.8
 * expose OkRest/OkHttp from jenkins client
 * upgrade Jenkins to OkRest/OkHttp 3.x
 
-## 1.3.6
+### 1.3.6
 * removing relationships between ELB-ASG when ASGs are detached from ELB
 
 ### 1.3.5

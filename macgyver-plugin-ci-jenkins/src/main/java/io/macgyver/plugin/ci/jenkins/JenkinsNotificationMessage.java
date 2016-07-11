@@ -13,7 +13,7 @@
  */
 package io.macgyver.plugin.ci.jenkins;
 
-import io.macgyver.core.reactor.MacGyverMessage;
+import io.macgyver.core.event.MacGyverMessage;
 
 public class JenkinsNotificationMessage extends MacGyverMessage {
 

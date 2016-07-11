@@ -30,8 +30,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.macgyver.core.reactor.MacGyverEventPublisher;
-import io.macgyver.core.reactor.MacGyverMessage;
+import io.macgyver.core.event.MacGyverEventPublisher;
 import io.macgyver.plugin.ci.jenkins.JenkinsNotificationMessage.BuildNotificationMessage;
 import io.macgyver.plugin.ci.jenkins.JenkinsNotificationMessage.ProjectNotificationMessage;
 import io.macgyver.plugin.ci.jenkins.JenkinsNotificationMessage.QueueNotificationMessage;

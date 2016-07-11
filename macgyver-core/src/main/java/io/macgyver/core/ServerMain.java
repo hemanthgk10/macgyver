@@ -35,7 +35,7 @@ import com.google.common.collect.Lists;
 import com.sun.akuma.JavaVMArguments;
 
 import io.macgyver.core.Kernel.ServerStartedEvent;
-import io.macgyver.core.log.EventLogger;
+import io.macgyver.core.event.EventLogger;
 import reactor.bus.Event;
 import reactor.bus.EventBus;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
