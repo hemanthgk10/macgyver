@@ -90,8 +90,8 @@ public class JdbcEventWriter implements ApplicationListener<ApplicationReadyEven
 		return this;
 	}
 
-	public static final String GENERIC_DDL = "create table event (event_id varchar(38) not null, event_type varchar(150), json_data clob, event_ts timestamp, event_source varchar(100))";
-	public static final String MYSQL_DDL = "create table event (event_id varchar(38) not null, event_type varchar(150), json_data json, event_ts timestamp, event_source varchar(100))";
+	public static final String GENERIC_DDL = "create table event (event_id varchar(38) not null, event_type varchar(150), json_data clob, event_ts timestamp)";
+	public static final String MYSQL_DDL = "create table event (event_id varchar(38) not null, event_type varchar(150), json_data json, event_ts timestamp)";
 
 	public void writeAsync(MacGyverMessage m) {
 		Preconditions.checkState(localBus != null, "event bus not set");
@@ -104,17 +104,11 @@ public class JdbcEventWriter implements ApplicationListener<ApplicationReadyEven
 
 	protected void write(JsonNode data) {
 
-		if (database == null) {
-			if (logger.isDebugEnabled()) {
-				logger.warn("cannot log...database not set: {}",data);
-			}
-			else {
-				logger.warn("cannot log...database not set");
-			}
+		if (!isEnabled()) {
 			return;
 		}
 		String id = data.path("eventId").asText(uuidGenerator.generate().toString());
-		String eventSource = data.path("eventSource").asText();
+		
 		String eventType = data.path("eventType").asText();
 
 		long ts = data.path("eventTs").longValue();
@@ -124,12 +118,11 @@ public class JdbcEventWriter implements ApplicationListener<ApplicationReadyEven
 		Timestamp eventTimestamp = new Timestamp(ts);
 
 		int count = getDatabase()
-				.update("insert into event(event_id, event_type, json_data,event_ts, event_source) values (?,?,?,?,?)")
+				.update("insert into event(event_id, event_type, json_data,event_ts) values (?,?,?,?)")
 				.parameter(id)
 				.parameter(eventType)
 				.parameter(data.toString())
 				.parameter(eventTimestamp)
-				.parameter(eventSource)
 				.execute();
 		logger.debug("inserted event id={} eventType={}", id, eventType);
 	}
@@ -158,7 +151,5 @@ public class JdbcEventWriter implements ApplicationListener<ApplicationReadyEven
 		} catch (RuntimeException e) {
 			logger.error("could not load service id=jdbcEventLog...events will not be logger to RDBMS", e);
 		}
-		publisher.createMessage().withAttribute("message", "JdbcEventWriter initialized").publish();
-		eventLogger.event().withMessage("JdbCEventWriter initialized").log();
 	}
 }

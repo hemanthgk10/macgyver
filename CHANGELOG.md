@@ -1,5 +1,8 @@
 ## Changes
 
+### 1.4.1
+* JdbcEventLog Fixes
+
 ### 1.4.0
 * Refactor Event Processing Model
 

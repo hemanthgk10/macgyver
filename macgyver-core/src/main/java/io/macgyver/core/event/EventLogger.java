@@ -58,34 +58,10 @@ public final class EventLogger {
 		}
 	}
 
-	public class LogMessage extends MacGyverMessage {
-		String label = null;
-		boolean sent = false;
 
-		public LogMessage() {
-			super();
-			withEventType(LogMessage.class.getName());
-		}
-		public LogMessage withLabel(String label) {
-			this.label = label;
-			return this;
-		}
-		public String getLabel() {
-			return label;
-		}
-
-		public LogMessage withMessage(String msg) {
-			return (LogMessage) withAttribute("message", msg);
-		}
-
-		public void log() {
-			logEvent(this);
-		}
-		
-	}
 
 	public LogMessage event() {
-		return new LogMessage();
+		return new LogMessage(this);
 	}
 
 	protected final void logEvent(LogMessage event) {

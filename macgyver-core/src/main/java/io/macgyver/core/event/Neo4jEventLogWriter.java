@@ -27,7 +27,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
-import io.macgyver.core.event.EventLogger.LogMessage;
 import io.macgyver.neorx.rest.NeoRxClient;
 import reactor.bus.Event;
 import reactor.bus.EventBus;

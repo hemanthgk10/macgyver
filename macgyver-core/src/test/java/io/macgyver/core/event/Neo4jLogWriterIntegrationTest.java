@@ -32,7 +32,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.macgyver.core.event.MacGyverMessage;
 import io.macgyver.core.event.Neo4jEventLogWriter;
-import io.macgyver.core.event.EventLogger.LogMessage;
+
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.test.MacGyverIntegrationTest;
 

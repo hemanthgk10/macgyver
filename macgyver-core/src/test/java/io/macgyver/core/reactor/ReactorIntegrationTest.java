@@ -22,7 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.macgyver.core.event.EventLogger;
-import io.macgyver.core.event.EventLogger.LogMessage;
+import io.macgyver.core.event.LogMessage;
 import io.macgyver.test.MacGyverIntegrationTest;
 import reactor.Environment;
 import reactor.bus.Event;
