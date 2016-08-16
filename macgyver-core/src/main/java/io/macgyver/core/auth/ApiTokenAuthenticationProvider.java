@@ -74,7 +74,7 @@ public class ApiTokenAuthenticationProvider implements AuthenticationProvider {
 	@Value("${API_TOKEN_TTL_SECS:604800}")
 	long tokenTTLSeconds = TimeUnit.DAYS.toSeconds(7);
 
-	@Value("${API_TOKEN_MAX_PER_USER:128")
+	@Value("${API_TOKEN_MAX_PER_USER:128}")
 	int maxTokensPerUser = 128;
 
 	@Override
