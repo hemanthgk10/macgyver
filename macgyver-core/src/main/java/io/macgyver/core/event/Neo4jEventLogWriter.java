@@ -45,27 +45,23 @@ public class Neo4jEventLogWriter implements InitializingBean {
 	@Autowired
 	EventBus eventBus;
 
-	DateTimeFormatter utcFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX")
-	.withZone(ZoneOffset.UTC);
-	
+	DateTimeFormatter utcFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX").withZone(ZoneOffset.UTC);
+
 	protected void applyTimestamp(Instant instant, ObjectNode n) {
 		if (instant == null) {
-			
-		
-				long ts = n.path("eventTs").asLong();
-				if (ts<=0) {
-					instant = Instant.now();
-				}
-				else {
-					instant = Instant.ofEpochMilli(ts);
-				}
-			
+
+			long ts = n.path("eventTs").asLong();
+			if (ts <= 0) {
+				instant = Instant.now();
+			} else {
+				instant = Instant.ofEpochMilli(ts);
+			}
+
 		}
 
 		n.put("eventTs", instant.toEpochMilli());
 
-		n.put("eventDate", utcFormatter
-				.format(instant));
+		n.put("eventDate", utcFormatter.format(instant));
 	}
 
 	protected void checkLabel(String label) {
@@ -86,7 +82,7 @@ public class Neo4jEventLogWriter implements InitializingBean {
 			@Override
 			public void accept(Event<LogMessage> logEvent) {
 
-				logger.info("writing log message: {}", logEvent);
+				logger.debug("writing log message: {}", logEvent);
 				if (neo4j != null) {
 					String labelClause = "";
 					String label = logEvent.getData().getLabel();
@@ -95,21 +91,22 @@ public class Neo4jEventLogWriter implements InitializingBean {
 						labelClause = ":" + label;
 					}
 					JsonNode n = logEvent.getData().getPayload();
-					
+
 					try {
-						ObjectNode props = (ObjectNode) n;
-						props = props.deepCopy();
-										
-						applyTimestamp(logEvent.getData().getTimestamp(), props);
+						if (n != null && n.isObject()) {
+							ObjectNode props = (ObjectNode) n;
+							props = props.deepCopy();
 
-						String cypher = "create (x:EventLog" + labelClause + ") set x={props}";
+							applyTimestamp(logEvent.getData().getTimestamp(), props);
 
-						neo4j.execCypher(cypher, "props", props);
+							String cypher = "create (x:EventLog" + labelClause + ") set x={props}";
+
+							neo4j.execCypher(cypher, "props", props);
+						}
+					} catch (RuntimeException e) {
+						logger.warn("problem logging to EventLog: " + n, e);
 					}
-					catch (RuntimeException e) {
-						logger.warn("problem logging to EventLog: "+n,e);
-					}
-					
+
 				}
 
 			}

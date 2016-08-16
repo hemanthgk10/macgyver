@@ -107,6 +107,9 @@ public class JdbcEventWriter implements ApplicationListener<ApplicationReadyEven
 		if (!isEnabled()) {
 			return;
 		}
+		if (data==null || !data.isObject()) {
+			return;
+		}
 		String id = data.path("eventId").asText(uuidGenerator.generate().toString());
 		
 		String eventType = data.path("eventType").asText();

@@ -67,6 +67,8 @@ dependencies {
     compile "com.squareup.okhttp:okhttp:${OKHTTP2_VERSION}"
     compile "com.squareup.okhttp:okhttp-urlconnection:${OKHTTP2_VERSION}"
     
+    compile "com.squareup.okhttp3:logging-interceptor:${OKHTTP3_VERSION}"
+    
     compile 'com.squareup.mimecraft:mimecraft:1.1.1'
     
 	compile "ch.qos.logback:logback-classic:${LOGBACK_VERSION}"

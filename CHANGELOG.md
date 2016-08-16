@@ -1,5 +1,12 @@
 ## Changes
 
+### 1.4.2
+* OkHttp 3.4.1
+* OkRest 3.1.0
+* NeoRx 1.3.4
+* Do not log MissingNode JSON payloads
+* Do not expire old tokens when refreshing tokens
+
 ### 1.4.1
 * JdbcEventLog Fixes
 

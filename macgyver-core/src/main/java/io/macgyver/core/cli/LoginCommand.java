@@ -29,11 +29,10 @@ import com.google.common.io.BaseEncoding;
 import io.macgyver.cli.CLIException;
 import io.macgyver.cli.CLIRemoteException;
 import io.macgyver.cli.Command;
-import io.macgyver.okrest3.LoggingInterceptor;
 import io.macgyver.okrest3.OkRestClient;
 import io.macgyver.okrest3.OkRestResponse;
-import io.macgyver.okrest3.LoggingInterceptor.Level;
 import okhttp3.Response;
+import okhttp3.logging.HttpLoggingInterceptor;
 
 
 @Parameters()
@@ -126,10 +125,17 @@ public class LoginCommand  extends Command {
 		
 		header = "Basic " + BaseEncoding.base64().encode(header.getBytes());
 		
+		
 		statusOutput("authenticating with "+getServerUrl());
 		OkRestResponse rr = new OkRestClient.Builder().withOkHttpClientConfig(cfg->{
 			if (isDebugEnabled()) {
-				cfg.addInterceptor(new LoggingInterceptor().withLevel(Level.BODY).withLogger(getClass()));
+				cfg.addInterceptor(new HttpLoggingInterceptor(new okhttp3.logging.HttpLoggingInterceptor.Logger() {
+
+					@Override
+					public void log(String message) {
+						logger.debug("{}",message);
+						
+					}}));
 			}
 		}). build().uri(getServerUrl()).path("/api/core/token/create").addHeader("Authorization", header).get()
 				.execute();

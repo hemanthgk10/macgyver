@@ -63,16 +63,19 @@ import rx.exceptions.OnErrorNotImplementedException;
 
 public class ApiTokenAuthenticationProvider implements AuthenticationProvider {
 
-	public static final String API_KEY_HEADER_NAME="X-API-KEY";
-	
+	public static final String API_KEY_HEADER_NAME = "X-API-KEY";
+
 	ObjectMapper mapper = new ObjectMapper();
 	@Inject
 	NeoRxClient neo4j;
 
 	Logger logger = LoggerFactory.getLogger(ApiTokenAuthenticationProvider.class);
 
-	@Value("${API_TOKEN_TTL_SECS:14400}")
-	long tokenTTLSeconds = TimeUnit.HOURS.toSeconds(4);
+	@Value("${API_TOKEN_TTL_SECS:604800}")
+	long tokenTTLSeconds = TimeUnit.DAYS.toSeconds(7);
+
+	@Value("${API_TOKEN_MAX_PER_USER:128")
+	int maxTokensPerUser = 128;
 
 	@Override
 	public Authentication authenticate(Authentication auth) throws AuthenticationException {
@@ -104,7 +107,7 @@ public class ApiTokenAuthenticationProvider implements AuthenticationProvider {
 
 			neo4j.execCypher(cypher, "accessKey", apiToken.getAccessKey()).first().forEach(it -> {
 
-				if (it.path("expirationTs").asLong(0)<System.currentTimeMillis()) {				
+				if (it.path("expirationTs").asLong(0) < System.currentTimeMillis()) {
 					logger.info("token has expired");
 					deleteToken(apiToken);
 				} else {
@@ -112,14 +115,17 @@ public class ApiTokenAuthenticationProvider implements AuthenticationProvider {
 
 						String username = it.path("username").asText();
 
-						// We would really like to be able to look up the roles granted to the token dynamically in the source provider
-						// rather than use the roles at grant time.  This is tricky.
+						// We would really like to be able to look up the roles
+						// granted to the token dynamically in the source
+						// provider
+						// rather than use the roles at grant time. This is
+						// tricky.
 						List<GrantedAuthority> grantedAuthorities = Lists.newArrayList();
 						it.path("roles").elements().forEachRemaining(r -> {
 							SimpleGrantedAuthority sga = new SimpleGrantedAuthority(r.asText());
 							grantedAuthorities.add(sga);
 						});
-					
+
 						UsernamePasswordAuthenticationToken authenticatedUser = new UsernamePasswordAuthenticationToken(
 								username, null, grantedAuthorities);
 						auth.set(authenticatedUser);
@@ -136,9 +142,10 @@ public class ApiTokenAuthenticationProvider implements AuthenticationProvider {
 	}
 
 	public void deleteToken(ApiToken token) {
-		neo4j.execCypher(
-				"match (a:ApiToken {accessKey:{accessKey}}) detach delete a","accessKey",token.getAccessKey());	
+		neo4j.execCypher("match (a:ApiToken {accessKey:{accessKey}}) detach delete a", "accessKey",
+				token.getAccessKey());
 	}
+
 	public void deleteExpiredTokens() {
 		neo4j.execCypher(
 				"match (a:ApiToken) where a.expirationTs<timestamp() or not exists(a.expirationTs) detach delete a");
@@ -152,15 +159,17 @@ public class ApiTokenAuthenticationProvider implements AuthenticationProvider {
 	 */
 	public void revokeOldTokens(String username, int tokensToKeep) {
 
-		// There must be a better way to do this in neo4j in one shot
-		AtomicInteger counter = new AtomicInteger(0);
-		String cypher = "match (a:ApiToken {username:{username}}) return a.accessKey as accessKey, a.createTs as createTs order by a.createTs desc";
-		neo4j.execCypherAsList(cypher, "username", username).forEach(it -> {
-			if (counter.getAndIncrement() >= tokensToKeep) {
-				String deleteCypher = "match (a:ApiToken {accessKey:{accessKey}}) delete a";
-				neo4j.execCypher(deleteCypher, "accessKey", it.path("accessKey").asText());
-			}
-		});
+		if (tokensToKeep > 0) {
+			// There must be a better way to do this in neo4j in one shot
+			AtomicInteger counter = new AtomicInteger(0);
+			String cypher = "match (a:ApiToken {username:{username}}) return a.accessKey as accessKey, a.createTs as createTs order by a.createTs desc";
+			neo4j.execCypherAsList(cypher, "username", username).forEach(it -> {
+				if (counter.getAndIncrement() >= tokensToKeep) {
+					String deleteCypher = "match (a:ApiToken {accessKey:{accessKey}}) delete a";
+					neo4j.execCypher(deleteCypher, "accessKey", it.path("accessKey").asText());
+				}
+			});
+		}
 	}
 
 	String hashSecretKey(ApiToken token) {
@@ -228,30 +237,34 @@ public class ApiTokenAuthenticationProvider implements AuthenticationProvider {
 
 			JsonNode n = neo4j.execCypher(cypher, "accessKey", oldToken.getAccessKey()).toBlocking().first();
 
+			String username = n.path("username").asText();
+			
 			long oldExpiration = n.path("expirationTs").asLong(0);
-			if (oldExpiration<System.currentTimeMillis()) {
+			if (oldExpiration < System.currentTimeMillis()) {
 				throw new BadCredentialsException("cannot refresh an expired token");
 			}
 			long newExpiration = System.currentTimeMillis() + unit.toMillis(duration);
 
-			logger.info("refreshing token...new token will expire at {}", new Date(newExpiration));
+			logger.info("refreshing token for user={}...new token will expire at {}",username, new Date(newExpiration));
 			cypher = "create (a:ApiToken {accessKey:{accessKey}, secretKeyHash: {secretKeyHash}}) set a.createTs=timestamp(), a.expirationTs={expirationTs}, a.username={username}, a.roles={roles} return a";
 
 			String hash = hashSecretKey(newToken);
 
 			ObjectNode createdNode = (ObjectNode) neo4j
-					.execCypher(cypher, "accessKey", newToken.getAccessKey(), "secretKeyHash", hash,
-							"username", n.path("username").asText(), "roles", n.path("roles"), "expirationTs",
-							newExpiration)
+					.execCypher(cypher, "accessKey", newToken.getAccessKey(), "secretKeyHash", hash, "username",
+							n.path("username").asText(), "roles", n.path("roles"), "expirationTs", newExpiration)
 					.toBlocking().first();
 
 			createdNode.put("token", newToken.getArmoredString());
 			createdNode.remove("accessKey");
 			createdNode.remove("secretKey");
-			
-			String expireOldTokenCypher = "match (a:ApiToken {accessKey:{accessKey}}) set a.expirationTs={expirationTs}";
-			neo4j.execCypher(expireOldTokenCypher, "accessKey",oldToken.getAccessKey(),"expirationTs",System.currentTimeMillis()+TimeUnit.MINUTES.toMillis(2));
-			
+
+			try {
+				revokeOldTokens(username, maxTokensPerUser);
+			} catch (RuntimeException e) {
+				logger.warn("could not prune old tokens", e);
+			}
+
 			return createdNode;
 		} catch (NoSuchElementException e) {
 			throw new BadCredentialsException("token not found");
@@ -261,7 +274,8 @@ public class ApiTokenAuthenticationProvider implements AuthenticationProvider {
 	public long getTokenTTLSeconds() {
 		return tokenTTLSeconds;
 	}
+
 	public void setTokenTTLSeconds(long l) {
-		tokenTTLSeconds=l;
+		tokenTTLSeconds = l;
 	}
 }
