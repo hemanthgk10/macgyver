@@ -16,6 +16,7 @@ package io.macgyver.plugin.cmdb.catalog;
 import javax.inject.Inject;
 
 import org.assertj.core.api.Assertions;
+import org.junit.Assume;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -32,7 +33,7 @@ public class JobCatalogLoaderIntegrationTest extends MacGyverIntegrationTest {
 
 	@Test
 	public void testIt() {
-
+		Assume.assumeFalse(isRunningInCircleCI());
 		neo4j.execCypher("match (a:JobDefinition) where a.name=~'junit-test-.*' detach delete a");
 		
 		GitResourceProvider r = new GitResourceProvider("https://github.com/if6was9/macgyver-resource-test.git");
