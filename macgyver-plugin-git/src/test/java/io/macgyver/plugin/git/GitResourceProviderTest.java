@@ -24,6 +24,7 @@ import org.assertj.core.api.Assertions;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -36,15 +37,16 @@ import com.google.common.io.Files;
 import io.macgyver.core.resource.Resource;
 import io.macgyver.core.resource.ResourceMatcher;
 import io.macgyver.core.resource.ResourceMatchers;
+import io.macgyver.test.MacGyverIntegrationTest;
 
-public class GitResourceProviderTest {
+public class GitResourceProviderTest extends MacGyverIntegrationTest {
 
 	Logger logger = LoggerFactory.getLogger(GitRepositoryServiceFactory.class);
 	static File repoDir = null;
 	static GitResourceProvider provider;
 
 	@BeforeClass
-	public static void setup() throws ZipException, IOException {
+	public static void setupTest() throws ZipException, IOException {
 		File dir = Files.createTempDir();
 		File zip = new File("./src/test/resources/test-repo.zip");
 
@@ -83,6 +85,7 @@ public class GitResourceProviderTest {
 
 	@Test
 	public void testX() throws IOException {
+		Assume.assumeFalse(isRunningInCircleCI());
 		GitResourceProvider rp = new GitResourceProvider("https://github.com/if6was9/macgyver-resource-test.git");
 		
 		Map<String,Resource> m = Maps.newHashMap();
@@ -102,7 +105,7 @@ public class GitResourceProviderTest {
 	@Test
 	@Ignore
 	public void testClone() throws GitAPIException, IOException {
-
+		Assume.assumeFalse(isRunningInCircleCI());
 		GitResourceProvider p = new GitResourceProvider(
 				"https://github.com/if6was9/macgyver-resource-test.git");
 
