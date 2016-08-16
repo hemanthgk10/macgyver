@@ -137,4 +137,9 @@ public abstract class MacGyverIntegrationTest extends
 			}
 		}
 	}
+	
+	
+	public boolean isRunningInCircleCI() {
+		return !Strings.isNullOrEmpty(System.getenv("CIRCLECI"));
+	}
 }
