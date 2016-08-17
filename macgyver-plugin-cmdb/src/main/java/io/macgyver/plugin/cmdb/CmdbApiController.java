@@ -31,6 +31,7 @@ import org.ocpsoft.prettytime.PrettyTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -42,6 +43,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Strings;
 
 @Controller
 @RequestMapping("/api/cmdb")
@@ -60,6 +62,8 @@ public class CmdbApiController {
 
 	ObjectMapper mapper = new ObjectMapper();
 
+	@Value("${SUPPRESS_ACCESS_LOG_ATTRIBUTE:SUPPRESS_ACCESS_LOG}")
+	String conditionalLoggingAttribute = "SUPPRESS_ACCESS_LOG";
 
 	@Autowired
 	NeoRxClient neo4j;
@@ -74,8 +78,8 @@ public class CmdbApiController {
 
 	};
 
-	@RequestMapping(value = "checkIn", method = { RequestMethod.PUT,
-			RequestMethod.POST, RequestMethod.GET }, produces = "application/json")
+	@RequestMapping(value = "checkIn", method = { RequestMethod.PUT, RequestMethod.POST,
+			RequestMethod.GET }, produces = "application/json")
 	@PreAuthorize("permitAll")
 	public ResponseEntity<ObjectNode> checkIn(
 
@@ -87,9 +91,11 @@ public class CmdbApiController {
 
 		ObjectNode data = toObjectNode(request);
 
-		// allow tomcat to be configured to suppress access log
-		request.setAttribute("SUPPRESS_ACCESS_LOG","true");
-		
+		if (Strings.isNullOrEmpty(conditionalLoggingAttribute)) {
+			// allow tomcat to be configured to suppress access log
+			request.setAttribute(conditionalLoggingAttribute, "true");
+		}
+
 		appInstanceManager.processCheckIn(data);
 
 		return new ResponseEntity<ObjectNode>(mapper.createObjectNode(), HttpStatus.OK);
