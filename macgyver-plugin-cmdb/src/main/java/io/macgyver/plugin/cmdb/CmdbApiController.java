@@ -87,8 +87,9 @@ public class CmdbApiController {
 
 		ObjectNode data = toObjectNode(request);
 
+		// allow tomcat to be configured to suppress access log
+		request.setAttribute("SUPPRESS_ACCESS_LOG","true");
 		
-
 		appInstanceManager.processCheckIn(data);
 
 		return new ResponseEntity<ObjectNode>(mapper.createObjectNode(), HttpStatus.OK);
