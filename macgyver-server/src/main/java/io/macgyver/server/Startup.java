@@ -24,7 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import org.gradle.impldep.com.google.common.collect.Lists;
+
 import org.gradle.tooling.BuildLauncher;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
@@ -44,6 +44,7 @@ import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
+import com.google.common.collect.Lists;
 
 import groovy.lang.Writable;
 import groovy.text.SimpleTemplateEngine;
