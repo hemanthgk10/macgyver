@@ -1,5 +1,9 @@
 ## Changes
 
+### 1.4.3
+* Do not throw exception when logging invalid json in JdbcEventWriter
+* Add access log suppression attribute to app checIn
+
 ### 1.4.2
 * OkHttp 3.4.1
 * OkRest 3.1.0
