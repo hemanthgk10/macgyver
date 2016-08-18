@@ -75,6 +75,8 @@ dependencies {
     
     compile 'com.squareup.mimecraft:mimecraft:1.1.1'
     
+    compile 'com.amazonaws:jmespath-java:1.0'
+    
 	compile "ch.qos.logback:logback-classic:${LOGBACK_VERSION}"
 
 
