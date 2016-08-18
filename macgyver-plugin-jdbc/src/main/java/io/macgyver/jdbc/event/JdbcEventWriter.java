@@ -5,13 +5,16 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.assertj.core.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.uuid.EthernetAddress;
 import com.fasterxml.uuid.Generators;
 import com.fasterxml.uuid.impl.TimeBasedGenerator;
@@ -23,6 +26,7 @@ import io.macgyver.core.event.EventLogger;
 import io.macgyver.core.event.MacGyverEventPublisher;
 import io.macgyver.core.event.MacGyverMessage;
 import io.macgyver.core.service.ServiceRegistry;
+import io.macgyver.core.util.JsonNodes;
 import reactor.Environment;
 import reactor.bus.Event;
 import reactor.bus.EventBus;
@@ -37,10 +41,10 @@ public class JdbcEventWriter implements ApplicationListener<ApplicationReadyEven
 
 	@Autowired
 	MacGyverEventPublisher publisher;
-	
+
 	@Autowired
 	EventLogger eventLogger;
-	
+
 	TimeBasedGenerator uuidGenerator = Generators.timeBasedGenerator(EthernetAddress.fromInterface());
 
 	AtomicReference<Database> database = new AtomicReference<Database>(null);
@@ -49,13 +53,13 @@ public class JdbcEventWriter implements ApplicationListener<ApplicationReadyEven
 
 	Logger logger = LoggerFactory.getLogger(JdbcEventWriter.class);
 
-	
+	ObjectMapper mapper = new ObjectMapper();
+
 	AtomicBoolean enabled = new AtomicBoolean(true);
-	
+
 	public JdbcEventWriter() {
 		Environment.initializeIfEmpty();
-		
-	
+
 	}
 
 	class LocalConsumer implements Consumer<Event<MacGyverMessage>> {
@@ -71,14 +75,14 @@ public class JdbcEventWriter implements ApplicationListener<ApplicationReadyEven
 		return localBus.get();
 	}
 
-
 	public Database getDatabase() {
 		return database.get();
 	}
-	
+
 	public JdbcEventWriter withPrivateEventBus() {
 		return withEventBus(EventBus.create(Environment.newDispatcher("jdbc-event-log", 2048)));
 	}
+
 	public JdbcEventWriter withEventBus(EventBus bus) {
 		localBus.set(bus);
 		bus.on(Selectors.matchAll(), new LocalConsumer());
@@ -103,31 +107,36 @@ public class JdbcEventWriter implements ApplicationListener<ApplicationReadyEven
 	}
 
 	protected void write(JsonNode data) {
+		try {
+			if (!isEnabled()) {
+				return;
+			}
+			if (data == null || !data.isObject()) {
+				return;
+			}
+			String jsonString = mapper.writeValueAsString(data);
 
-		if (!isEnabled()) {
-			return;
-		}
-		if (data==null || !data.isObject()) {
-			return;
-		}
-		String id = data.path("eventId").asText(uuidGenerator.generate().toString());
-		
-		String eventType = data.path("eventType").asText();
+			if (Strings.isNullOrEmpty(jsonString)) {
+				return;
+			}
 
-		long ts = data.path("eventTs").longValue();
-		if (ts <= 0) {
-			ts = System.currentTimeMillis();
-		}
-		Timestamp eventTimestamp = new Timestamp(ts);
+			String id = data.path("eventId").asText(uuidGenerator.generate().toString());
 
-		int count = getDatabase()
-				.update("insert into event(event_id, event_type, json_data,event_ts) values (?,?,?,?)")
-				.parameter(id)
-				.parameter(eventType)
-				.parameter(data.toString())
-				.parameter(eventTimestamp)
-				.execute();
-		logger.debug("inserted event id={} eventType={}", id, eventType);
+			String eventType = data.path("eventType").asText();
+
+			long ts = data.path("eventTs").longValue();
+			if (ts <= 0) {
+				ts = System.currentTimeMillis();
+			}
+			Timestamp eventTimestamp = new Timestamp(ts);
+
+			int count = getDatabase()
+					.update("insert into event(event_id, event_type, json_data,event_ts) values (?,?,?,?)")
+					.parameter(id).parameter(eventType).parameter(jsonString).parameter(eventTimestamp).execute();
+			logger.debug("inserted event id={} eventType={}", id, eventType);
+		} catch (JsonProcessingException | RuntimeException e) {
+			logger.warn("could not log event", e);
+		}
 	}
 
 	public Registration<Object, Consumer<? extends Event<?>>> subscribe(EventBus bus) {
@@ -138,17 +147,18 @@ public class JdbcEventWriter implements ApplicationListener<ApplicationReadyEven
 	}
 
 	public boolean isEnabled() {
-		return enabled.get() && database.get()!=null;
+		return enabled.get() && database.get() != null;
 	}
+
 	@Override
 	public void onApplicationEvent(ApplicationReadyEvent event) {
 		try {
 			logger.info("configuring JdbcEventWriter");
 			Database db = serviceRegistry.get("jdbcEventLogRxJdbc", Database.class);
 			this.database.set(db);
-			
-			logger.info("configured JdbcEventLogWriter with db: {}",db);
-			
+
+			logger.info("configured JdbcEventLogWriter with db: {}", db);
+
 		} catch (ServiceNotFoundException e) {
 			logger.warn("service id={} not defined....events will not be logged to RDBMS", e.getMessage());
 		} catch (RuntimeException e) {
