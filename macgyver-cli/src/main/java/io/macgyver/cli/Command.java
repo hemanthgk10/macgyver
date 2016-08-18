@@ -30,10 +30,11 @@ import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 
-import io.macgyver.okrest3.LoggingInterceptor;
-import io.macgyver.okrest3.LoggingInterceptor.Level;
+
 import io.macgyver.okrest3.OkRestClient;
 import io.macgyver.okrest3.OkRestTarget;
+import okhttp3.logging.HttpLoggingInterceptor;
+import okhttp3.logging.HttpLoggingInterceptor.Level;
 
 public abstract class Command {
 
@@ -107,6 +108,19 @@ public abstract class Command {
 
 	OkRestTarget target;
 
+	public HttpLoggingInterceptor createLogger() {
+		Logger slf4j = LoggerFactory.getLogger(CLI.class);
+		okhttp3.logging.HttpLoggingInterceptor.Logger logger = new okhttp3.logging.HttpLoggingInterceptor.Logger() {
+			
+			@Override
+			public void log(String message) {
+				slf4j.debug("{}",message);
+			}
+		};
+		
+		HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor(logger).setLevel(Level.BODY);
+		return interceptor;
+	}
 	public OkRestTarget getOkRestTarget() {
 		if (target == null) {
 
@@ -115,7 +129,7 @@ public abstract class Command {
 			target = new OkRestClient.Builder().withOkHttpClientConfig(cfg -> {
 				cfg.readTimeout(60, TimeUnit.SECONDS);
 				if (isDebugEnabled()) {
-					cfg.addInterceptor(new LoggingInterceptor().withLevel(Level.BODY).withLogger(getClass()));
+					cfg.addNetworkInterceptor(createLogger());
 				}
 			}).build().uri(getServerUrl());
 

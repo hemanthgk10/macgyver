@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Strings;
 import com.google.common.io.BaseEncoding;
 
+import io.macgyver.cli.CLI;
 import io.macgyver.cli.CLIException;
 import io.macgyver.cli.CLIRemoteException;
 import io.macgyver.cli.Command;
@@ -33,6 +34,7 @@ import io.macgyver.okrest3.OkRestClient;
 import io.macgyver.okrest3.OkRestResponse;
 import okhttp3.Response;
 import okhttp3.logging.HttpLoggingInterceptor;
+import okhttp3.logging.HttpLoggingInterceptor.Level;
 
 
 @Parameters()
@@ -203,4 +205,9 @@ public class LoginCommand  extends Command {
 			throw new CLIRemoteException("could not refresh token", response.code());
 		}
 	}
+
+
+
+	
+	
 }

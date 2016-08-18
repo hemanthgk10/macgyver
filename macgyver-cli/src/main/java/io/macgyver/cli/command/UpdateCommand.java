@@ -27,46 +27,44 @@ import com.google.common.base.Strings;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
+import io.macgyver.cli.CLI;
 import io.macgyver.cli.CLIException;
 import io.macgyver.cli.Command;
 import okhttp3.Response;
-
+import okhttp3.logging.HttpLoggingInterceptor;
+import okhttp3.logging.HttpLoggingInterceptor.Level;
 
 @Parameters()
-public class UpdateCommand  extends Command {
+public class UpdateCommand extends Command {
 
 	Logger logger = LoggerFactory.getLogger(UpdateCommand.class);
 
-	@Parameter(names={"--url"},arity=1,description="url for macgyver server")
+	@Parameter(names = { "--url" }, arity = 1, description = "url for macgyver server")
 	String url;
-	
-	
-	
+
 	@Override
 	public String getServerUrl() {
-		if (url!=null) {
+		if (url != null) {
 			return url;
 		}
 		return super.getServerUrl();
 	}
 
-
-
 	@Override
 	public void execute() throws IOException {
-		
+
 		String exe = System.getProperty("cli.exe");
 		if (Strings.isNullOrEmpty(exe)) {
 			throw new CLIException("update can only be called from packaged executable");
-			
+
 		}
 		File exeFile = new File(exe);
-		File exeBackup = new File(exe+".bak");
-		
+		File exeBackup = new File(exe + ".bak");
+
 		Files.copy(exeFile, exeBackup);
-		
+
 		File tempDir = Files.createTempDir();
-		File tempExe = new File(tempDir,"macgyver");
+		File tempExe = new File(tempDir, "macgyver");
 		Response response = getOkRestTarget().path("/cli/download").get().execute().response();
 		if (!response.isSuccessful()) {
 			throw new CLIException("could not download CLI");
@@ -74,16 +72,19 @@ public class UpdateCommand  extends Command {
 		try (InputStream is = response.body().byteStream()) {
 			try (FileOutputStream fos = new FileOutputStream(tempExe)) {
 				ByteStreams.copy(is, fos);
-				Files.copy(tempExe,exeFile);
+				Files.copy(tempExe, exeFile);
 				tempExe.setExecutable(true);
-				statusOutput("successfully updated "+exeFile.getAbsolutePath());
+				statusOutput("successfully updated " + exeFile.getAbsolutePath());
 			}
 		}
-		
-		
-		
+
 	}
-	
-	
+
+	@Override
+	public HttpLoggingInterceptor createLogger() {
+		// This will be a binary response, but with a plain-text header.  OkHttp's binary content detection
+		// is confused by this.  So we just force it to HEADERS-only mode.
+		return super.createLogger().setLevel(Level.HEADERS);
+	}
 
 }
