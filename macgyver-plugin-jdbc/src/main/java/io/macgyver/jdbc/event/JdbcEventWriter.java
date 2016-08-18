@@ -1,11 +1,9 @@
 package io.macgyver.jdbc.event;
 
 import java.sql.Timestamp;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.assertj.core.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,13 +18,13 @@ import com.fasterxml.uuid.Generators;
 import com.fasterxml.uuid.impl.TimeBasedGenerator;
 import com.github.davidmoten.rx.jdbc.Database;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
 import io.macgyver.core.ServiceNotFoundException;
 import io.macgyver.core.event.EventLogger;
 import io.macgyver.core.event.MacGyverEventPublisher;
 import io.macgyver.core.event.MacGyverMessage;
 import io.macgyver.core.service.ServiceRegistry;
-import io.macgyver.core.util.JsonNodes;
 import reactor.Environment;
 import reactor.bus.Event;
 import reactor.bus.EventBus;
