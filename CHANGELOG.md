@@ -1,5 +1,9 @@
 ## Changes
 
+### 1.4.4
+* Added cpu cores and memory to VSphere scanning
+* made access log and conditional logging configurable
+
 ### 1.4.3
 * Do not throw exception when logging invalid json in JdbcEventWriter
 * Add access log suppression attribute to app checkIn
