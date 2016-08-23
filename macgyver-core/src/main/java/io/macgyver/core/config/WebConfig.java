@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.web.WebMvcAutoConfiguration;
@@ -39,6 +40,7 @@ import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -49,7 +51,6 @@ import io.macgyver.core.web.mvc.CoreApiController;
 import io.macgyver.core.web.mvc.HomeController;
 import io.macgyver.core.web.mvc.MacGyverWeb;
 import io.macgyver.core.web.neo4j.Neo4jProxyServlet;
-
 
 @Configuration
 @ComponentScan(basePackageClasses = { HomeController.class })
@@ -65,6 +66,12 @@ public class WebConfig implements EnvironmentAware {
 	@Autowired
 	private Environment environment;
 
+	@Value(value = "${MACGYVER_ACCESS_LOG_ENABLED:true}")
+	boolean accessLogEnabled = true;
+
+	@Value("${MACGYVER_SUPPRESS_ACCESS_LOG_ATTRIBUTE:MACGYVER_SUPPRESS_ACCESS_LOG}")
+	String conditionalLoggingAttribute = "MACGYVER_SUPPRESS_ACCESS_LOG";
+	
 	@Override
 	public void setEnvironment(Environment environment) {
 
@@ -80,10 +87,8 @@ public class WebConfig implements EnvironmentAware {
 		return new BeanPostProcessor() {
 
 			@Override
-			public Object postProcessBeforeInitialization(Object bean,
-					String beanName) throws BeansException {
-				if (bean instanceof RequestMappingHandlerMapping
-						&& "requestMappingHandlerMapping".equals(beanName)) {
+			public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+				if (bean instanceof RequestMappingHandlerMapping && "requestMappingHandlerMapping".equals(beanName)) {
 					RequestMappingHandlerMapping m = ((RequestMappingHandlerMapping) bean);
 
 				}
@@ -92,8 +97,7 @@ public class WebConfig implements EnvironmentAware {
 			}
 
 			@Override
-			public Object postProcessAfterInitialization(Object bean,
-					String beanName) throws BeansException {
+			public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 				return bean;
 			}
 		};
@@ -104,8 +108,6 @@ public class WebConfig implements EnvironmentAware {
 		return new MacGyverWeb();
 	}
 
-	
-
 	@Bean
 	public EmbeddedServletContainerCustomizer macAccessLogCustomizer() {
 
@@ -113,51 +115,54 @@ public class WebConfig implements EnvironmentAware {
 
 			@Override
 			public void customize(ConfigurableEmbeddedServletContainer container) {
+
 				if (container instanceof TomcatEmbeddedServletContainerFactory) {
-					File dir = Bootstrap.getInstance().getLogDir();
-					try {
-						dir.mkdirs();
-					} catch (Exception ignore) {
-					}
-					if (dir.exists() && dir.isDirectory()) {
-						logger.info(
-								"configuring access logs to be logged to: {}",
-								dir);
-						TomcatEmbeddedServletContainerFactory factory = (TomcatEmbeddedServletContainerFactory) container;
+					if (accessLogEnabled) {
+						File dir = Bootstrap.getInstance().getLogDir();
+						try {
+							dir.mkdirs();
+						} catch (Exception ignore) {
+						}
+						if (dir.exists() && dir.isDirectory()) {
+							logger.info("configuring access logs to be logged to: {}", dir);
+							TomcatEmbeddedServletContainerFactory factory = (TomcatEmbeddedServletContainerFactory) container;
 
-						RemoteIpValve remoteIpValve = new RemoteIpValve();
-						remoteIpValve
-								.setTrustedProxies("10\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}|192\\.168\\.\\d{1,3}\\.\\d{1,3}|169\\.254\\.\\d{1,3}\\.\\d{1,3}|127\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}|::1|0:0:0:0:0:0:0:1");
-						remoteIpValve.setProtocolHeader("X-Forwarded-Proto");
-						factory.addContextValves(remoteIpValve);
+							RemoteIpValve remoteIpValve = new RemoteIpValve();
+							remoteIpValve.setTrustedProxies(
+									"10\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}|192\\.168\\.\\d{1,3}\\.\\d{1,3}|169\\.254\\.\\d{1,3}\\.\\d{1,3}|127\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}|::1|0:0:0:0:0:0:0:1");
+							remoteIpValve.setProtocolHeader("X-Forwarded-Proto");
+							factory.addContextValves(remoteIpValve);
 
-						AccessLogValve accessLogValve = new AccessLogValve();
-						accessLogValve.setEnabled(true);
-						accessLogValve.setBuffered(false);
-						accessLogValve.setCheckExists(true);
-						accessLogValve.setDirectory(dir.getAbsolutePath());
-						accessLogValve.setRotatable(true);
-						accessLogValve.setRequestAttributesEnabled(true);
-						accessLogValve
-								.setPattern("%h %l %u %t \"%r\" %s %b \"%{Referer}i\" \"%{User-Agent}i\"");
+							AccessLogValve accessLogValve = new AccessLogValve();
+							accessLogValve.setEnabled(accessLogEnabled);
+							accessLogValve.setBuffered(false);
+							accessLogValve.setCheckExists(true);
+							accessLogValve.setDirectory(dir.getAbsolutePath());
+							accessLogValve.setRotatable(true);
+							accessLogValve.setRequestAttributesEnabled(true);
+							accessLogValve.setPattern("%h %l %u %t \"%r\" %s %b \"%{Referer}i\" \"%{User-Agent}i\"");
+							accessLogValve.setSuffix(".log");
+							accessLogValve.setPrefix("macgyver_access");
+							if (!Strings.isNullOrEmpty(conditionalLoggingAttribute)) {
+								logger.info("configuring conditional access logging using attribute: {}",conditionalLoggingAttribute);
+								accessLogValve.setConditionUnless(conditionalLoggingAttribute);
+							}
 
-						accessLogValve.setSuffix(".log");
-						accessLogValve.setConditionUnless("SUPPRESS_ACCESS_LOG");
-
-						factory.addContextValves(accessLogValve);
+							factory.addContextValves(accessLogValve);
+						} else {
+							logger.warn("cannot configure access log -- log directory does not exist: {}", dir);
+						}
 					} else {
-						logger.warn(
-								"cannot configure access log -- log directory does not exist: {}",
-								dir);
+						logger.error("WARNING! this customizer does not support your configured container");
 					}
-				} else {
-					logger.error("WARNING! this customizer does not support your configured container");
+				}
+				else {
+					logger.info("core macgyver access log is disabled");
 				}
 			}
 		};
 		return customizer;
 	}
-
 
 	@Bean
 	public Neo4jProxyServlet macNeo4jProxyServlet() {
@@ -168,7 +173,7 @@ public class WebConfig implements EnvironmentAware {
 	@Bean
 	public ServletRegistrationBean macNeo4jProxyServletRegistrationBean() {
 		ServletRegistrationBean b = new ServletRegistrationBean();
-		b.setUrlMappings(Lists.newArrayList("/browser/*","/browser","/db/*"));
+		b.setUrlMappings(Lists.newArrayList("/browser/*", "/browser", "/db/*"));
 		b.setServlet(macNeo4jProxyServlet());
 		Map<String, String> x = Maps.newHashMap();
 
@@ -177,22 +182,23 @@ public class WebConfig implements EnvironmentAware {
 		return b;
 	}
 
-	@Bean MacGyverContextFilter macContextFilter() {
+	@Bean
+	MacGyverContextFilter macContextFilter() {
 		return new MacGyverContextFilter();
 	}
-	
-	@Bean FilterRegistrationBean macFilterRegistration() {
+
+	@Bean
+	FilterRegistrationBean macFilterRegistration() {
 		FilterRegistrationBean b = new FilterRegistrationBean();
 		b.setFilter(macContextFilter());
 		b.setName("macContextFilter");
 		return b;
 	}
 
-	@Bean UIContextManager macUIContextManager() {
+	@Bean
+	UIContextManager macUIContextManager() {
 
 		return new UIContextManager();
 	}
-	
-
 
 }

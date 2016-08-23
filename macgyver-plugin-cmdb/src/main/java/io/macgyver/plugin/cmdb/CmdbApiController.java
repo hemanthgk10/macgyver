@@ -62,8 +62,8 @@ public class CmdbApiController {
 
 	ObjectMapper mapper = new ObjectMapper();
 
-	@Value("${SUPPRESS_ACCESS_LOG_ATTRIBUTE:SUPPRESS_ACCESS_LOG}")
-	String conditionalLoggingAttribute = "SUPPRESS_ACCESS_LOG";
+	@Value("${MACGYVER_SUPPRESS_ACCESS_LOG_ATTRIBUTE:MACGYVER_SUPPRESS_ACCESS_LOG}")
+	String conditionalLoggingAttribute = "MACGYVER_SUPPRESS_ACCESS_LOG";
 
 	@Autowired
 	NeoRxClient neo4j;
