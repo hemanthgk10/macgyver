@@ -25,7 +25,7 @@ public interface HipChatClient {
 		YELLOW("yellow"),
 		GREEN("green"),
 		RED("red"),
-		PURPLE("puple"),
+		PURPLE("purple"),
 		GRAY("gray");
 		
 		String val;
