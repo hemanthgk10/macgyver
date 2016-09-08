@@ -16,6 +16,7 @@ package io.macgyver.plugin.cloud.aws.scanner;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import com.amazonaws.regions.Region;
 import com.amazonaws.services.rds.AmazonRDSClient;
@@ -52,11 +53,10 @@ public class RDSInstanceScanner extends AWSServiceScanner {
 
 	@Override
 	public void scan(Region region) {
-		AmazonRDSClient client = new AmazonRDSClient(getAWSServiceClient().getCredentialsProvider()).withRegion(region);
-		DescribeDBInstancesResult result = client.describeDBInstances();
 		
-		GraphNodeGarbageCollector gc = new GraphNodeGarbageCollector().label("AwsRdsInstance").account(getAccountId()).region(region);
-		result.getDBInstances().forEach(instance -> { 	
+		GraphNodeGarbageCollector gc = newGarbageCollector().label("AwsRdsInstance").region(region);
+		
+		forEachInstance(region, instance -> {
 			try { 
 				ObjectNode n = convertAwsObject(instance, region);
 				NeoRxClient neoRx = getNeoRxClient();
@@ -80,9 +80,22 @@ public class RDSInstanceScanner extends AWSServiceScanner {
 				logger.warn("problem scanning RDS Instance", e);
 			}
 		});
-	
 		gc.invoke();
+	} 
 	
+	private void forEachInstance(Region region, Consumer<DBInstance> consumer) { 
+		AmazonRDSClient client = new AmazonRDSClient(getAWSServiceClient().getCredentialsProvider()).withRegion(region);
+
+		DescribeDBInstancesResult result = client.describeDBInstances();
+		String marker = result.getMarker();
+
+		result.getDBInstances().forEach(consumer);
+		
+		while (!Strings.isNullOrEmpty(marker) && !marker.equals("null")) { 
+			result = client.describeDBInstances().withMarker(marker);
+			marker = result.getMarker();
+			result.getDBInstances().forEach(consumer);
+		}
 	}
 	
 	

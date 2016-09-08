@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.amazonaws.regions.Region;
@@ -27,10 +28,12 @@ import com.amazonaws.services.elasticloadbalancing.model.DescribeLoadBalancersRe
 import com.amazonaws.services.elasticloadbalancing.model.DescribeTagsRequest;
 import com.amazonaws.services.elasticloadbalancing.model.DescribeTagsResult;
 import com.amazonaws.services.elasticloadbalancing.model.LoadBalancerDescription;
+import com.amazonaws.services.opsworks.model.ElasticLoadBalancer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.plugin.cloud.aws.AWSServiceClient;
@@ -64,18 +67,11 @@ public class ELBScanner extends AWSServiceScanner {
 	@Override
 	public void scan(Region region) {
 
-		AmazonElasticLoadBalancingClient client = new AmazonElasticLoadBalancingClient(
-				getAWSServiceClient().getCredentialsProvider()).withRegion(region);
-		DescribeLoadBalancersRequest request = new DescribeLoadBalancersRequest();
-		if (targetLoadBalancerNames != null) {
-			request.setLoadBalancerNames(targetLoadBalancerNames);
-		}
-		DescribeLoadBalancersResult results = client.describeLoadBalancers(request);
-		GraphNodeGarbageCollector gc = new GraphNodeGarbageCollector().neo4j(getNeoRxClient()).region(region.getName())
-				.account(getAccountId()).label("AwsElb");
-		results.getLoadBalancerDescriptions().forEach(lb -> {
+		GraphNodeGarbageCollector gc = newGarbageCollector().label("AwsElb").region(region);
+		
+		forEachElb(region, elb -> {
 			try {
-				ObjectNode n = convertAwsObject(lb, region);
+				ObjectNode n = convertAwsObject(elb, region);
 
 				String elbArn = n.path("aws_arn").asText();
 
@@ -85,13 +81,43 @@ public class ELBScanner extends AWSServiceScanner {
 
 				neoRx.execCypher(cypher, "aws_arn", elbArn, "props", n).forEach(gc.MERGE_ACTION);
 
-				mapElbRelationships(lb, elbArn, region.getName());
+				mapElbRelationships(elb, elbArn, region.getName());
 
 			} catch (RuntimeException e) {
 				logger.warn("problem scanning ELBs", e);
 			}
-
 		});
+		if (targetLoadBalancerNames == null) {
+			// gc only if we scan all load balancers
+			gc.invoke();
+		}
+	}
+	
+	
+	private void forEachElb(Region region, Consumer<LoadBalancerDescription> consumer) { 
+		AmazonElasticLoadBalancingClient client = new AmazonElasticLoadBalancingClient(
+				getAWSServiceClient().getCredentialsProvider()).withRegion(region);
+		
+		DescribeLoadBalancersRequest request = new DescribeLoadBalancersRequest();
+		if (targetLoadBalancerNames != null) {
+			request.setLoadBalancerNames(targetLoadBalancerNames);
+		}
+		
+		DescribeLoadBalancersResult results = client.describeLoadBalancers(request);
+		String marker = results.getNextMarker();
+		
+		results.getLoadBalancerDescriptions().forEach(consumer);
+		writeTagsToNeo4j(results, region, client);
+		
+		while (!Strings.isNullOrEmpty(marker) && !marker.equals("null")) { 
+			results = client.describeLoadBalancers(request.withMarker(marker));
+			marker = results.getNextMarker();
+			results.getLoadBalancerDescriptions().forEach(consumer);
+			writeTagsToNeo4j(results, region, client);
+		}
+	}
+	
+	protected void writeTagsToNeo4j(DescribeLoadBalancersResult results, Region region, AmazonElasticLoadBalancingClient client) { 
 		if (!results.getLoadBalancerDescriptions().isEmpty()) {
 
 			List<String> loadBalancerNames = results.getLoadBalancerDescriptions().stream()
@@ -118,11 +144,6 @@ public class ELBScanner extends AWSServiceScanner {
 					}
 				});
 			}
-		}
-		
-		if (targetLoadBalancerNames == null) {
-			// gc only if we scan all load balancers
-			gc.invoke();
 		}
 	}
 
