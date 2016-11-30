@@ -72,13 +72,8 @@ public class GraphNodeGarbageCollector {
 		
 		// With neo4j 2.3 we can collapse this into a single DETACH DELETE.  However, for now, we need two operations.
 
-		// First delete all the relationships from the node(s) to be deleted.
-		String cypher = "match (x:"+label+" {aws_account: {account}, aws_region: {region}})-[r]-() where x.updateTs<{ts} delete r";
-		getNeoRxClient().execCypher(cypher, "account",account,"region",region,"ts",ts);
-		
-		// now nuke the nodes themselves.
-		cypher = "match (x:"+label+" {aws_account: {account}, aws_region: {region}}) where x.updateTs<{ts} delete x";
-		getNeoRxClient().execCypher(cypher, "account",account,"region",region,"ts",ts);
+		String cypher = "match (x:"+label+" {aws_account: {account}, aws_region: {region}})-[r]-() where x.updateTs<{ts} detach delete x";
+		getNeoRxClient().execCypher(cypher, "account",account,"region",region,"ts",ts);		
 	}
 	
 	public void invoke() {
