@@ -1,4 +1,6 @@
 ## Changes
+### 1.4.7 
+* fix deletion of launch config 
 
 ### 1.4.4
 * Added cpu cores and memory to VSphere scanning
