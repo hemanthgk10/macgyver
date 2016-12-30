@@ -1,4 +1,11 @@
 ## Changes
+
+### 1.5.1
+* move to reflex 1.0.6
+
+### 1.5.0
+* elimiate ProjectReactor and switch to RxJava+reflex 
+
 ### 1.4.7 
 * fix deletion of launch config 
 
