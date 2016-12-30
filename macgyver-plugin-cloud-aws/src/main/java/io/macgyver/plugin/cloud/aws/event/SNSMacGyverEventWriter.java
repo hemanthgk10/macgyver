@@ -4,6 +4,9 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.lendingclub.reflex.consumer.Consumers;
+import org.lendingclub.reflex.predicate.Predicates;
+import org.lendingclub.reflex.queue.WorkQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -14,10 +17,8 @@ import com.amazonaws.services.sns.AmazonSNSAsyncClient;
 import com.amazonaws.services.sns.model.PublishRequest;
 import com.amazonaws.services.sns.model.PublishResult;
 
+import io.macgyver.core.event.EventSystem;
 import io.macgyver.core.event.MacGyverMessage;
-import reactor.bus.Event;
-import reactor.bus.EventBus;
-import reactor.bus.selector.Selectors;
 
 public class SNSMacGyverEventWriter implements ApplicationListener<ApplicationReadyEvent>{
 
@@ -27,6 +28,8 @@ public class SNSMacGyverEventWriter implements ApplicationListener<ApplicationRe
 
 	AtomicBoolean enabled = new AtomicBoolean(true);
 
+	WorkQueue<MacGyverMessage> workQueue;
+	
 	public void setSNSClient(AmazonSNSAsyncClient client) {
 		withSNSClient(client);
 	}
@@ -73,25 +76,28 @@ public class SNSMacGyverEventWriter implements ApplicationListener<ApplicationRe
 	public Optional<String> getTopicArn() {
 		return Optional.ofNullable(topicArnRef.get());
 	}
-	public void subscribe(EventBus bus) {
+	public void subscribe(EventSystem eventSystem) {
+		workQueue = new WorkQueue<MacGyverMessage>().withCoreThreadPoolSize(2).withThreadName("SNSMacGyverEventWriter-%d");
 		
-		bus.on(Selectors.type(MacGyverMessage.class), (Event<MacGyverMessage> event) -> {
+		workQueue.getObservable().subscribe(Consumers.safeConsumer(event -> {
 			try {
 				if (isEnabled()) {
 					PublishRequest request = new PublishRequest();
 					request.setTopicArn(getTopicArn().get());
-					request.setMessage(event.getData().getEnvelope().toString());
+					request.setMessage(MacGyverMessage.class.cast(event).getEnvelope().toString());
 					getSNSClient().get().publishAsync(request, new ResponseHandler());
 				}
 			} catch (Exception e) {
 				logger.error("problem sending message to SNS: {}",e.toString());
 			}
-		});
+		}));
+		
+		eventSystem.getObservable().filter(Predicates.type(MacGyverMessage.class)).subscribe(Consumers.safeObserver(workQueue));
 	}
 	@Override
 	public void onApplicationEvent(ApplicationReadyEvent event) {
 		
-		subscribe(event.getApplicationContext().getBean(EventBus.class));
+		subscribe(event.getApplicationContext().getBean(EventSystem.class));
 		
 	}
 }

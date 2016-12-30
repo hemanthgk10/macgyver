@@ -24,16 +24,16 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import reactor.bus.Event;
-import reactor.bus.EventBus;
+
 
 public class MacGyverEventPublisher {
 
 	Logger logger = LoggerFactory.getLogger(MacGyverEventPublisher.class);
 
-	@Autowired
-	EventBus eventBus;
 
+	@Autowired
+	EventSystem eventSystem;
+	
 	static ObjectMapper mapper = new ObjectMapper();
 
 	public class MessageBuilder {
@@ -88,23 +88,22 @@ public class MacGyverEventPublisher {
 
 	}
 
-	public MacGyverEventPublisher(EventBus bus) {
-		this.eventBus = bus;
+	public MacGyverEventPublisher(EventSystem eventSystem) {
+		this.eventSystem = eventSystem;
 	}
 
 	
 	protected void publishObject(Object object) {
-		if (eventBus != null) {
-			
-			eventBus.notify(object, Event.wrap(object));
-		} else {
-			logger.warn("event not published because EventBus was not set");
+		if (eventSystem!=null) {
+			eventSystem.post(object);
 		}
+		else {
+			logger.warn("eventSystem is not set");
+		}
+		
 	}
 
-	public EventBus getEventBus() {
-		return eventBus;
-	}
+
 	public void publish(MacGyverMessage message) {
 		publishObject(message);
 	}
