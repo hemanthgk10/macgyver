@@ -14,6 +14,7 @@
 package io.macgyver.jdbc.event;
 
 import java.io.IOException;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -82,19 +83,26 @@ public class JdbcEventWriterTest extends MacGyverIntegrationTest {
 			System.out.println("Received "+c);
 			latch.countDown();
 		});
+		
+		String uuid = UUID.randomUUID().toString(); 
 		for (int i = 0; i < count; i++) {
 			MacGyverMessage m = new MacGyverMessage();
-			m.withAttribute("test", "hello " + i);
+			m.withAttribute("test", "hello " + uuid+" "+1);
 
 			writer.writeAsync(m);
 	
 		}
 
-		Assertions.assertThat(latch.await(10, TimeUnit.SECONDS)).isTrue();
+		Assertions.assertThat(latch.await(120, TimeUnit.SECONDS)).isTrue();
 
-		db.select("select * from event").get(new JacksonRxJdbcResultSetMapper()).forEach(it -> {
+		CountDownLatch latch2 = new CountDownLatch(count);
+		db.select("select * from event where JSON_DATA like '%"+uuid+"%'").get(new JacksonRxJdbcResultSetMapper()).forEach(it -> {
 			System.out.println(it);
+			latch2.countDown();
 		});
+		
+		Assertions.assertThat(latch2.await(120, TimeUnit.SECONDS)).isTrue();
+	
 	}
 
 	public static class TestMessageType extends MacGyverMessage {
