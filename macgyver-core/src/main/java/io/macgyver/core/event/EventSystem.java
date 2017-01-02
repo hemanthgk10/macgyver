@@ -57,12 +57,12 @@ public class EventSystem {
 	
 	@Deprecated
 	public <T> Observable<T> newObservable(Class<? extends T> clazz) {	
-		return newObservable(clazz);
+		return createObservable(clazz);
 	}
 	
 	@Deprecated
 	public Observable<Object> newObservable() {
-		return newObservable();
+		return createObservable();
 	}
 	
 	public <T> Observable<T> createObservable(Class<? extends T> clazz) {	
