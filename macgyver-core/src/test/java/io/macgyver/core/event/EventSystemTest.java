@@ -55,7 +55,7 @@ public class EventSystemTest {
 		CountDownLatch runnableLatch = new CountDownLatch(10);
 		CountDownLatch cdl = new CountDownLatch(100);
 		
-		eventSystem.getObservable().subscribe( c->{
+		eventSystem.newObservable().subscribe( c->{
 			logger.info("Thread: "+Thread.currentThread()+" "+c);
 			cdl.countDown();
 		});

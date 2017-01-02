@@ -21,6 +21,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 
+import org.lendingclub.reflex.concurrent.ConcurrentSubscribers;
+import org.lendingclub.reflex.concurrent.ConcurrentSubscribers.ConcurrentSubscriber;
 import org.lendingclub.reflex.eventbus.EventBusAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,8 +43,8 @@ public class EventSystem {
 
 	ThreadPoolExecutor executor;
 	
-	@Value("${MACGYVER_EVENT_SYSTEM_CORE_THREAD_COUNT:30}")
-	int coreThreadCount = 30;
+	@Value("${MACGYVER_EVENT_SYSTEM_CORE_THREAD_COUNT:50}")
+	int coreThreadCount = 50;
 	
 	@Value("${MACGYVER_EVENT_SYSTEM_MAX_THREAD_COUNT:50}")
 	int maxThreadCount = 50;
@@ -53,17 +55,26 @@ public class EventSystem {
 	
 	EventBus eventBus;
 	
-	public <T> Observable<T> newObservable(Class<? extends T> clazz) {
-		
-		return EventBusAdapter.toObservable(eventBus, clazz);
-	}
-	public Observable<Object> newObservable() {
-		return EventBusAdapter.toObservable(eventBus);
+	@Deprecated
+	public <T> Observable<T> newObservable(Class<? extends T> clazz) {	
+		return newObservable(clazz);
 	}
 	
 	@Deprecated
-	public Observable<Object> getObservable() {	
+	public Observable<Object> newObservable() {
 		return newObservable();
+	}
+	
+	public <T> Observable<T> createObservable(Class<? extends T> clazz) {	
+		return EventBusAdapter.toObservable(eventBus, clazz);
+	}
+	public Observable<Object> createObservable() {
+		return EventBusAdapter.toObservable(eventBus);
+	}
+
+	public <T> ConcurrentSubscriber<T> createConcurrentSubscriber(Class<T> clazz) {
+		ConcurrentSubscriber<T> concurrentSubscriber = ConcurrentSubscribers.newConcurrentSubscriber(newObservable(clazz));
+		return concurrentSubscriber;
 	}
 
 	public EventBus getEventBus() {
@@ -88,7 +99,7 @@ public class EventSystem {
 		}
 		
 	}
-	@SuppressWarnings("unchecked")
+
 	@PostConstruct
 	public synchronized void init() {
 		if (executor == null) {
@@ -99,11 +110,17 @@ public class EventSystem {
 			
 			maxThreadCount = Math.max(coreThreadCount,maxThreadCount);
 			
-			executor = new ThreadPoolExecutor(coreThreadCount,maxThreadCount,30, TimeUnit.SECONDS,queue,threadFactory,new MyRejectedExecutionHandler());
-	
+			executor = new ThreadPoolExecutor(
+					coreThreadCount,
+					maxThreadCount,
+					30, 
+					TimeUnit.SECONDS,
+					queue,
+					threadFactory,
+					new MyRejectedExecutionHandler());
+			executor.allowsCoreThreadTimeOut();
 			eventBus = new AsyncEventBus("MacGyverEventBus",executor);
-	
-		
+
 		}
 		else {
 			throw new IllegalStateException("init() can only be called once");
