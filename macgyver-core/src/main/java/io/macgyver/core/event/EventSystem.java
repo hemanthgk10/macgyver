@@ -55,16 +55,6 @@ public class EventSystem {
 	
 	EventBus eventBus;
 	
-	@Deprecated
-	public <T> Observable<T> newObservable(Class<? extends T> clazz) {	
-		return createObservable(clazz);
-	}
-	
-	@Deprecated
-	public Observable<Object> newObservable() {
-		return createObservable();
-	}
-	
 	public <T> Observable<T> createObservable(Class<? extends T> clazz) {	
 		return EventBusAdapter.toObservable(eventBus, clazz);
 	}
@@ -73,7 +63,7 @@ public class EventSystem {
 	}
 
 	public <T> ConcurrentSubscriber<T> createConcurrentSubscriber(Class<T> clazz) {
-		ConcurrentSubscriber<T> concurrentSubscriber = ConcurrentSubscribers.newConcurrentSubscriber(newObservable(clazz));
+		ConcurrentSubscriber<T> concurrentSubscriber = ConcurrentSubscribers.newConcurrentSubscriber(createObservable(clazz));
 		return concurrentSubscriber;
 	}
 

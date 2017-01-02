@@ -55,7 +55,7 @@ public class EventSystemTest {
 		CountDownLatch runnableLatch = new CountDownLatch(10);
 		CountDownLatch cdl = new CountDownLatch(100);
 		
-		eventSystem.newObservable().subscribe( c->{
+		eventSystem.createObservable().subscribe( c->{
 			logger.info("Thread: "+Thread.currentThread()+" "+c);
 			cdl.countDown();
 		});
@@ -100,12 +100,12 @@ public class EventSystemTest {
 		CountDownLatch latch = new CountDownLatch(count*2);
 		SecureRandom r = SecureRandom.getInstance("sha1prng");
 		
-		eventSystem.newObservable().subscribe(c->{
+		eventSystem.createObservable().subscribe(c->{
 			logger.info("subscriber1 - {}",c);
 			Thread.sleep(Math.abs(r.nextLong()%1000));
 			latch.countDown();
 		});
-		eventSystem.newObservable().subscribe(c->{
+		eventSystem.createObservable().subscribe(c->{
 			logger.info("subscriber2 - {}", c);
 			Thread.sleep(Math.abs(r.nextLong()%1000));
 			latch.countDown();

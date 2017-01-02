@@ -114,7 +114,7 @@ public class Neo4jEventLogWriter implements InitializingBean {
 			}
 		};
 		ThreadFactory tf = new ThreadFactoryBuilder().setNameFormat("Neo4jEventLogWriter-%d").setDaemon(true).build();
-		ConcurrentSubscribers.subscribeParallel(eventSystem.newObservable(LogMessage.class),
+		ConcurrentSubscribers.subscribeParallel(eventSystem.createObservable(LogMessage.class),
 				Executors.newFixedThreadPool(2, tf), org.lendingclub.reflex.operator.ExceptionHandlers.safeConsumer(consumer));
 
 	}

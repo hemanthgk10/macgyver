@@ -52,7 +52,7 @@ public class EventLoggerIntegrationTest extends MacGyverIntegrationTest {
 		CountDownLatch latch = new CountDownLatch(1);
 		AtomicReference<LogMessage> ref = new AtomicReference<LogMessage>(null);
 		
-		Disposable disposable = eventSystem.newObservable(LogMessage.class).subscribe(ExceptionHandlers.safeConsumer(c -> {
+		Disposable disposable = eventSystem.createObservable(LogMessage.class).subscribe(ExceptionHandlers.safeConsumer(c -> {
 			ref.set((LogMessage)c);
 			latch.countDown();
 			

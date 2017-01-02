@@ -30,7 +30,7 @@ public class Slf4jEventWriter {
 
 	@PostConstruct
 	public void subscribe() {
-		eventSystem.newObservable(MacGyverMessage.class).subscribe(ExceptionHandlers.safeConsumer(x-> {
+		eventSystem.createObservable(MacGyverMessage.class).subscribe(ExceptionHandlers.safeConsumer(x-> {
 			if (logger.isDebugEnabled()) {
 				logger.debug("logging event:\n {}",JsonNodes.pretty(((MacGyverMessage)x).getEnvelope()));
 			}
