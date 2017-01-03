@@ -1,5 +1,8 @@
 ## Changes
 
+### 1.5.4
+* reflex 1.4.2
+
 ### 1.5.3
 * core reflex thread pool default size of 50
 * expose convenience method for creating concurrent subscribers
