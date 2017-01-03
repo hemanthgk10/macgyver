@@ -62,7 +62,7 @@ public class WebHookController {
 
 	@PostConstruct
 	public void registerLogger() {
-		eventSystem.newObservable(GitHubWebHookMessage.class).subscribe(
+		eventSystem.createObservable(GitHubWebHookMessage.class).subscribe(
 				ExceptionHandlers.safeConsumer(c -> {
 					logger.info("received {}", c);
 				}));

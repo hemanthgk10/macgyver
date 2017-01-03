@@ -63,7 +63,7 @@ public class EventSystem {
 	}
 
 	public <T> ConcurrentSubscriber<T> createConcurrentSubscriber(Class<T> clazz) {
-		ConcurrentSubscriber<T> concurrentSubscriber = ConcurrentSubscribers.newConcurrentSubscriber(createObservable(clazz));
+		ConcurrentSubscriber<T> concurrentSubscriber = ConcurrentSubscribers.createConcurrentSubscriber(createObservable(clazz));
 		return concurrentSubscriber;
 	}
 

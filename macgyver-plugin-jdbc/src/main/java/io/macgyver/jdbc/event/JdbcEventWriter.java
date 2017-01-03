@@ -86,7 +86,7 @@ public class JdbcEventWriter implements ApplicationListener<ApplicationReadyEven
 	public JdbcEventWriter subscribe(EventSystem eventSystem) {
 		this.eventSystem = eventSystem;
 
-		ConcurrentSubscribers.newConcurrentSubscriber(this.eventSystem.newObservable(MacGyverMessage.class))
+		ConcurrentSubscribers.createConcurrentSubscriber(this.eventSystem.createObservable(MacGyverMessage.class))
 				.withNewExecutor(cfg -> {
 					cfg.withCorePoolSize(2).withMaxPoolSize(2).withMaxQueueSize(4096).withThreadNameFormat(
 							"JdbcEventWriter-%d");

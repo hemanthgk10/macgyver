@@ -109,7 +109,7 @@ public class JdbcEventWriterTest extends MacGyverIntegrationTest {
 	public void testX() throws InterruptedException, IOException, JsonProcessingException{
 		
 		CountDownLatch latch = new CountDownLatch(1);
-		eventSystem.newObservable(MacGyverMessage.class).subscribe(x-> {
+		eventSystem.createObservable(MacGyverMessage.class).subscribe(x-> {
 			
 			if (x.getPayload().path("hello").asText().equals("world")) {
 				latch.countDown();
