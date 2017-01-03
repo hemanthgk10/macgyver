@@ -13,26 +13,15 @@
  */
 package io.macgyver.plugin.elb.f5;
 
-import java.util.Map;
 import java.util.Properties;
 
-import org.jdom2.Element;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Lists;
-import com.squareup.okhttp.Response;
+import com.google.common.base.Strings;
 
 import io.macgyver.core.service.ServiceFactory;
 import io.macgyver.okrest3.OkHttpClientConfigurer;
 import io.macgyver.okrest3.OkRestClient;
-import io.macgyver.okrest3.OkRestTarget;
-import io.macgyver.okrest3.OkRestClient.Builder;
 import io.macgyver.okrest3.OkRestClientConfigurer;
-import joptsimple.internal.Strings;
-import okhttp3.ConnectionSpec;
-import okhttp3.OkHttpClient;
-import okhttp3.TlsVersion;
+import io.macgyver.okrest3.OkRestTarget;
 
 public class F5Client {
 

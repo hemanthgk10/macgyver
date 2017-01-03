@@ -49,6 +49,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
@@ -58,7 +59,6 @@ import com.lambdaworks.crypto.SCryptUtil;
 
 import io.macgyver.core.util.JsonNodes;
 import io.macgyver.neorx.rest.NeoRxClient;
-import joptsimple.internal.Strings;
 import rx.exceptions.OnErrorNotImplementedException;
 
 public class ApiTokenAuthenticationProvider implements AuthenticationProvider {

@@ -22,6 +22,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 
+import org.lendingclub.reflex.operator.ExceptionHandlers;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -34,42 +35,37 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.eventbus.Subscribe;
-import com.google.common.io.ByteStreams;
 
+import io.macgyver.core.event.EventSystem;
 import io.macgyver.core.event.MacGyverEventPublisher;
-import reactor.bus.EventBus;
-import reactor.bus.selector.Selectors;
 
 @Controller
 public class WebHookController {
 
-	public static final int WEBHOOK_MAX_BYTES_DEFAULT=500 * 1024;
-	
+	public static final int WEBHOOK_MAX_BYTES_DEFAULT = 500 * 1024;
+
 	@Autowired
 	MacGyverEventPublisher eventPublisher;
-	
+
 	@Autowired
-	EventBus eventBus;
-	
+	EventSystem eventSystem;
+
 	static org.slf4j.Logger logger = LoggerFactory
 			.getLogger(WebHookController.class);
 
 	ObjectMapper mapper = new ObjectMapper();
 
 	List<WebHookAuthenticator> authenticatorList = new CopyOnWriteArrayList<>();
-	
-	int webhookMaxBytes = WEBHOOK_MAX_BYTES_DEFAULT;
-	
 
+	int webhookMaxBytes = WEBHOOK_MAX_BYTES_DEFAULT;
 
 	@PostConstruct
 	public void registerLogger() {
-		eventBus.on(Selectors.T(GitHubWebHookMessage.class),c-> {
-			logger.info("received {}",c);
-		});
+		eventSystem.createObservable(GitHubWebHookMessage.class).subscribe(
+				ExceptionHandlers.safeConsumer(c -> {
+					logger.info("received {}", c);
+				}));
 	}
 
 	@RequestMapping(value = "/api/plugin/github/webhook", method = RequestMethod.POST, consumes = "application/json")
@@ -78,22 +74,20 @@ public class WebHookController {
 	public ResponseEntity<JsonNode> processHook(HttpServletRequest request)
 			throws IOException, InvalidKeyException, NoSuchAlgorithmException {
 
-		if (request.getContentLength() >webhookMaxBytes) {
+		if (request.getContentLength() > webhookMaxBytes) {
 			JsonNode returnNode = new ObjectMapper().createObjectNode()
 					.put("success", "false")
 					.put("error", "message too large");
 			return new ResponseEntity<JsonNode>(returnNode,
-					HttpStatus.UNAUTHORIZED);	
+					HttpStatus.UNAUTHORIZED);
 		}
-		
-		
 
 		GitHubWebHookMessage event = new GitHubWebHookMessage(request);
-	
+
 		if (isAuthenticated(event)) {
-		
+
 			eventPublisher.createMessage().withMessage(event).publish();
-			
+
 			JsonNode returnNode = new ObjectMapper().createObjectNode().put(
 					"success", "true");
 			return new ResponseEntity<JsonNode>(returnNode, HttpStatus.OK);
@@ -108,16 +102,17 @@ public class WebHookController {
 	}
 
 	boolean isAuthenticated(GitHubWebHookMessage event) {
-		
-		if (authenticatorList==null || authenticatorList.isEmpty()) {
-			// if no authenticators are set up, assume we want to just trust everything
+
+		if (authenticatorList == null || authenticatorList.isEmpty()) {
+			// if no authenticators are set up, assume we want to just trust
+			// everything
 			return true;
 		}
-		
-		for (WebHookAuthenticator auth: authenticatorList) {
-		
+
+		for (WebHookAuthenticator auth : authenticatorList) {
+
 			java.util.Optional<Boolean> b = auth.authenticate(event);
-			if (b.isPresent() && (! b.get().booleanValue())) {
+			if (b.isPresent() && (!b.get().booleanValue())) {
 				return b.get();
 			}
 		}

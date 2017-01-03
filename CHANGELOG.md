@@ -1,5 +1,24 @@
 ## Changes
 
+### 1.5.4
+* reflex 1.4.2
+
+### 1.5.3
+* core reflex thread pool default size of 50
+* expose convenience method for creating concurrent subscribers
+
+### 1.5.2
+* reflex 1.4.1
+
+### 1.5.1
+* move to reflex 1.0.6
+
+### 1.5.0
+* elimiate ProjectReactor and switch to RxJava+reflex 
+
+### 1.4.7 
+* fix deletion of launch config 
+
 ### 1.4.4
 * Added cpu cores and memory to VSphere scanning
 * made access log and conditional logging configurable

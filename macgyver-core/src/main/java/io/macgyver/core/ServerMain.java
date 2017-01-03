@@ -36,8 +36,7 @@ import com.sun.akuma.JavaVMArguments;
 
 import io.macgyver.core.Kernel.ServerStartedEvent;
 import io.macgyver.core.event.EventLogger;
-import reactor.bus.Event;
-import reactor.bus.EventBus;
+import io.macgyver.core.event.EventSystem;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 /**
@@ -115,11 +114,7 @@ public class ServerMain {
 		
 		ServerStartedEvent serverStartedEvent = new Kernel.ServerStartedEvent(Kernel.getInstance());
 		
-		Kernel.getApplicationContext().getBean(EventBus.class)
-				.notify(ServerStartedEvent.class,Event.wrap(serverStartedEvent));
-		
-		Kernel.getApplicationContext().getBean(EventBus.class).notify(serverStartedEvent,Event.wrap(serverStartedEvent));
-	
+		Kernel.getApplicationContext().getBean(EventSystem.class).post(serverStartedEvent);
 		logger.info("\n\n\n"+  
 		Bootstrap.getBannerText()+
 		"\n\n"+

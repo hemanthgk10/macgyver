@@ -21,71 +21,69 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.data.Offset;
 import org.junit.Test;
+import org.lendingclub.reflex.operator.ExceptionHandlers;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-
 import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.test.MacGyverIntegrationTest;
-import reactor.bus.Event;
-import reactor.bus.EventBus;
-import reactor.bus.registry.Registration;
-import reactor.bus.selector.Selectors;
+import io.reactivex.disposables.Disposable;
 
 public class EventLoggerIntegrationTest extends MacGyverIntegrationTest {
 
 	@Autowired
-	EventBus eventBus;
+	EventSystem eventSystem;
 
 	@Autowired
 	EventLogger eventLogger;
 
 	@Autowired
 	NeoRxClient neo4j;
-	
+
 	@Test
 	public void testIt() throws InterruptedException {
-	
-		Assertions.assertThat(eventBus).isNotNull();
-		
+
+		Assertions.assertThat(eventSystem).isNotNull();
+
 		CountDownLatch latch = new CountDownLatch(1);
-		AtomicReference<Event<LogMessage>> ref = new AtomicReference<Event<LogMessage>>(null);
-		Registration reg = eventBus.on(Selectors.T(LogMessage.class),(Event<LogMessage> x)->{
-			ref.set(x);
-			latch.countDown();
-		});
-		
+		AtomicReference<LogMessage> ref = new AtomicReference<LogMessage>(null);
+
+		Disposable disposable = eventSystem
+				.createObservable(LogMessage.class).subscribe(ExceptionHandlers.safeConsumer(c -> {
+					ref.set((LogMessage) c);
+					latch.countDown();
+
+				}));
+
 		String id = UUID.randomUUID().toString();
-		
-		((LogMessage)eventLogger.event().withAttribute("foo", "bar").withAttribute("test", id)).log();
+
+		((LogMessage) eventLogger.event().withAttribute("foo", "bar").withAttribute("test", id)).log();
 
 		Assertions.assertThat(latch.await(10, TimeUnit.SECONDS)).isTrue();
-		
 
-		Assertions.assertThat(ref.get().getData().getData().path("foo").asText()).isEqualTo("bar");
-	
-		eventBus.getConsumerRegistry().unregister(reg);
-		
-		
-		
+		Assertions.assertThat(ref.get().getPayload().path("foo").asText()).isEqualTo("bar");
+
+		disposable.dispose();
+
 	}
-	
+
 	@Test
 	public void testEventBuilder() {
-		
+
 		String id = UUID.randomUUID().toString();
-		
+
 		ObjectNode n = new ObjectMapper().createObjectNode().put("test2", id);
-		
+
 		LogMessage builder = (LogMessage) eventLogger.event().withData(n);
-		
-		Assertions.assertThat(builder.getData().path("test2").asText()).isEqualTo(id);
-		
-		Assertions.assertThat(builder.getTimestamp().toEpochMilli()).isCloseTo(System.currentTimeMillis(), Offset.offset(1000L));
-		
+
+		Assertions.assertThat(builder.getPayload().path("test2").asText()).isEqualTo(id);
+
+		Assertions.assertThat(builder.getTimestamp().toEpochMilli()).isCloseTo(System.currentTimeMillis(),
+				Offset.offset(1000L));
+
 		Assertions.assertThat(builder.label).isNull();
 	}
-	
+
 }

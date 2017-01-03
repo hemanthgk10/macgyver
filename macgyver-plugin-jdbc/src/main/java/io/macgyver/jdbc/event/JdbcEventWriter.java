@@ -1,9 +1,26 @@
+/**
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package io.macgyver.jdbc.event;
 
 import java.sql.Timestamp;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.annotation.PostConstruct;
+
+import org.lendingclub.reflex.concurrent.ConcurrentSubscribers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,15 +39,10 @@ import com.google.common.base.Strings;
 
 import io.macgyver.core.ServiceNotFoundException;
 import io.macgyver.core.event.EventLogger;
+import io.macgyver.core.event.EventSystem;
 import io.macgyver.core.event.MacGyverEventPublisher;
 import io.macgyver.core.event.MacGyverMessage;
 import io.macgyver.core.service.ServiceRegistry;
-import reactor.Environment;
-import reactor.bus.Event;
-import reactor.bus.EventBus;
-import reactor.bus.registry.Registration;
-import reactor.bus.selector.Selectors;
-import reactor.fn.Consumer;
 
 public class JdbcEventWriter implements ApplicationListener<ApplicationReadyEvent> {
 
@@ -43,11 +55,12 @@ public class JdbcEventWriter implements ApplicationListener<ApplicationReadyEven
 	@Autowired
 	EventLogger eventLogger;
 
+	@Autowired
+	EventSystem eventSystem;
+
 	TimeBasedGenerator uuidGenerator = Generators.timeBasedGenerator(EthernetAddress.fromInterface());
 
 	AtomicReference<Database> database = new AtomicReference<Database>(null);
-
-	AtomicReference<EventBus> localBus = new AtomicReference<EventBus>(null);
 
 	Logger logger = LoggerFactory.getLogger(JdbcEventWriter.class);
 
@@ -55,35 +68,30 @@ public class JdbcEventWriter implements ApplicationListener<ApplicationReadyEven
 
 	AtomicBoolean enabled = new AtomicBoolean(true);
 
-	public JdbcEventWriter() {
-		Environment.initializeIfEmpty();
-
-	}
-
-	class LocalConsumer implements Consumer<Event<MacGyverMessage>> {
+	class LocalConsumer implements io.reactivex.functions.Consumer<MacGyverMessage> {
 
 		@Override
-		public void accept(Event<MacGyverMessage> t) {
-			write(t.getData());
+		public void accept(MacGyverMessage t) {
+
+			write(t.getEnvelope());
+
 		}
 
-	}
-
-	public EventBus getEventBus() {
-		return localBus.get();
 	}
 
 	public Database getDatabase() {
 		return database.get();
 	}
 
-	public JdbcEventWriter withPrivateEventBus() {
-		return withEventBus(EventBus.create(Environment.newDispatcher("jdbc-event-log", 2048)));
-	}
+	public JdbcEventWriter subscribe(EventSystem eventSystem) {
+		this.eventSystem = eventSystem;
 
-	public JdbcEventWriter withEventBus(EventBus bus) {
-		localBus.set(bus);
-		bus.on(Selectors.matchAll(), new LocalConsumer());
+		ConcurrentSubscribers.createConcurrentSubscriber(this.eventSystem.createObservable(MacGyverMessage.class))
+				.withNewExecutor(cfg -> {
+					cfg.withCorePoolSize(2).withMaxPoolSize(2).withMaxQueueSize(4096).withThreadNameFormat(
+							"JdbcEventWriter-%d");
+				}).subscribe(new LocalConsumer());
+
 		return this;
 	}
 
@@ -95,9 +103,11 @@ public class JdbcEventWriter implements ApplicationListener<ApplicationReadyEven
 	public static final String GENERIC_DDL = "create table event (event_id varchar(38) not null, event_type varchar(150), json_data clob, event_ts timestamp)";
 	public static final String MYSQL_DDL = "create table event (event_id varchar(38) not null, event_type varchar(150), json_data json, event_ts timestamp)";
 
+	AtomicLong insertCount = new AtomicLong();
+
 	public void writeAsync(MacGyverMessage m) {
-		Preconditions.checkState(localBus != null, "event bus not set");
-		getEventBus().notify(m, Event.wrap(m));
+		Preconditions.checkState(eventSystem != null, "event bus not set");
+		eventSystem.post(m);
 	}
 
 	public void write(MacGyverMessage m) {
@@ -107,21 +117,31 @@ public class JdbcEventWriter implements ApplicationListener<ApplicationReadyEven
 	protected void write(JsonNode data) {
 		try {
 			if (!isEnabled()) {
+
 				return;
 			}
 			if (data == null || !data.isObject()) {
+
 				return;
 			}
 			String jsonString = mapper.writeValueAsString(data);
 
 			if (Strings.isNullOrEmpty(jsonString)) {
+
 				return;
 			}
 
-			String id = data.path("eventId").asText(uuidGenerator.generate().toString());
+			String id = data.path("eventId").asText();
+			if (Strings.isNullOrEmpty(id)) {
+
+				id = uuidGenerator.generate().toString();
+			}
 
 			String eventType = data.path("eventType").asText();
 
+			if (Strings.isNullOrEmpty(eventType)) {
+				throw new IllegalStateException("eventType not set");
+			}
 			long ts = data.path("eventTs").longValue();
 			if (ts <= 0) {
 				ts = System.currentTimeMillis();
@@ -132,20 +152,24 @@ public class JdbcEventWriter implements ApplicationListener<ApplicationReadyEven
 					.update("insert into event(event_id, event_type, json_data,event_ts) values (?,?,?,?)")
 					.parameter(id).parameter(eventType).parameter(jsonString).parameter(eventTimestamp).execute();
 			logger.debug("inserted event id={} eventType={}", id, eventType);
+
+			if (count != 1) {
+				throw new RuntimeException("could not insert");
+			}
+
 		} catch (JsonProcessingException | RuntimeException e) {
 			logger.warn("could not log event", e);
 		}
 	}
 
-	public Registration<Object, Consumer<? extends Event<?>>> subscribe(EventBus bus) {
-		return bus.on(Selectors.type(MacGyverMessage.class), x -> {
-			getEventBus().notify(x.getKey(), Event.wrap(x.getKey()));
-		});
-
-	}
-
 	public boolean isEnabled() {
 		return enabled.get() && database.get() != null;
+	}
+
+	@PostConstruct
+	public void subscribe() {
+		subscribe(eventSystem);
+		//
 	}
 
 	@Override
