@@ -59,6 +59,7 @@ subprojects {
     	all*.exclude group: 'xml-apis'
 		all*.exclude group: 'org.bouncycastle', module: 'bcprov-jdk16'
 		all*.exclude group: 'javax.ws.rs' , module: 'jsr311-api'
+        all*.exclude group: 'org.springframework.boot', module:'spring-boot-cli'
 
 		provided
     }

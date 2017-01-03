@@ -31,9 +31,7 @@ import io.macgyver.neorx.rest.NeoRxClient;
 import io.macgyver.test.MacGyverIntegrationTest;
 import io.reactivex.disposables.Disposable;
 
-
 public class EventLoggerIntegrationTest extends MacGyverIntegrationTest {
-
 
 	@Autowired
 	EventSystem eventSystem;
@@ -43,52 +41,49 @@ public class EventLoggerIntegrationTest extends MacGyverIntegrationTest {
 
 	@Autowired
 	NeoRxClient neo4j;
-	
+
 	@Test
 	public void testIt() throws InterruptedException {
-	
+
 		Assertions.assertThat(eventSystem).isNotNull();
-		
+
 		CountDownLatch latch = new CountDownLatch(1);
 		AtomicReference<LogMessage> ref = new AtomicReference<LogMessage>(null);
-		
-		Disposable disposable = eventSystem.createObservable(LogMessage.class).subscribe(ExceptionHandlers.safeConsumer(c -> {
-			ref.set((LogMessage)c);
-			latch.countDown();
-			
-		}));
-	
-		
+
+		Disposable disposable = eventSystem
+				.createObservable(LogMessage.class).subscribe(ExceptionHandlers.safeConsumer(c -> {
+					ref.set((LogMessage) c);
+					latch.countDown();
+
+				}));
+
 		String id = UUID.randomUUID().toString();
-		
-		((LogMessage)eventLogger.event().withAttribute("foo", "bar").withAttribute("test", id)).log();
+
+		((LogMessage) eventLogger.event().withAttribute("foo", "bar").withAttribute("test", id)).log();
 
 		Assertions.assertThat(latch.await(10, TimeUnit.SECONDS)).isTrue();
-		
 
 		Assertions.assertThat(ref.get().getPayload().path("foo").asText()).isEqualTo("bar");
-	
+
 		disposable.dispose();
-	
-		
-		
-		
+
 	}
-	
+
 	@Test
 	public void testEventBuilder() {
-		
+
 		String id = UUID.randomUUID().toString();
-		
+
 		ObjectNode n = new ObjectMapper().createObjectNode().put("test2", id);
-		
+
 		LogMessage builder = (LogMessage) eventLogger.event().withData(n);
-		
-		Assertions.assertThat(builder.getData().path("test2").asText()).isEqualTo(id);
-		
-		Assertions.assertThat(builder.getTimestamp().toEpochMilli()).isCloseTo(System.currentTimeMillis(), Offset.offset(1000L));
-		
+
+		Assertions.assertThat(builder.getPayload().path("test2").asText()).isEqualTo(id);
+
+		Assertions.assertThat(builder.getTimestamp().toEpochMilli()).isCloseTo(System.currentTimeMillis(),
+				Offset.offset(1000L));
+
 		Assertions.assertThat(builder.label).isNull();
 	}
-	
+
 }
