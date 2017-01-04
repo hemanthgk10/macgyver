@@ -109,7 +109,7 @@ public class SNSMacGyverEventWriter implements ApplicationListener<ApplicationRe
 		};
 		ConcurrentSubscribers.createConcurrentSubscriber(eventSystem.createObservable(MacGyverMessage.class))
 				.withNewExecutor(b -> {
-					b.withCorePoolSize(2)
+					b.withThreadPoolSize(2)
 							.withThreadNameFormat("SNSMacGyverEventWriter-%d");
 				})
 				.subscribe(consumer);
