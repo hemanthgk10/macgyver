@@ -70,7 +70,7 @@ public class EventSystemTest {
 			
 		};
 		for (int i=0; i<100; i++) {
-			eventSystem.getExecutorService().submit(r);
+			ExecutorService.class.cast(eventSystem.getExecutor()).submit(r);
 		}
 		for (int i=0; i<100; i++) {
 			eventSystem.getEventBus().post("test");
