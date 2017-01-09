@@ -1,5 +1,8 @@
 ## Changes
 
+### 1.5.7
+* Add NewRelic message types
+
 ### 1.5.4
 * reflex 1.4.2
 
