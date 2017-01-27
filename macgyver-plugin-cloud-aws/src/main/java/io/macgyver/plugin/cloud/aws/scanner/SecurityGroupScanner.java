@@ -50,17 +50,18 @@ public class SecurityGroupScanner extends AWSServiceScanner {
 
 			ObjectNode g = convertAwsObject(sg, region);
 
-			// it is possible for a vpc to be in no vpc
-			String vpcId = Strings.nullToEmpty(sg.getGroupId()); 
-			String cypher = "merge (sg:AwsSecurityGroup {aws_vpcId: {vpcId}, aws_groupId: {groupId}}) set sg+={props}, sg.updateTs={now} return sg";
+			// non-VPC security groups don't have a VPC
+			String vpcId = Strings.nullToEmpty(sg.getVpcId());
+			String cypher = "merge (sg:AwsSecurityGroup {aws_account: {a}, aws_region: {r}, aws_vpcId: {vpcId}, aws_groupId: {groupId}}) set sg+={props}, sg.updateTs={now} return sg";
 
-			JsonNode xx = getNeoRxClient()
-					.execCypher(cypher, "vpcId", vpcId, "groupId", sg.getGroupId(), "props", g,"now",now).toBlocking()
-					.first();
-		
+			JsonNode xx = getNeoRxClient().execCypher(cypher, "vpcId", vpcId, "groupId", sg.getGroupId(), "props", g,
+					"now", now, "a", getAccountId(), "r", region.getName()).toBlocking().first();
+
 			gc.updateEarliestTimestamp(xx);
-			cypher = "match (v:AwsVpc {aws_vpcId: {vpcId}}), (sg:AwsSecurityGroup {aws_groupId:{groupId}, aws_vpcId: {vpcId}}) merge (sg)-[:RESIDES_IN]->(v)";
-			getNeoRxClient().execCypher(cypher, "vpcId", vpcId, "groupId", sg.getGroupId());
+			if (!vpcId.isEmpty()) {
+				cypher = "match (v:AwsVpc {aws_vpcId: {vpcId}}), (sg:AwsSecurityGroup {aws_groupId:{groupId}, aws_vpcId: {vpcId}}) merge (sg)-[:RESIDES_IN]->(v)";
+				getNeoRxClient().execCypher(cypher, "vpcId", vpcId, "groupId", sg.getGroupId());
+			}
 		});
 
 		gc.invoke();
