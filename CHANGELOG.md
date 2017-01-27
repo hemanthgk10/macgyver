@@ -1,5 +1,8 @@
 ## Changes
 
+### 1.5.9
+* Fix Security Group Scanner
+
 ### 1.5.7
 * Add NewRelic message types
 
