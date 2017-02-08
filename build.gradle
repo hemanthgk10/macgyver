@@ -95,7 +95,10 @@ subprojects {
 			name "splunk"
 	        url "http://splunk.artifactoryonline.com/splunk/ext-releases-local/"
 	    }
-		
+		maven {
+            name "lendingclub-oss"
+            url "https://s3-us-west-2.amazonaws.com/lendingclub-oss/m2/"
+        }
 
     }
     
