@@ -97,7 +97,7 @@ subprojects {
 	    }
 		maven {
             name "lendingclub-oss"
-            url "https://s3-us-west-2.amazonaws.com/lendingclub-oss/m2/"
+            url "https://dl.bintray.com/lendingclub/OSS/"
         }
 
     }

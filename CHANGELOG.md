@@ -1,5 +1,12 @@
 ## Changes
 
+### 1.6.1
+* Mercator 1.0.2
+
+### 1.6.0
+* Migrate scanning functionality to mercator
+
+
 ### 1.5.9
 * Fix Security Group Scanner
 
