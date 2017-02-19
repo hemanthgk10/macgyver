@@ -15,6 +15,8 @@ package io.macgyver.plugin.cloud.aws;
 
 import java.util.List;
 
+import org.slf4j.LoggerFactory;
+
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -37,9 +39,17 @@ public class AWSServiceFactory extends ServiceFactory<AWSServiceClient> {
 
 	}
 
-	protected List<String> splitToList(String input) {
-		return Splitter.onPattern("(,|\\s|;)").omitEmptyStrings().trimResults()
-		.splitToList(Strings.nullToEmpty(input));
+	public static List<Regions> splitToRegionList(String input) {
+		List<Regions> regionList = Lists.newArrayList();
+		Splitter.onPattern("(,|\\s|;)").omitEmptyStrings().trimResults()
+		.splitToList(Strings.nullToEmpty(input)).forEach(name->{
+			try {
+				regionList.add(Regions.fromName(name));
+			} catch (RuntimeException e) {
+				LoggerFactory.getLogger(AWSServiceFactory.class).warn("could not configure region: " + name, e);
+			}
+		});
+		return regionList;
 	}
 	@Override
 	protected AWSServiceClient doCreateInstance(ServiceDefinition def) {
@@ -49,19 +59,8 @@ public class AWSServiceFactory extends ServiceFactory<AWSServiceClient> {
 
 		ci.credentialsProvider = getCredentialsProvider(def);
 		
-		List<Regions> regionList = Lists.newArrayList();
-	
-		splitToList(def.getProperties().getProperty("regions"))
-				.forEach(it -> {
-					try {
-						regionList.add(Regions.fromName(it));
-					} catch (RuntimeException e) {
-						logger.warn("could not configure region: " + it, e);
-					}
-
-				});
 		
-		ci.setConfiguredRegions(regionList);
+		ci.setConfiguredRegions(splitToRegionList(def.getProperties().getProperty("regions")));
 		
 		return ci;
 	}

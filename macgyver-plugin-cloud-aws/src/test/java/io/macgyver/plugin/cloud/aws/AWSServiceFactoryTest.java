@@ -98,9 +98,8 @@ public class AWSServiceFactoryTest {
 
 	@Test
 	public void testSplitter() {
-		AWSServiceFactory f = new AWSServiceFactory();
-		Assertions.assertThat(f.splitToList("hello, world; another time")).containsExactly("hello","world","another","time");
 		
+		Assertions.assertThat(AWSServiceFactory.splitToRegionList("us-west-2,foo,us-east-1")).hasSize(2).containsExactly(Regions.US_WEST_2,Regions.US_EAST_1);
 			
 		
 	}
