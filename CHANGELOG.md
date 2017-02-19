@@ -1,5 +1,9 @@
 ## Changes
 
+
+### 1.6.3
+* Minor extensibility improvements for scanning
+
 ### 1.6.2
 * Mercator 1.0.4
 * Fix delimiting of AWS regions
