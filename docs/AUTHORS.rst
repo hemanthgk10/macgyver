@@ -1,7 +1,1 @@
-Authors
--------
-
-* Eric (New contributor)
-* Anthony 
-
-
+.. include:: ../AUTHORS.rst
