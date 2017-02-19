@@ -37,6 +37,10 @@ public class AWSServiceFactory extends ServiceFactory<AWSServiceClient> {
 
 	}
 
+	List<String> splitToList(String input) {
+		return Splitter.onPattern("(,|\\s|;)").omitEmptyStrings().trimResults()
+		.splitToList(Strings.nullToEmpty(input));
+	}
 	@Override
 	protected AWSServiceClient doCreateInstance(ServiceDefinition def) {
 
@@ -46,8 +50,8 @@ public class AWSServiceFactory extends ServiceFactory<AWSServiceClient> {
 		ci.credentialsProvider = getCredentialsProvider(def);
 		
 		List<Regions> regionList = Lists.newArrayList();
-		Splitter.on(",; ").omitEmptyStrings().trimResults()
-				.splitToList(Strings.nullToEmpty(Strings.nullToEmpty(def.getProperties().getProperty("regions"))))
+	
+		splitToList(def.getProperties().getProperty("regions"))
 				.forEach(it -> {
 					try {
 						regionList.add(Regions.fromName(it));

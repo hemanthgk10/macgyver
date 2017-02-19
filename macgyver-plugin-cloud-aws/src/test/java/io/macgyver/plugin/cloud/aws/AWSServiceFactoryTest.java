@@ -19,6 +19,7 @@ import org.junit.Test;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.codedeploy.AmazonCodeDeployClient;
+import com.google.common.base.Splitter;
 
 import io.macgyver.core.util.StandaloneServiceBuilder;
 
@@ -95,4 +96,12 @@ public class AWSServiceFactoryTest {
 
 	}
 
+	@Test
+	public void testSplitter() {
+		AWSServiceFactory f = new AWSServiceFactory();
+		Assertions.assertThat(f.splitToList("hello, world; another time")).containsExactly("hello","world","another","time");
+		
+			
+		
+	}
 }
