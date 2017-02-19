@@ -37,7 +37,7 @@ public class AWSServiceFactory extends ServiceFactory<AWSServiceClient> {
 
 	}
 
-	List<String> splitToList(String input) {
+	protected List<String> splitToList(String input) {
 		return Splitter.onPattern("(,|\\s|;)").omitEmptyStrings().trimResults()
 		.splitToList(Strings.nullToEmpty(input));
 	}
@@ -60,15 +60,13 @@ public class AWSServiceFactory extends ServiceFactory<AWSServiceClient> {
 					}
 
 				});
-		if (regionList.isEmpty()) {
-			// Add the two "primary" US regions by default if not specified
-			regionList.add(Regions.US_EAST_1);
-			regionList.add(Regions.US_WEST_2);
-		}
-		ci.regionList = ImmutableList.copyOf(regionList);
+		
+		ci.setConfiguredRegions(regionList);
+		
 		return ci;
 	}
 
+	
 	private AWSCredentialsProvider getCredentialsProvider(ServiceDefinition def) {
 
 		String accessKey = def.getProperty("accessKey");

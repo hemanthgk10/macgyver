@@ -29,7 +29,9 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 import io.macgyver.core.Kernel;
 import io.macgyver.core.MacGyverException;
@@ -165,11 +167,27 @@ public class AWSServiceClientImpl implements AWSServiceClient {
 			}
 		}
 	}
+	
+	/**
+	 * This is public, but only on the implementation class.
+	 * @param list
+	 */
+	
+	public synchronized void setConfiguredRegions(List<Regions> list) {
+		if (list==null) {
+			list = Lists.newArrayList();
+		}
+		regionList = ImmutableList.copyOf(list);
+	}
+	
 	@Override
-	public List<Regions> getConfiguredRegions() {
+	public synchronized List<Regions> getConfiguredRegions() {
 		return regionList;
 	}
 	
-	
+	public String toString() {
+		return MoreObjects.toStringHelper(this).add("account", getAccountId()).toString();
+		
+	}
 	
 }
