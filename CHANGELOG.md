@@ -3,6 +3,7 @@
 ### 1.6.2
 * Mercator 1.0.4
 * Fix delimiting of AWS regions
+* AWS SDK 1.11.93
 
 ### 1.6.1
 * Mercator 1.0.2
