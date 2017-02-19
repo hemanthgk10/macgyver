@@ -15,28 +15,33 @@ package io.macgyver.plugin.cloud.aws;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Optional;
+import java.util.List;
 
 import org.lendingclub.mercator.aws.AWSScannerBuilder;
+import org.lendingclub.mercator.aws.AllEntityScanner;
 import org.lendingclub.mercator.core.Projector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.amazonaws.AmazonWebServiceClient;
 import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.google.common.collect.ImmutableList;
 
 import io.macgyver.core.Kernel;
 import io.macgyver.core.MacGyverException;
 
 public class AWSServiceClientImpl implements AWSServiceClient {
 
-	AWSCredentialsProvider credentialsProvider;
-	Region defaultRegion=null;
-	String accountId;
+	Logger logger = LoggerFactory.getLogger(AWSServiceClientImpl.class);
 	
+	AWSCredentialsProvider credentialsProvider;
+
+	String accountId;
+	List<Regions> regionList = ImmutableList.of();
 	public  AWSServiceClientImpl() {
 		super();
 	}
@@ -55,12 +60,12 @@ public class AWSServiceClientImpl implements AWSServiceClient {
 
 	@Override
 	public AmazonS3Client newS3Client() {
-		return createClient(AmazonS3Client.class,defaultRegion);
+		return createClient(AmazonS3Client.class);
 	}
 
 	@Override
 	public AmazonEC2Client createEC2Client() {
-		return createClient(AmazonEC2Client.class,defaultRegion);
+		return createClient(AmazonEC2Client.class);
 	}
 
 	@Override
@@ -96,12 +101,9 @@ public class AWSServiceClientImpl implements AWSServiceClient {
 	public <T extends AmazonWebServiceClient> T createClient(
 			Class<? extends T> t) {
 
-		return createClient(t, defaultRegion);
+		return createClient(t,null);
 	}
 
-	public Optional<Region> getDefaultRegion() {
-		return Optional.ofNullable(defaultRegion);
-	}
 	
 	@Override
 	public <T extends AmazonWebServiceClient> T createClient(
@@ -135,6 +137,39 @@ public class AWSServiceClientImpl implements AWSServiceClient {
 
 	public AWSScannerBuilder createScannerBuilder() {
 		// No need to set region or account.  Account will be determined at runtime.  Region will be selected by the caller.
-		return Kernel.getApplicationContext().getBean(Projector.class).createBuilder(AWSScannerBuilder.class).withCredentials(getCredentialsProvider());
+		return Kernel.getApplicationContext().getBean(Projector.class).createBuilder(AWSScannerBuilder.class).withCredentials(getCredentialsProvider()).withFailOnError(false);
 	}
+
+	@Override
+	public void scanRegion(String name) {
+		scanRegion(Regions.fromName(name));	
+	}
+
+	@Override
+	public void scanRegion(Regions region) {		
+		createScannerBuilder().withRegion(region).build(AllEntityScanner.class).scan();
+	}
+
+	@Override
+	public void scanRegion(Region region) {
+		scanRegion(Regions.fromName(region.getName()));
+	}
+
+	public void scan() {
+		for (Regions region: getConfiguredRegions()) {
+			try {
+				scanRegion(region);
+			}
+			catch (RuntimeException e) {
+				logger.warn("problem scanning region: "+region,e);
+			}
+		}
+	}
+	@Override
+	public List<Regions> getConfiguredRegions() {
+		return regionList;
+	}
+	
+	
+	
 }

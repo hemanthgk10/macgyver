@@ -1,5 +1,8 @@
 ## Changes
 
+### 1.6.2
+* Mercator 1.0.4
+
 ### 1.6.1
 * Mercator 1.0.2
 

@@ -13,6 +13,7 @@
  */
 package io.macgyver.plugin.cloud.aws;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.lendingclub.mercator.aws.AWSScannerBuilder;
@@ -45,11 +46,8 @@ public interface AWSServiceClient {
 	<T extends AmazonWebServiceClient> T createClient(Class<? extends T> t);
 	<T extends AmazonWebServiceClient> T createClient(Class<? extends T> t, Region region);
 	
-	/**
-	 * If the region parameter is set on the service, initialized clients will be initialized with this as the selected region.
-	 * @return
-	 */
-	Optional<Region> getDefaultRegion();
+	
+	List<Regions> getConfiguredRegions();
 	
 	AmazonS3Client newS3Client();
 	
@@ -57,7 +55,12 @@ public interface AWSServiceClient {
 	AmazonEC2Client createEC2Client(String name);
 	AmazonEC2Client createEC2Client(Regions region);
 	AmazonEC2Client createEC2Client(Region region);
+	
 	AWSScannerBuilder createScannerBuilder();
+	void scanRegion(String name);
+	void scanRegion(Regions region);
+	void scanRegion(Region region);
+	
 	String getAccountId();
 	
 	
