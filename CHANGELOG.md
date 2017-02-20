@@ -1,7 +1,9 @@
 ## Changes
 
-### 1.6.4
+
+### 1.6.4 - 2017-02-19
 * mercator 1.0.5
+* expoose ReflexBus from EventSystem
 
 ### 1.6.3
 * Minor extensibility improvements for scanning
