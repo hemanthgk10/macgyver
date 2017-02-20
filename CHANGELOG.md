@@ -1,5 +1,7 @@
 ## Changes
 
+### 1.6.4
+* mercator 1.0.5
 
 ### 1.6.3
 * Minor extensibility improvements for scanning
