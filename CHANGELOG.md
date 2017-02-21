@@ -1,5 +1,8 @@
 ## Changes
 
+### 1.6.9 - 2017-02-21
+* mercator should share neo4j client with macgyver
+
 ### 1.6.8 - 2017-02-21
 * mercator 1.1.1
 
