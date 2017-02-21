@@ -1,5 +1,9 @@
 ## Changes
 
+### 1.6.7 - 2017-02-20
+* fix service catalog change detection
+* fix service catalog entries wiht missing appId
+
 ### 1.6.6 - 2017-02-20 
 * mercator 1.1.0 
 
