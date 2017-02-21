@@ -216,11 +216,11 @@ public class CoreConfig implements EnvironmentAware {
 	}
 
 	@Bean(name = "macProjector")
-	public Projector macProjector() {
-		BasicProjector p = new BasicProjector();
-		
+	public Projector macProjector() throws MalformedURLException {
+		BasicProjector p = new BasicProjector(macGraphClient());
 		return p;
 	}
+	
 	@Bean
 	public ExtensionResourceProvider macExtensionResourceProvider() {
 		ExtensionResourceProvider loader = new ExtensionResourceProvider();
