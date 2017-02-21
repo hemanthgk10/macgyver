@@ -1,5 +1,8 @@
 ## Changes
 
+### 1.6.6 - 2017-02-20 
+* mercator 1.1.0 
+
 ### 1.6.5 - 2017-02-20
 * mercator 1.0.6 - fix for incremental ASG scans
 
