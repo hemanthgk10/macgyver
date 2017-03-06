@@ -31,6 +31,8 @@ import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.Ignore;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +49,7 @@ public class WaveFrontClientTest  {
 	public MockWebServer mockServer = new MockWebServer();
 
 	@Test
+	@Ignore
 	public void testX() throws IOException, InterruptedException {
 		// For real: curl -X POST --header "X-AUTH-TOKEN: xxxx"
 		// -d "n=test-wavefront-from-macgyver&h=application%3A%20macgyver-plugin&h=revision%3A%20testrev&l=info&t=test"
@@ -77,6 +80,7 @@ public class WaveFrontClientTest  {
 	}
 
 	@Test
+	@Ignore
 	public void testInvalidKey() {
 
 		try {
