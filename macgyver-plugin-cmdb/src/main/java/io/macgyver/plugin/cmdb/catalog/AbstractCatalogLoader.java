@@ -246,6 +246,12 @@ public abstract class AbstractCatalogLoader {
 		JsonNode n = neo4j.execCypher(cypher, "id", resourceName, "error", e.toString()).toBlocking()
 				.firstOrDefault(MissingNode.getInstance());
 
+		if (this instanceof AppDefinitionLoader) {
+			// things can break if appId is not ALSO set. 
+			cypher = "merge (j:" + neo4jLabel + " { id :{id}}) set j.appId={id} return j";
+			neo4j.execCypher(cypher, "id",resourceName);
+		}
+		
 		ServiceCatalogMessage.ErrorMessage m = new ServiceCatalogMessage.ErrorMessage().withErrorMessage(e.toString())
 				.withEntryType(getEntryType()).withId(resourceName);
 		publish(m);
@@ -258,7 +264,7 @@ public abstract class AbstractCatalogLoader {
 
 			try {
 				String id = n.get("id").asText();
-				logger.info("entity ({}): {}", id, n);
+				logger.debug("entity ({}): {}", id, n);
 				Preconditions.checkState(neo4j != null, "neo4j not set");
 				Preconditions.checkState(!Strings.isNullOrEmpty(neo4jLabel), "neo4j label must be set");
 
@@ -282,12 +288,13 @@ public abstract class AbstractCatalogLoader {
 					logger.warn("problem processing entity definition", e);
 				}
 
-				if (oldHashVal.equals(copy.path("entryHash"))) {
+				String newHashVal = Strings.nullToEmpty(copy.path("entryHash").asText());
+				if (oldHashVal.equals(newHashVal)) {
 					logger.debug("no change detected in: entryType={} id={}", copy.path("entryType").asText(),
 							copy.path("id").asText());
 				} else {
-					logger.info("change detected in: entryType={} id={}", copy.path("entryType").asText(),
-							copy.path("id").asText());
+					logger.info("change detected in: entryType={} id={} oldHash={} newHash={}", copy.path("entryType").asText(),
+							copy.path("id").asText(),oldHashVal,newHashVal);
 					String cypher = "match (j:" + neo4jLabel + " {id:{id}})  return j";
 					ObjectNode defData = (ObjectNode) neo4j.execCypher(cypher, "id", n.get("id").asText()).toBlocking()
 							.first();
@@ -321,7 +328,7 @@ public abstract class AbstractCatalogLoader {
 					n.put("entryType", getEntryType());
 					n.put("entryHash", hash);
 					n.put("id", m.group(2));
-
+					
 					return Observable.just(n);
 				}
 
@@ -343,5 +350,9 @@ public abstract class AbstractCatalogLoader {
 		}
 
 		builder.forEach(new EntitiyDefinitionWriter());
+		
+		// This fixes any appDefinitions that might be missing appId
+		neo4j.execCypher("match (a:AppDefinition) where not exists(a.appId) set a.appId=a.id return a").forEach(it ->{});
+		
 	}
 }

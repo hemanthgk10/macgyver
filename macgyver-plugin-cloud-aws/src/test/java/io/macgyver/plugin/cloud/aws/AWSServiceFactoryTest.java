@@ -19,6 +19,7 @@ import org.junit.Test;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.codedeploy.AmazonCodeDeployClient;
+import com.google.common.base.Splitter;
 
 import io.macgyver.core.util.StandaloneServiceBuilder;
 
@@ -95,4 +96,11 @@ public class AWSServiceFactoryTest {
 
 	}
 
+	@Test
+	public void testSplitter() {
+		
+		Assertions.assertThat(AWSServiceFactory.splitToRegionList("us-west-2,foo,us-east-1")).hasSize(2).containsExactly(Regions.US_WEST_2,Regions.US_EAST_1);
+			
+		
+	}
 }

@@ -13,6 +13,10 @@
  */
 package io.macgyver.plugin.cloud.aws;
 
+import java.util.List;
+
+import org.slf4j.LoggerFactory;
+
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -20,7 +24,10 @@ import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.util.StringUtils;
+import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 import io.macgyver.core.service.ServiceDefinition;
 import io.macgyver.core.service.ServiceFactory;
@@ -32,6 +39,18 @@ public class AWSServiceFactory extends ServiceFactory<AWSServiceClient> {
 
 	}
 
+	public static List<Regions> splitToRegionList(String input) {
+		List<Regions> regionList = Lists.newArrayList();
+		Splitter.onPattern("(,|\\s|;)").omitEmptyStrings().trimResults()
+		.splitToList(Strings.nullToEmpty(input)).forEach(name->{
+			try {
+				regionList.add(Regions.fromName(name));
+			} catch (RuntimeException e) {
+				LoggerFactory.getLogger(AWSServiceFactory.class).warn("could not configure region: " + name, e);
+			}
+		});
+		return regionList;
+	}
 	@Override
 	protected AWSServiceClient doCreateInstance(ServiceDefinition def) {
 
@@ -39,15 +58,14 @@ public class AWSServiceFactory extends ServiceFactory<AWSServiceClient> {
 		ci.setAccountId(def.getProperty("accountId"));
 
 		ci.credentialsProvider = getCredentialsProvider(def);
-		String regionName = Strings.emptyToNull(Strings.nullToEmpty(def.getProperties().getProperty("region")).trim());
-		if (regionName != null) {
-			logger.info("setting region: {}", regionName);
-			ci.defaultRegion = Region.getRegion(Regions.fromName(regionName));
-		}
-
+		
+		
+		ci.setConfiguredRegions(splitToRegionList(def.getProperties().getProperty("regions")));
+		
 		return ci;
 	}
 
+	
 	private AWSCredentialsProvider getCredentialsProvider(ServiceDefinition def) {
 
 		String accessKey = def.getProperty("accessKey");

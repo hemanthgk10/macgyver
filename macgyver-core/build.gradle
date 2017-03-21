@@ -21,8 +21,8 @@ mainClassName = 'io.macgyver.core.ServerMain'
 
 dependencies {
     
-    compile 'org.apache.httpcomponents:httpcore:4.3.3' // dependency FU
-    compile 'org.apache.httpcomponents:httpclient:4.3.6'
+    compile "org.apache.httpcomponents:httpcore:${APACHE_HTTPCORE_VERSION}" // dependency FU
+    compile "org.apache.httpcomponents:httpclient:${APACHE_HTTPCLIENT_VERSION}"
     
 
     compile "org.codehaus.groovy:groovy-all:${GROOVY_VERSION}"
@@ -78,7 +78,7 @@ dependencies {
     compile 'com.amazonaws:jmespath-java:1.0'
     
 	compile "ch.qos.logback:logback-classic:${LOGBACK_VERSION}"
-
+    compile "org.lendingclub.mercator:mercator-core:${MERCATOR_VERSION}"
     compile "org.lendingclub:reflex:${REFLEX_VERSION}"
     compile("org.springframework.boot:spring-boot-starter-web:${SPRING_BOOT_VERSION}")
     compile("org.springframework.boot:spring-boot-starter-remote-shell:${SPRING_BOOT_VERSION}")

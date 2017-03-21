@@ -14,27 +14,19 @@
 package io.macgyver.core.event;
 
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 
 import org.lendingclub.reflex.concurrent.ConcurrentSubscribers;
 import org.lendingclub.reflex.concurrent.ConcurrentSubscribers.ConcurrentSubscriber;
-import org.lendingclub.reflex.eventbus.EventBusAdapter;
 import org.lendingclub.reflex.eventbus.ReflexBus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 
 import com.google.common.base.Preconditions;
-import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import io.reactivex.Observable;
 
@@ -52,7 +44,7 @@ public class EventSystem {
 
 	@SuppressWarnings("unchecked")
 	public <T> Observable<T> createObservable(Class<? extends T> clazz) {
-		return (Observable<T>) reflexBus.createObservable(clazz);	
+		return (Observable<T>) getReflexBus().createObservable(clazz);	
 	}
 
 	public Observable<Object> createObservable() {
@@ -65,12 +57,16 @@ public class EventSystem {
 		return concurrentSubscriber;
 	}
 
+	public ReflexBus getReflexBus() {
+		return reflexBus;
+	}
+	
 	public EventBus getEventBus() {
-		return reflexBus.getGuavaEventBus();
+		return getReflexBus().getGuavaEventBus();
 	}
 
 	public Executor getExecutor() {
-		return reflexBus.getExecutor();	
+		return getReflexBus().getExecutor();	
 	}
 
 	public void post(Object event) {

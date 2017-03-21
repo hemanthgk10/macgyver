@@ -1,5 +1,43 @@
 ## Changes
 
+### 1.6.9 - 2017-02-21
+* mercator should share neo4j client with macgyver
+
+### 1.6.8 - 2017-02-21
+* mercator 1.1.1
+
+### 1.6.7 - 2017-02-20
+* fix service catalog change detection
+* fix service catalog entries wiht missing appId
+
+### 1.6.6 - 2017-02-20 
+* mercator 1.1.0 
+
+### 1.6.5 - 2017-02-20
+* mercator 1.0.6 - fix for incremental ASG scans
+
+### 1.6.4 - 2017-02-19
+* mercator 1.0.5
+* expoose ReflexBus from EventSystem
+
+### 1.6.3
+* Minor extensibility improvements for scanning
+
+### 1.6.2
+* Mercator 1.0.4
+* Fix delimiting of AWS regions
+* AWS SDK 1.11.93
+
+### 1.6.1
+* Mercator 1.0.2
+
+### 1.6.0
+* Migrate scanning functionality to mercator
+
+
+### 1.5.9
+* Fix Security Group Scanner
+
 ### 1.5.7
 * Add NewRelic message types
 
